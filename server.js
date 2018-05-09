@@ -14,6 +14,7 @@ const app = express();
 
 app.use(express.static('views'))
 app.use('/scripts', express.static('scripts'))
+app.use('/external_libraries', express.static('external_libraries'))
 
 
 
