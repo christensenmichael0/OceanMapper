@@ -3,21 +3,25 @@
 $(function() {
     console.log( "ready!" );
     // $('#grab-data').click(function(){alert('going to s3 to grab data')});
-    let filename = 'oceanmapper-data-storage/RTOFS_OC/0m/rtofs_currents_20160512_00.json';
-    let filetype = 'json';
-    getSignedRequest(filename,filetype);
+    let fileName = 'RTOFS_OC/0m/rtofs_currents_20160512_00.json';
+    // getSignedRequest(fileName);
+    // listFiles();
+    // downloadFile()
+
 });
 
-function getSignedRequest(filename, filetype){
-  debugger
+
+
+function getSignedRequest(fileName){
   const xhr = new XMLHttpRequest();
-  // xhr.open('GET', `/sign-s3?file-name=${filename}&file-type=${filetype}`);
-  xhr.open('GET', `/sign-s3?file-name=${filename}`);
+  xhr.open('GET', `/sign-s3?file-name=${fileName}`);
   xhr.onreadystatechange = () => {
     if(xhr.readyState === 4){
       if(xhr.status === 200){
       	debugger
         const response = JSON.parse(xhr.responseText);
+        alert(response.signedRequest);
+        alert(response.url)
         downloadFile(filename, response.signedRequest, response.url);
       }
       else{
@@ -28,10 +32,10 @@ function getSignedRequest(filename, filetype){
   xhr.send();
 }
 
-function downloadFile(filename, signedRequest, url){
+function downloadFile(){
   debugger
   const xhr = new XMLHttpRequest();
-  // xhr.open('GET', signedRequest);
+  xhr.open('GET', `/download`);
   xhr.onreadystatechange = () => {
     if(xhr.readyState === 4){
       if(xhr.status === 200){
@@ -44,9 +48,38 @@ function downloadFile(filename, signedRequest, url){
       }
     }
   };
-  xhr.open('GET', signedRequest);
   xhr.send();
 }
 
+function listFiles(){
+  const xhr = new XMLHttpRequest();
+  xhr.open('GET', `/list-files`);
+  xhr.onreadystatechange = () => {
+    if(xhr.readyState === 4){
+      if(xhr.status === 200){
+      	debugger
+        const response = JSON.parse(xhr.responseText);
+        // downloadFile(filename, response.signedRequest, response.url);
+      }
+      else{
+        alert('Could not get signed URL.');
+      }
+    }
+  };
+  xhr.send();
+}
+
+
+// var velocityLayer = L.velocityLayer({
+// 		displayValues: true,
+// 		displayOptions: {
+// 			velocityType: 'GBR Water',
+// 			displayPosition: 'bottomleft',
+// 			displayEmptyString: 'No water data'
+// 		},
+// 		data: data,
+// 		maxVelocity: 0.6,
+// 		velocityScale: 0.1 // arbitrary default 0.005
+// 	});
 
 // getSignedRequest(file);
