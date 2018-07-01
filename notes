@@ -13,3 +13,36 @@
 #     ax.imshow(data, cmap=cm)
 #     plt.savefig(fn, dpi = height) 
 #     plt.close()
+
+
+
+
+# creating the upload package for grab_rtofs_highres_initiator (RTOFS_highres_lambda_initiator.py)
+zip -ur ~/lambda_highres_rtofs_grab_initiator.zip RTOFS_forecast_info.py build_model_times.py RTOFS_highres_lambda_initiator.py
+
+# creating the upload package for grab_rtofs_highres (RTOFS_process_highres_fields.py)
+zip -ur ~/lambda_highres_rtofs_grab_s3_save.zip RTOFS_process_highres_fields.py fetch_utils.py
+
+---
+
+# creating the upload package for grab_rtofs_3d_initiator (RTOFS_3d_lambda_initiator.py)
+zip -ur ~/lambda_3d_rtofs_grab_initiator.zip RTOFS_forecast_info.py build_model_times.py RTOFS_3d_lambda_initiator.py
+
+# creating the upload package for grab_rtofs_3d (RTOFS_process_3d_daily_fields.py)
+zip -ur ~/lambda_3d_rtofs_grab_s3_save.zip RTOFS_process_3d_daily_fields.py fetch_utils.py
+
+---
+
+# creating the upload package for grab_hycom_3d_initiator (HYCOM_3d_lambda_initiator.py)
+zip -ur ~/lambda_3d_hycom_grab_initiator.zip HYCOM_forecast_info.py HYCOM_3d_lambda_initiator.py fetch_utils.py
+
+# creating the upload package for grab_hycoms_3d (HYCOM_process_3d_fields.py)
+zip -ur ~/lambda_3d_hycom_grab_s3_save.zip HYCOM_process_3d_fields.py fetch_utils.py
+
+---
+
+# creating the upload package for grab_hycom_3d_initiator (GFS_lambda_initiator.py)
+zip -ur ~/lambda_gfs_grab_initiator.zip GFS_forecast_info.py GFS_lambda_initiator.py fetch_utils.py
+
+# creating the upload package for grab_hycoms_3d (GFS_process_fields.py)
+zip -ur ~/lambda_gfs_grab_s3_save.zip GFS_process_fields.py fetch_utils.py

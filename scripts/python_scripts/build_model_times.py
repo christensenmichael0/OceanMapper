@@ -2,9 +2,9 @@ import datetime
 import netCDF4
 import collections
 
-def assemble_model_timesteps(available_data):
+def assemble_model_timesteps(available_data, model_res):
     """
-    assemble_model_timesteps(available_data)
+    assemble_model_timesteps(available_data, model_res)
 
     This function assembles the available model times and associated urls
     -----------------------------------------------------------------------
@@ -21,25 +21,32 @@ def assemble_model_timesteps(available_data):
     -----------------------------------------------------------------------
     Other info:
     
-    RTOFS: nowcast --> only need the last nowcast field (the first 2 days are model spin up)
+    RTOFS: nowcast --> only need the last nowcast field (all prior fields are model spin up)
     RTOFS: forecast --> the first field is the same date as the nowcast and is all NaNs
-
+    -----------------------------------------------------------------------
+    Author: Michael Christensen
+    Date Modified: 06/16/2018
     """
 
-    # TODO: need to kepp track of the forecast indx 
-    
-    start_indx={'nowcast': 2, 'forecast': 1}
-    time_array=[]
-    info = collections.OrderedDict()
+    # the first 15 fields are model initialization when working with 3hrly data
+    # the first 2 fields are model initialization when working with daily data
+    start_indx = {'daily': {'nowcast': 2, 'forecast': 1}, '3hrly': {'nowcast': 16, 'forecast': 1}}
+    time_array = []
+    info = {}
+    info['products'] = collections.OrderedDict()
+    info['general'] = {}
+    info['general']['levels']=[]
 
     for product_type in available_data.keys():
-        info[product_type]={}
-        info[product_type]['url'] = available_data[product_type]['url']
-        info[product_type]['field_datetimes'] = [] # provide empty array
-        info[product_type]['forecast_indx'] = [] # provide empty array
         
-        file = netCDF4.Dataset(available_data[product_type]['url'])    
-        product_times = file.variables['time'][start_indx[product_type]:]
+        info['products'][product_type] = {}
+        info['products'][product_type]['url'] = available_data[product_type]['url']
+        info['products'][product_type]['field_datetimes'] = [] # provide empty array
+        info['products'][product_type]['forecast_indx'] = [] # provide empty array
+        
+        file = netCDF4.Dataset(available_data[product_type]['url'])
+        product_times = file.variables['time'][start_indx[model_res][product_type]:]
+        levels = file.variables['lev'][:]
 
         for forecast_indx, forecast_time in enumerate(product_times):
             basetime_int = int(forecast_time)
@@ -51,17 +58,20 @@ def assemble_model_timesteps(available_data):
 
             if len(time_array) == 0:
                 time_array.append(full_forecast_time)
-                info[product_type]['field_datetimes'].append(full_forecast_time)
-                info[product_type]['forecast_indx'].append(start_indx[product_type] + forecast_indx)
+                info['products'][product_type]['field_datetimes'].append(full_forecast_time)
+                info['products'][product_type]['forecast_indx'].append(start_indx[model_res][product_type] + forecast_indx)
             else:
                 # make sure the time isnt already present and that it is also larger than the last time
                 # in the time array
                 if (full_forecast_time not in time_array and full_forecast_time > time_array[-1]):
                     time_array.append(full_forecast_time)
-                    info[product_type]['field_datetimes'].append(full_forecast_time)
-                    info[product_type]['forecast_indx'].append(start_indx[product_type] + forecast_indx)
+                    info['products'][product_type]['field_datetimes'].append(full_forecast_time)
+                    info['products'][product_type]['forecast_indx'].append(start_indx[model_res][product_type] + forecast_indx)
 
         file.close()
+
+    # add levels to output data structure
+    info['general']['levels'] = [int(lev) for lev in levels.tolist()]
 
     return info
 

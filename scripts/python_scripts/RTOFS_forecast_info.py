@@ -12,14 +12,17 @@ import numpy as np
 import collections
 import re
 
-def get_latest_RTOFS_forecast_time(rtofs_url):
+def get_latest_RTOFS_forecast_time(rtofs_url, grid_dim='2d'):
     """
     get_latest_RTOFS_forecast_time(rtofs_url)
 
     This function assembles an object with the latest available date
     and data url for both the nowcast and forecast
     -----------------------------------------------------------------------
-    Input: {string} rtofs_url - the RTOFS opendap url
+    Inputs: 
+    {string} rtofs_url - the RTOFS opendap url
+    {string} grid_dim - the RTOFS grid dimension '2d' or '3d' (i.e. the 2d surface data or 3d full water column data)
+
 
     ex: 'http://nomads.ncep.noaa.gov:9090/dods/rtofs/rtofs_global20180516/rtofs_glo_2ds_nowcast_daily_prog'
     -----------------------------------------------------------------------
@@ -27,7 +30,9 @@ def get_latest_RTOFS_forecast_time(rtofs_url):
 
     available_data = {'nowcast': {'latest_date': 'yyyymmdd', 'url': xxx}, 
         'forecast': {'forecast': {'latest_date': 'yyyymmdd', 'url': xxx}}
-
+    -----------------------------------------------------------------------
+    Author: Michael Christensen
+    Date Modified: 06/06/2018
     """
     
     page = urllib.urlopen(rtofs_url).read()
@@ -49,8 +54,13 @@ def get_latest_RTOFS_forecast_time(rtofs_url):
     sorted_dates_str = [datetime.datetime.strftime(d,'%Y%m%d') for d in sorted_dates]
     
     forecast_info = collections.OrderedDict()
-    nowcast_suffix = 'rtofs_glo_2ds_nowcast_daily_prog'
-    forecast_suffix = 'rtofs_glo_2ds_forecast_daily_prog'
+    if grid_dim is '2d':
+        nowcast_suffix = 'rtofs_glo_2ds_nowcast_3hrly_prog'
+        forecast_suffix = 'rtofs_glo_2ds_forecast_3hrly_prog'
+    else:
+        # assume that if uvel is present vvel is also present
+        nowcast_suffix = 'rtofs_glo_3dz_nowcast_daily_uvel'
+        forecast_suffix = 'rtofs_glo_3dz_forecast_daily_uvel'
     
     if len(sorted_dates_str):
         for forecast_indx, forecast_date in enumerate(sorted_dates_str):

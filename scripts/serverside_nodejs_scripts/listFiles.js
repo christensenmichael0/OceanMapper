@@ -1,6 +1,6 @@
 const express = require('express');
 const aws = require('aws-sdk');
-const { s3, s3Params } = require('../../aws_s3.js');
+const { s3 } = require('../../aws_s3.js');
 
 listFilesRouter = express.Router();
 
