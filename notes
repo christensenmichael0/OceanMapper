@@ -1,21 +1,50 @@
-# def save_image(data, cm, fn):
-   
-#     sizes = np.shape(data)
-#     height = float(sizes[0])
-#     width = float(sizes[1])
-     
-#     fig = plt.figure()
-#     fig.set_size_inches((width/height)*5, 5, forward=False)
-#     ax = plt.Axes(fig, [0., 0., 1., 1.])
-#     ax.set_axis_off()
-#     fig.add_axes(ax)
- 
-#     ax.imshow(data, cmap=cm)
-#     plt.savefig(fn, dpi = height) 
-#     plt.close()
+# fig, axes = plt.subplots()
+# axes.imshow(data['u_vel'], origin='lower')
+# or 
+# fig = plt.figure()
+# ax = fig.add_subplot(111)
 
 
+* when request tiles for a specific date we need to shoot off a request to see whats available... following this 
+we need to send off individual requests for the tiles
 
+--- (PACKAGING USING DOCKER)
+docker run -it dacut/amazon-linux-python-3.6
+
+** (restart and run)
+docker restart fb43bc2247cb
+docker exec -it fb43bc2247cb bash
+
+mkdir lambda_package_api
+cd lambda_package_api
+pip3 install numpy scipy -t ./
+
+mkdir lambda_package
+cd lambda_package
+pip3 install bs4 matplotlib mercantile numpy pyproj scipy netCDF4 pillow cmocean -t ./
+zip -r lambda_package_api.zip *
+docker cp fb43bc2247cb:/lambda_package_api/lambda_package_api.zip ~
+
+cd ~/globalMapper/scripts/python_scripts
+zip -ur ~/lambda_package_api.zip utils api_utils
+zip -urj ~/lambda_package_api.zip api/get_model_field.py api/get_model_timeseries.py
+
+# copy from current docker container to local machine
+docker ps -a
+docker ps -a | grep "dacut" | awk '{print $1}'
+
+docker cp <CONTAINER_ID>:<DOCKER_PATH_TO_ZIP_FILE> <LOCAL_PATH>
+docker cp fb43bc2247cb:/lambda_package/lambda_package.zip ~
+
+# add lambda function files to zipped folder
+zip -ur lambda.zip <PATH_TO_LAMBDA_FUNCTION_FILE>
+
+#all encompassing lambda package..
+
+zip -ur ~/lambda_package.zip GFS_forecast_info.py GFS_lambda_initiator.py GFS_process_fields.py HYCOM_forecast_info.py HYCOM_3d_lambda_initiator.py HYCOM_process_3d_fields.py RTOFS_forecast_info.py RTOFS_3d_lambda_initiator.py RTOFS_process_3d_daily_fields.py WW3_forecast_info.py WW3_lambda_initiator.py WW3_process_fields.py tile_task_distributor.py process_tiles.py fetch_utils.py s3_bucket_cleaner.py
+
+
+--- (SURFACE RTOFS)
 
 # creating the upload package for grab_rtofs_highres_initiator (RTOFS_highres_lambda_initiator.py)
 zip -ur ~/lambda_highres_rtofs_grab_initiator.zip RTOFS_forecast_info.py build_model_times.py RTOFS_highres_lambda_initiator.py
@@ -23,7 +52,7 @@ zip -ur ~/lambda_highres_rtofs_grab_initiator.zip RTOFS_forecast_info.py build_m
 # creating the upload package for grab_rtofs_highres (RTOFS_process_highres_fields.py)
 zip -ur ~/lambda_highres_rtofs_grab_s3_save.zip RTOFS_process_highres_fields.py fetch_utils.py
 
----
+--- (RTOFS 3D)
 
 # creating the upload package for grab_rtofs_3d_initiator (RTOFS_3d_lambda_initiator.py)
 zip -ur ~/lambda_3d_rtofs_grab_initiator.zip RTOFS_forecast_info.py build_model_times.py RTOFS_3d_lambda_initiator.py
@@ -31,7 +60,7 @@ zip -ur ~/lambda_3d_rtofs_grab_initiator.zip RTOFS_forecast_info.py build_model_
 # creating the upload package for grab_rtofs_3d (RTOFS_process_3d_daily_fields.py)
 zip -ur ~/lambda_3d_rtofs_grab_s3_save.zip RTOFS_process_3d_daily_fields.py fetch_utils.py
 
----
+--- (HYCOM 3D)
 
 # creating the upload package for grab_hycom_3d_initiator (HYCOM_3d_lambda_initiator.py)
 zip -ur ~/lambda_3d_hycom_grab_initiator.zip HYCOM_forecast_info.py HYCOM_3d_lambda_initiator.py fetch_utils.py
@@ -39,10 +68,124 @@ zip -ur ~/lambda_3d_hycom_grab_initiator.zip HYCOM_forecast_info.py HYCOM_3d_lam
 # creating the upload package for grab_hycoms_3d (HYCOM_process_3d_fields.py)
 zip -ur ~/lambda_3d_hycom_grab_s3_save.zip HYCOM_process_3d_fields.py fetch_utils.py
 
----
+--- (GFS)
 
-# creating the upload package for grab_hycom_3d_initiator (GFS_lambda_initiator.py)
+# creating the upload package for grab_gfs_initiator (GFS_lambda_initiator.py)
 zip -ur ~/lambda_gfs_grab_initiator.zip GFS_forecast_info.py GFS_lambda_initiator.py fetch_utils.py
 
-# creating the upload package for grab_hycoms_3d (GFS_process_fields.py)
+# creating the upload package for grab_gfs (GFS_process_fields.py)
 zip -ur ~/lambda_gfs_grab_s3_save.zip GFS_process_fields.py fetch_utils.py
+
+zip -ur ~/lambda_gfs_v1.zip GFS_forecast_info.py GFS_lambda_initiator.py GFS_process_fields.py fetch_utils.py
+
+--- (WW3)
+
+# creating the upload package for grab_ww3_initiator (WW3_lambda_initiator.py)
+zip -ur ~/lambda_ww3_grab_initiator.zip WW3_forecast_info.py WW3_lambda_initiator.py fetch_utils.py
+
+# creating the upload package for grab_ww3 (WW3_process_fields.py)
+zip -ur ~/lambda_ww3_grab_s3_save.zip WW3_process_fields.py fetch_utils.py
+
+-90 21.94304553343818
+-67.5 40.979898069620134
+
+# adding image to map test
+
+-90 0
+-45 40.979898069620134
+
+var imageUrl = 'http://services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/3/3/2'
+var imageBounds = [[0, -90], [40.979898069620134, -45]];
+hi = L.imageOverlay(imageUrl, imageBounds).addTo(map);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png?{foo}', {foo: 'bar'}).addTo(map);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png?{foo}', {foo: 'bar'}).addTo(map);
+
+
+var imageUrl2 = 'https://s3.us-east-2.amazonaws.com/oceanmapper-data-storage/2_2_1.png';
+var imageBounds2 = [[0, 0], [66.51326044311185, 90]];
+hi2 = L.imageOverlay(imageUrl2, imageBounds2).addTo(map);
+
+var imageUrl = 'https://s3.us-east-2.amazonaws.com/oceanmapper-data-storage/4_4_6.png';
+var imageBounds = [[21.94304553343818, -90], [40.979898069620134, -67.5]];
+hi = L.imageOverlay(imageUrl, imageBounds).addTo(map);
+
+
+var imageUrl1 = 'https://s3.us-east-2.amazonaws.com/oceanmapper-data-storage/5_8_12.png';
+var imageBounds1 = [[31.95216223802497, -90], [40.979898069620134, -78.75]];
+var image_1 = L.imageOverlay(imageUrl1, imageBounds1).addTo(map);
+
+var imageUrl2 = 'https://s3.us-east-2.amazonaws.com/oceanmapper-data-storage/5_8_13.png';
+var imageBounds2 = [[21.94304553343818, -90], [31.95216223802497, -78.75]];
+var image_2 = L.imageOverlay(imageUrl2, imageBounds2).addTo(map);
+
+var imageUrl3 = 'https://s3.us-east-2.amazonaws.com/oceanmapper-data-storage/5_9_11.png';
+var imageBounds3 = [[40.979898069620134, -78.75], [48.922499263758255, -67.5]];
+var image_3 = L.imageOverlay(imageUrl3, imageBounds3).addTo(map);
+
+var imageUrl4 = 'https://s3.us-east-2.amazonaws.com/oceanmapper-data-storage/5_9_12.png';
+var imageBounds4 = [[31.95216223802497, -78.75], [40.979898069620134, -67.5]];
+var image_4 = L.imageOverlay(imageUrl4, imageBounds4).addTo(map);
+
+var imageBounds = [[21.94304553343818, -90], [40.979898069620134, -67.5]];
+L.imageOverlay(imageUrl, imageBounds).addTo(map);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png?{foo}', {foo: 'bar'}).addTo(map);
+
+options= {
+opacity: 1,
+}
+L.tileLayer('https://s3.us-east-2.amazonaws.com/oceanmapper-data-storage/test_tiles/{z}/{x}/{y}.png',options).addTo(map);
+
+-73.125 40.979898069620134
+-67.5 45.089035564831036
+
+var imageUrl = 'https://s3.us-east-2.amazonaws.com/oceanmapper-data-storage/cape_cod.png';
+var imageBounds = [[40.979898069620134, -73.125], [45.089035564831036, -67.5]];
+var image = L.imageOverlay(imageUrl, imageBounds).addTo(map);
+
+
+# waves
+# https://matplotlib.org/gallery/images_contours_and_fields/image_masked.html
+
+fig, axes = plt.subplots()
+palette = copy.copy(plt.cm.rainbow)
+palette.set_bad(alpha = 0.0)
+axes.pcolormesh(height_raw,cmap=palette)
+# axes.pcolormesh(height_raw,cmap=palette,norm=colors.BoundaryNorm([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15],ncolors=palette.N))
+fig.show()
+
+options= {
+opacity: 1,
+maxNativeZoom: 4,
+minNativeZoom: 4,
+}
+hi = L.tileLayer('https://s3.us-east-2.amazonaws.com/oceanmapper-data-storage/HYCOM_OCEAN_CURRENTS_3D/20180825_00/0m/tiles/scalar/{z}/{x}/{y}.png',options).addTo(map);
+
+hi= L.tileLayer('https://s3.us-east-2.amazonaws.com/oceanmapper-data-storage/test_tiles/{z}/{x}/{y}.png',options).addTo(map);
+hi= L.tileLayer('https://s3.us-east-2.amazonaws.com/oceanmapper-data-storage/GFS_WINDS/20180825_06/10m/tiles/scalar/{z}/{x}/{y}.png',options).addTo(map);
+
+
+payload = {}
+payload['pickle_filepath'] = 'blah
+payload['data_type'] = 'wind_speed'
+payload['bucket_name'] = 'blah'
+payload['output_tilepath'] = 'blah'
+payload['xyz_info'] = {'start_indx': 1, 
+    'end_indx': 2}
+payload['zoom_array'] = list(range(4,7)
+
+
+AWS_BUCKET_NAME='oceanmapper-data-storage'
+output_pickle_path='GFS_WINDS/20180813_18/10m/pickle/gfs_winds_20180813_18.pickle'
+output_tile_path='blahblah'
+
+
+
+
+
+
+
+
+
+

@@ -49,9 +49,9 @@ def lambda_handler(event, context):
         for model_field in zipped_time_and_indx:
             model_field_indx = model_field[1]
 
-            # only grab the upper 250m 
+            # only grab the upper 10m
             levels = output_info['general']['levels']
-            stop_depth_indx = levels.index(250) + 1
+            stop_depth_indx = levels.index(10) + 1
             for level_indx, level_depth in enumerate(levels[:stop_depth_indx]):
                 # build payload for initiation of lambda function
                 payload = {}
@@ -69,7 +69,7 @@ def lambda_handler(event, context):
                     raise e
 
                 print(response)
-                time.sleep(0.5)
+                time.sleep(0.1)
 	           
 
 if __name__ == "__main__":

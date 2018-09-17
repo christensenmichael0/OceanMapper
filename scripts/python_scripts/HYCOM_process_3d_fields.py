@@ -15,6 +15,7 @@ import netCDF4
 import pickle
 import time
 from fetch_utils import get_opendapp_netcdf
+from tile_task_distributor import tile_task_distributor
 
 
 def lambda_handler(event, context):
@@ -35,8 +36,11 @@ def lambda_handler(event, context):
     Output: A .json file and a .pickle file are save to S3
     -----------------------------------------------------------------------
     Author: Michael Christensen
-    Date Modified: 06/24/2018
+    Date Modified: 08/26/2018
     """
+
+    AWS_BUCKET_NAME = 'oceanmapper-data-storage'
+    TOP_LEVEL_FOLDER = 'HYCOM_OCEAN_CURRENTS_3D'
         
     # unpack event data
     url = event['url']
@@ -44,20 +48,20 @@ def lambda_handler(event, context):
     model_level_depth = event['level']['level_depth']
     model_level_indx = event['level']['level_indx']
 
-    file = get_opendapp_netcdf(url) 
-
-    print('building HYCOM data: ' + datetime.datetime.strftime(model_field_time,'%Y%m%d_%H'))
-
+    file = get_opendapp_netcdf(url)
     formatted_folder_date = datetime.datetime.strftime(model_field_time,'%Y%m%d_%H')
     
-    output_json_path = ('HYCOM_OCEAN_CURRENTS_3D/' + formatted_folder_date + '/' + str(model_level_depth) + 'm/json/' +
+    output_json_path = (TOP_LEVEL_FOLDER + '/' + formatted_folder_date + '/' + str(model_level_depth) + 'm/json/' +
         'hycom_currents_' + formatted_folder_date + '.json')
 
-    output_pickle_path = ('HYCOM_OCEAN_CURRENTS_3D/' + formatted_folder_date + '/' + str(model_level_depth) + 'm/pickle/' +
+    output_pickle_path = (TOP_LEVEL_FOLDER + '/' + formatted_folder_date + '/' + str(model_level_depth) + 'm/pickle/' +
         'hycom_currents_' + formatted_folder_date + '.pickle')
 
-    lat  = file.variables['lat'][:]
-    lon  = file.variables['lon'][:]
+    output_tile_scalar_path = (TOP_LEVEL_FOLDER + '/' + formatted_folder_date + '/' + str(model_level_depth) +
+     'm/tiles/scalar/')
+
+    lat = file.variables['lat'][:]
+    lon = file.variables['lon'][:]
 
     # transform masked values to 0
     u_data_raw = file.variables['water_u'][0,model_level_indx,:,:] #[time,level,lat,lon] -- only 1 time for HYCOM
@@ -66,26 +70,33 @@ def lambda_handler(event, context):
     u_data_mask_applied = np.where(~u_data_raw.mask, u_data_raw, 0)
     v_data_mask_applied = np.where(~v_data_raw.mask, v_data_raw, 0)
 
+    # ordered lat array
+    lat_sort_indices = np.argsort(lat)
+    lat_ordered = lat[lat_sort_indices]
+
     # remap and sort to -180 to 180 grid
     lon_translate = np.where(lon>180, lon-360.0, lon)
     lon_sort_indices = np.argsort(lon_translate)
 
-    # ordered clongitude arrays
+    # ordered longitude arrays
     lon_ordered = lon_translate[lon_sort_indices]
 
-    # rebuild u/v data with correct longitude sorting (monotonic increasing) 
-    u_data_cleaned = np.array([lat_row[lon_sort_indices] for lat_row in u_data_mask_applied])
-    v_data_cleaned = np.array([lat_row[lon_sort_indices] for lat_row in v_data_mask_applied])
+    # rebuild u/v data with correct longitude sorting (monotonic increasing)
+    u_data_cleaned_filled = u_data_mask_applied[lat_sort_indices,:][:,lon_sort_indices]
+    v_data_cleaned_filled = v_data_mask_applied[lat_sort_indices,:][:,lon_sort_indices]
+
+    u_data_cleaned = u_data_raw[lat_sort_indices,:][:,lon_sort_indices]
+    v_data_cleaned = v_data_raw[lat_sort_indices,:][:,lon_sort_indices]
 
     # assign the raw data to a variable so we can pickle it for use with other scripts
-    raw_data = {'lat': lat, 'lon': lon_ordered, 'u_vel': u_data_cleaned, 'v_vel': v_data_cleaned}
+    raw_data = {'lat': lat_ordered, 'lon': lon_ordered, 'u_vel': u_data_cleaned, 'v_vel': v_data_cleaned}
     raw_data_pickle = pickle.dumps(raw_data)
 
     output_lat_array = np.arange(int(min(lat)),int(max(lat))+0.5,0.5) # last point is excluded with arange (80 to -80)
     output_lon_array = np.arange(-180,180.5,0.5) # last point is excluded with arange (-180 to 180)
 
-    u_interp_func = interpolate.interp2d(lon_ordered, lat, u_data_cleaned, kind='cubic')
-    v_interp_func = interpolate.interp2d(lon_ordered, lat, v_data_cleaned, kind='cubic')
+    u_interp_func = interpolate.interp2d(lon_ordered, lat_ordered, u_data_cleaned_filled, kind='cubic')
+    v_interp_func = interpolate.interp2d(lon_ordered, lat_ordered, v_data_cleaned_filled, kind='cubic')
 
     u_data_interp = u_interp_func(output_lon_array, output_lat_array)
     v_data_interp = v_interp_func(output_lon_array, output_lat_array)
@@ -114,7 +125,7 @@ def lambda_handler(event, context):
     			'ny': len(output_lat_array),
     			'refTime': datetime.datetime.strftime(model_field_time,'%Y-%m-%d %H:%M:%S'),
     			},
-    			'data': [float('{:.3f}'.format(el)) if el > 0.01 else 0 for el in u_data_interp[::-1].flatten().tolist()]
+    			'data': [float('{:.3f}'.format(el)) if np.abs(el) > 0.0001 else 0 for el in u_data_interp[::-1].flatten().tolist()]
     		},
     		{'header': {
     			'parameterUnit': "m.s-1",
@@ -131,20 +142,19 @@ def lambda_handler(event, context):
     			'ny': len(output_lat_array),
     			'refTime': datetime.datetime.strftime(model_field_time,'%Y-%m-%d %H:%M:%S'),
     			},
-    			'data': [float('{:.3f}'.format(el)) if el > 0.01 else 0 for el in v_data_interp[::-1].flatten().tolist()]
+    			'data': [float('{:.3f}'.format(el)) if np.abs(el) > 0.0001 else 0 for el in v_data_interp[::-1].flatten().tolist()]
     		},
       ]
-
-    AWS_BUCKET_NAME = 'oceanmapper-data-storage'
 
     client = boto3.client('s3')
     client.put_object(Body=json.dumps(output_data), Bucket=AWS_BUCKET_NAME, Key=output_json_path)
     client.put_object(Body=raw_data_pickle, Bucket=AWS_BUCKET_NAME, Key=output_pickle_path)
 
+    # call an intermediate function to distribute tiling workload
+    tile_task_distributor(output_pickle_path, 'current_speed', AWS_BUCKET_NAME, 
+        output_tile_scalar_path, range(3,4))
+
     file.close()
-
-
-
 
 if __name__ == "__main__":
 	lambda_handler('','')

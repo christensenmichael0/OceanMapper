@@ -47,9 +47,9 @@ def lambda_handler(event, context):
     for forecast_time, data_url in zipped_time_and_indx:
         # only utilize 1 forecast/day (00:00 UTC) for cost savings 
         if forecast_time.hour == 0:
-            # only grab the upper 250m
+            # only grab the upper 10m
             levels = forecast_info['levels']
-            stop_depth_indx = levels.index(250) + 1
+            stop_depth_indx = levels.index(10) + 1
             for level_indx, level_depth in enumerate(levels[:stop_depth_indx]):
                 # build payload for initiation of lambda function
                 payload = {}

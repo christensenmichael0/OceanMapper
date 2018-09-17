@@ -70,16 +70,18 @@ function listFiles(){
 }
 
 
-// var velocityLayer = L.velocityLayer({
-// 		displayValues: true,
-// 		displayOptions: {
-// 			velocityType: 'GBR Water',
-// 			displayPosition: 'bottomleft',
-// 			displayEmptyString: 'No water data'
-// 		},
-// 		data: data,
-// 		maxVelocity: 0.6,
-// 		velocityScale: 0.1 // arbitrary default 0.005
-// 	});
+var velocityLayer = L.velocityLayer({
+		displayValues: true,
+		displayOptions: {
+			velocityType: 'GBR Water',
+			displayPosition: 'bottomleft',
+			displayEmptyString: 'No water data'
+		},
+		data: data,
+		maxVelocity: 1.0,
+		velocityScale: 0.1 // arbitrary default 0.005
+	});
+
+  map.addLayer(velocityLayer)
 
 // getSignedRequest(file);

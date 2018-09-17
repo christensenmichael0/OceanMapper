@@ -39,23 +39,25 @@ def lambda_handler(event, context):
     gfs_url = 'http://nomads.ncep.noaa.gov:9090/dods/gfs_0p25'
     forecast_info = get_gfs_forecast_info(gfs_url)
         
-    for forecast_indx, forecast_time in forecast_info['data']:     
-        # build payload for initiation of lambda function
-        payload = {}
-        payload['url'] = forecast_info['url']
-        payload['forecast_time'] = datetime.datetime.strftime(forecast_time,'%Y%m%dT%H:%M')
-        payload['forecast_indx'] = forecast_indx
+    for forecast_indx, forecast_time in forecast_info['data']:
+        # only utilize 2 forecast/day (00:00 UTC) for cost savings
+        if forecast_time.hour == 0:
+            # build payload for initiation of lambda function
+            payload = {}
+            payload['url'] = forecast_info['url']
+            payload['forecast_time'] = datetime.datetime.strftime(forecast_time,'%Y%m%dT%H:%M')
+            payload['forecast_indx'] = forecast_indx
 
-        # InvocationType = RequestResponse # this is used for synchronous lambda calls
-        try:
-            response = lam.invoke(FunctionName='grab_gfs', 
-                InvocationType='Event', Payload=json.dumps(payload))
-        except Exception as e:
-            print(e)
-            raise e
+            # InvocationType = RequestResponse # this is used for synchronous lambda calls
+            try:
+                response = lam.invoke(FunctionName='grab_gfs', 
+                    InvocationType='Event', Payload=json.dumps(payload))
+            except Exception as e:
+                print(e)
+                raise e
 
-        print(response)
-        time.sleep(0.1)
+            print(response)
+            time.sleep(0.1)
                
 
 if __name__ == "__main__":

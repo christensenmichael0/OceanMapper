@@ -34,8 +34,11 @@ def lambda_handler(event, context):
     Output: A .json file and a .pickle file are save to S3
     -----------------------------------------------------------------------
     Author: Michael Christensen
-    Date Modified: 06/06/2018
+    Date Modified: 08/26/2018
     """
+
+    AWS_BUCKET_NAME = 'oceanmapper-data-storage'
+    TOP_LEVEL_FOLDER = 'RTOFS_OCEAN_CURRENTS_HIGHRES'
 
     # unpack event data
     url = event['url']
@@ -43,17 +46,17 @@ def lambda_handler(event, context):
     model_field_indx = event['forecast_indx']
 
     file = get_opendapp_netcdf(url)
-
-    print('building RTOFS data: ' + datetime.datetime.strftime(model_field_time,'%Y%m%d_%H'))
-
     formatted_folder_date = datetime.datetime.strftime(model_field_time,'%Y%m%d_%H')
     
     # update this when fetching 4d data (right now only use surface depth
-    output_json_path = ('RTOFS_OCEAN_CURRENTS_HIGHRES/' + formatted_folder_date + '/0m/json/' +
+    output_json_path = (TOP_LEVEL_FOLDER + '/' + formatted_folder_date + '/0m/json/' +
         'rtofs_currents_' + formatted_folder_date + '.json')
 
-    output_pickle_path = ('RTOFS_OCEAN_CURRENTS_HIGHRES/' + formatted_folder_date + '/0m/pickle/' +
+    output_pickle_path = (TOP_LEVEL_FOLDER + '/' + formatted_folder_date + '/0m/pickle/' +
         'rtofs_currents_' + formatted_folder_date + '.pickle')
+
+    output_tile_scalar_path = (TOP_LEVEL_FOLDER + '/' + formatted_folder_date + '/' + str(model_level_depth) +
+     'm/tiles/scalar/')
 
     lat  = file.variables['lat'][:]
     lon  = file.variables['lon'][:]   
@@ -113,7 +116,7 @@ def lambda_handler(event, context):
     			'ny': len(output_lat_array),
     			'refTime': datetime.datetime.strftime(model_field_time,'%Y-%m-%d %H:%M:%S'),
     			},
-    			'data': [float('{:.3f}'.format(el)) if el > 0.01 else 0 for el in u_data_interp[::-1].flatten().tolist()]
+    			'data': [float('{:.3f}'.format(el)) if np.abs(el) > 0.0001 else 0 for el in u_data_interp[::-1].flatten().tolist()]
     		},
     		{'header': {
     			'parameterUnit': "m.s-1",
@@ -130,15 +133,17 @@ def lambda_handler(event, context):
     			'ny': len(output_lat_array),
     			'refTime': datetime.datetime.strftime(model_field_time,'%Y-%m-%d %H:%M:%S'),
     			},
-    			'data': [float('{:.3f}'.format(el)) if el > 0.01 else 0 for el in v_data_interp[::-1].flatten().tolist()]
+    			'data': [float('{:.3f}'.format(el)) if np.abs(el) > 0.0001 else 0 for el in v_data_interp[::-1].flatten().tolist()]
     		},
       ]
-
-    AWS_BUCKET_NAME = 'oceanmapper-data-storage'
 
     client = boto3.client('s3')
     client.put_object(Body=json.dumps(output_data), Bucket=AWS_BUCKET_NAME, Key=output_json_path)
     client.put_object(Body=raw_data_pickle, Bucket=AWS_BUCKET_NAME, Key=output_pickle_path)
+
+    # call an intermediate function to distribute tiling workload
+    tile_task_distributor(output_pickle_path, 'current_speed', AWS_BUCKET_NAME, 
+        output_tile_scalar_path, range(3,5))
 
     file.close()
 

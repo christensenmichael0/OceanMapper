@@ -7,10 +7,8 @@ Created on Mon Apr 09 19:12:40 2018
 
 import urllib.request as urllib
 from bs4 import BeautifulSoup
-import netCDF4
 import datetime
 import numpy as np
-import collections
 import re
 from fetch_utils import get_opendapp_netcdf
 
@@ -57,11 +55,11 @@ def get_gfs_forecast_info(gfs_url):
 
     forecast_run_array = {}
     for model_run in soup.findAll('b'):
-        match = re.search(r'gfs_.*_(\d{2})z', model_run.string)
+        match = re.search(r'(gfs_.*_(\d{2})z):$', model_run.string)
     
         if match:
-            run_name = match.group(0)
-            forecast_run_hour = match.group(1)
+            run_name = match.group(1)
+            forecast_run_hour = match.group(2)
             forecast_run_array.setdefault(int(forecast_run_hour), run_name)
 
     # build forecast field datetime/indx array

@@ -1,2 +1,3 @@
 node_modules
+compiled_lambda_packages
 .env
