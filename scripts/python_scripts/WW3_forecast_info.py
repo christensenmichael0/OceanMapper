@@ -11,7 +11,7 @@ import netCDF4
 import datetime
 import numpy as np
 import re
-from fetch_utils import get_opendapp_netcdf
+from utils.fetch_utils import get_opendapp_netcdf
 
 
 def get_ww3_forecast_info(ww3_url):

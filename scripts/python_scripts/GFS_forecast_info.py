@@ -10,7 +10,7 @@ from bs4 import BeautifulSoup
 import datetime
 import numpy as np
 import re
-from fetch_utils import get_opendapp_netcdf
+from utils.fetch_utils import get_opendapp_netcdf
 
 
 def get_gfs_forecast_info(gfs_url):

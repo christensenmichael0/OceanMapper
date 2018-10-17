@@ -2,23 +2,38 @@ import fiona
 from shapely import geometry
 from shapely.prepared import prep
 
+def in_ocean(point_lon,point_lat):
+    """
+    in_ocean(point_lon,point_lat)
 
-with fiona.open("ne_10m_ocean/ne_10m_ocean.shp") as fiona_collection:
+    This function determines if a provided point is in the ocean
+    -----------------------------------------------------------------------
+    Inputs:
 
-    # In this case, we'll assume the shapefile only has one record/layer (e.g., the shapefile
-    # is just for the borders of a single country, etc.).
+    point_lon (float) - the coordinate longitude
+    point_lat (float) - the coordinate latitude
+    -----------------------------------------------------------------------
+    Output: (bool) - true/false
+    -----------------------------------------------------------------------
+    Author: Michael Christensen
+    Date Modified: 09/23/2018
+    """
 
-    shapefile_record = fiona_collection.next()
-    import pdb; pdb.set_trace()
+    coord_in_ocean = False
+    with fiona.open("utils/ne_10m_ocean/ne_10m_ocean.shp") as fiona_collection:
 
-    #TODO: deal with null island
-    print(shapefile_record['properties']['featurecla'])
+        shapefile_record = fiona_collection.next()
 
-    # Use Shapely to create the polygon
-    shape = geometry.asShape( shapefile_record['geometry'] )
+        #TODO: deal with null island
+        # need to create a 1km square island
 
-    point = geometry.Point(0, 0) # longitude, latitude
+        # Use Shapely to create the polygon
+        shape = geometry.asShape( shapefile_record['geometry'] )
 
-    # Alternative: if point.within(shape)
-    if shape.contains(point):
-        print("In OCEAN!!")
+        point = geometry.Point(point_lon, point_lat) # longitude, latitude
+
+        # Alternative: if point.within(shape)
+        if shape.contains(point):
+            coord_in_ocean = True
+
+    return coord_in_ocean

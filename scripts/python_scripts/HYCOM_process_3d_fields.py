@@ -7,15 +7,19 @@ Created on Mon Apr  2 17:20:30 2018
 
 
 import json
+import datetime
+import pickle
+import time
+
 import boto3
 import numpy as np
 from scipy import interpolate
-import datetime
 import netCDF4
-import pickle
-import time
-from fetch_utils import get_opendapp_netcdf
-from tile_task_distributor import tile_task_distributor
+
+from utils.fetch_utils import get_opendapp_netcdf
+from utils.tile_task_distributor import tile_task_distributor
+from utils.pickle_task_distributor import pickle_task_distributor
+from utils.datasets import datasets
 
 
 def lambda_handler(event, context):
@@ -40,7 +44,9 @@ def lambda_handler(event, context):
     """
 
     AWS_BUCKET_NAME = 'oceanmapper-data-storage'
-    TOP_LEVEL_FOLDER = 'HYCOM_OCEAN_CURRENTS_3D'
+    TOP_LEVEL_FOLDER = 'HYCOM_DATA'
+    SUB_RESOURCE = 'ocean_current_speed'
+    DATA_PREFIX = 'hycom_currents'
         
     # unpack event data
     url = event['url']
@@ -51,14 +57,20 @@ def lambda_handler(event, context):
     file = get_opendapp_netcdf(url)
     formatted_folder_date = datetime.datetime.strftime(model_field_time,'%Y%m%d_%H')
     
-    output_json_path = (TOP_LEVEL_FOLDER + '/' + formatted_folder_date + '/' + str(model_level_depth) + 'm/json/' +
-        'hycom_currents_' + formatted_folder_date + '.json')
+    output_json_path = (TOP_LEVEL_FOLDER + '/' + formatted_folder_date + '/' + SUB_RESOURCE + '/' +
+        str(model_level_depth) + 'm/json/' + DATA_PREFIX + '_' + formatted_folder_date + '.json')
 
-    output_pickle_path = (TOP_LEVEL_FOLDER + '/' + formatted_folder_date + '/' + str(model_level_depth) + 'm/pickle/' +
-        'hycom_currents_' + formatted_folder_date + '.pickle')
+    output_pickle_path = (TOP_LEVEL_FOLDER + '/' + formatted_folder_date + '/' + SUB_RESOURCE + '/' +
+        str(model_level_depth) + 'm/pickle/' + DATA_PREFIX + '_' + formatted_folder_date + '.pickle')
 
-    output_tile_scalar_path = (TOP_LEVEL_FOLDER + '/' + formatted_folder_date + '/' + str(model_level_depth) +
-     'm/tiles/scalar/')
+    output_tile_scalar_path = (TOP_LEVEL_FOLDER + '/' + formatted_folder_date + '/' + SUB_RESOURCE + '/' +
+        str(model_level_depth) + 'm/tiles/scalar/')
+
+    output_tile_data_path = (TOP_LEVEL_FOLDER + '/' + formatted_folder_date + '/' + SUB_RESOURCE + '/' +
+        str(model_level_depth) + 'm/tiles/data/')
+
+    # get model origin time
+    time_origin = datetime.datetime.strptime(file.variables['tau'].time_origin,'%Y-%m-%d %H:%M:%S')
 
     lat = file.variables['lat'][:]
     lon = file.variables['lon'][:]
@@ -89,7 +101,9 @@ def lambda_handler(event, context):
     v_data_cleaned = v_data_raw[lat_sort_indices,:][:,lon_sort_indices]
 
     # assign the raw data to a variable so we can pickle it for use with other scripts
-    raw_data = {'lat': lat_ordered, 'lon': lon_ordered, 'u_vel': u_data_cleaned, 'v_vel': v_data_cleaned}
+    raw_data = {
+        'lat': lat_ordered, 'lon': lon_ordered, 'u_vel': u_data_cleaned, 'v_vel': v_data_cleaned,
+        'time_origin': time_origin}
     raw_data_pickle = pickle.dumps(raw_data)
 
     output_lat_array = np.arange(int(min(lat)),int(max(lat))+0.5,0.5) # last point is excluded with arange (80 to -80)
@@ -124,6 +138,7 @@ def lambda_handler(event, context):
     			'nx': len(output_lon_array),
     			'ny': len(output_lat_array),
     			'refTime': datetime.datetime.strftime(model_field_time,'%Y-%m-%d %H:%M:%S'),
+                'timeOrigin': datetime.datetime.strftime(time_origin,'%Y-%m-%d %H:%M:%S'),
     			},
     			'data': [float('{:.3f}'.format(el)) if np.abs(el) > 0.0001 else 0 for el in u_data_interp[::-1].flatten().tolist()]
     		},
@@ -141,6 +156,7 @@ def lambda_handler(event, context):
     			'nx': len(output_lon_array),
     			'ny': len(output_lat_array),
     			'refTime': datetime.datetime.strftime(model_field_time,'%Y-%m-%d %H:%M:%S'),
+                'timeOrigin': datetime.datetime.strftime(time_origin,'%Y-%m-%d %H:%M:%S'),
     			},
     			'data': [float('{:.3f}'.format(el)) if np.abs(el) > 0.0001 else 0 for el in v_data_interp[::-1].flatten().tolist()]
     		},
@@ -153,6 +169,10 @@ def lambda_handler(event, context):
     # call an intermediate function to distribute tiling workload
     tile_task_distributor(output_pickle_path, 'current_speed', AWS_BUCKET_NAME, 
         output_tile_scalar_path, range(3,4))
+
+    # call an intermediate function to distribute pickling workload (subsetting data by tile)
+    data_zoom_level = datasets[TOP_LEVEL_FOLDER]['sub_resource'][SUB_RESOURCE]['data_tiles_zoom_level']
+    pickle_task_distributor(output_pickle_path, AWS_BUCKET_NAME, output_tile_data_path, data_zoom_level)
 
     file.close()
 

@@ -13,7 +13,7 @@ from scipy import interpolate
 import datetime
 import netCDF4
 import pickle
-from fetch_utils import get_opendapp_netcdf
+from utils.fetch_utils import get_opendapp_netcdf
 
 
 def lambda_handler(event, context):

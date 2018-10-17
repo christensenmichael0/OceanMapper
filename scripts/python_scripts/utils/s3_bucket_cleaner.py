@@ -6,12 +6,7 @@ import re
 s3 = boto3.resource('s3')
 data_bucket = s3.Bucket('oceanmapper-data-storage')
 
-datasets = {
-	'HYCOM': 'HYCOM_OCEAN_CURRENTS_3D',
-	'RTOFS': 'RTOFS_OCEAN_CURRENTS_3D/',
-	'GFS': 'GFS_WINDS/',
-	'WW3': 'WAVE_WATCH_3/'
-	}
+datasets = ['HYCOM_DATA', 'RTOFS_DATA', 'WW3_DATA', 'GFS_DATA']
 
 # get present time in UTC
 utc_now = datetime.datetime.utcnow()
@@ -26,7 +21,7 @@ def lambda_handler(event, context):
 	"""
 	keep_days = os.getenv('keep_days', 10)
 
-	for dataset_key, dataset_value in datasets.items():
+	for dataset_value in datasets:
 		for object in data_bucket.objects.filter(Prefix=dataset_value):
 			pattern = r'\d{8}_\d{2}'
 			match = re.search(pattern,object.key)

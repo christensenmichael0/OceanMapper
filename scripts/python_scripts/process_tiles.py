@@ -4,7 +4,6 @@ import datetime
 import numpy as np
 import mercantile
 import pyproj
-from scipy import interpolate
 import matplotlib
 matplotlib.use('agg')
 from matplotlib import pyplot as plt, cm
@@ -14,7 +13,6 @@ import copy
 import io
 import os
 import PIL
-import pyproj
 
 s3 = boto3.client('s3')
 
@@ -44,12 +42,13 @@ def lambda_handler(event, context):
     Date Modified: 08/19/2018
     """
 
-    # config object
+    # config object 
     cmap_config = {
         'wind_speed': {'color_map': cm.get_cmap('viridis'), 'data_range': [0,25]},
         'current_speed': {'color_map': cm.get_cmap('magma'), 'data_range': [0,2]},
-        'wave_amp': {'color_map': cm.get_cmap('plasma'), 'data_range': [0,10]},
-        'wave_dir': {'color_map': None, 'data_range': [None, None]}
+        'wave_amp': {'color_map': cm.get_cmap('jet'), 'data_range': [0,11]},
+        'wave_dir': {'color_map': None, 'data_range': [None, None]},
+        'wave_period': {'color_map': cm.get_cmap('cool'), 'data_range': [0,21]},
     }
 
     # get event paramaters
@@ -118,6 +117,7 @@ def lambda_handler(event, context):
         ax.set_frame_on(False)
         ax.set_clip_on(False)
         ax.set_position([0, 0, 1, 1])
+
     elif data_type == 'wave_amp':
         fig, ax = make_tile_figure()
 
@@ -128,13 +128,17 @@ def lambda_handler(event, context):
         # ax.pcolormesh(proj_lon_array, proj_lat_array, height_raw, shading='flat', cmap=palette,
         # norm=colors.BoundaryNorm([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15],ncolors=palette.N))
 
+        lvls = range(cmin, cmax)
         ax.contourf(proj_lon_array, proj_lat_array, height_raw[sa,:][:,so], cmap=palette,
-        levels=range(16))
+        levels=lvls)
 
         ax.set_frame_on(False)
         ax.set_clip_on(False)
         ax.set_position([0, 0, 1, 1])
+
     elif data_type == 'wave_dir':
+        fig, ax = make_tile_figure()
+        
         dir_raw = data['primary_wave_dir'][keep_lat_indx,:]
         #directions are in degrees already
         dir_array = dir_raw[sa,:][:,so]
@@ -165,13 +169,28 @@ def lambda_handler(event, context):
             u_comp[::row_int,::col_int], v_comp[::row_int,::col_int], headwidth=9.0,headlength=8.5, headaxislength=8.0,
             scale_units='width', scale=17.0)
 
-            ax_container.set_frame_on(False)
-            ax_container.set_clip_on(False)
-            ax_container.set_position([0, 0, 1, 1])
+            ax.set_frame_on(False)
+            ax.set_clip_on(False)
+            ax.set_position([0, 0, 1, 1])
 
             figure_container[zoom] = fig_container
+    elif data_type == 'wave_period':
+        fig, ax = make_tile_figure()
+
+        period_raw = data['primary_wave_period'][keep_lat_indx,:]
+        
+        palette = copy.copy(data_cmap)
+        palette.set_bad(alpha = 0.0)
+        
+        lvls = range(cmin, cmax)
+        ax.contourf(proj_lon_array, proj_lat_array, period_raw[sa,:][:,so], cmap=palette,
+        levels=lvls)
+
+        ax.set_frame_on(False)
+        ax.set_clip_on(False)
+        ax.set_position([0, 0, 1, 1])
     else:
-        pass   
+        pass 
 
     # get list of all tiles for certain geographic extents and zooms
     tiles_gen = mercantile.tiles(west=lon.min(), south=lat.min(), east=lon.max(), north=lat.max(), zooms=zoom_array)
@@ -216,8 +235,7 @@ def lambda_handler(event, context):
             with io.BytesIO() as out_img:
                 fig.savefig(out_img,format='png', dpi=dpi, pad_inches=0.0, transparent=True)
                 out_img.seek(0)
-                client = boto3.client('s3')
-                client.put_object(Body=out_img, Bucket=bucket_name, Key=filename,
+                s3.put_object(Body=out_img, Bucket=bucket_name, Key=filename,
                     ACL='public-read')
 
     # release memory
@@ -266,13 +284,9 @@ def make_tile_figure(height=256, width=256, dpi=256):
 
 
 if __name__ == "__main__":
-
-    # 'GFS_WINDS/20180725_06/10m/pickle/gfs_winds_20180725_06.pickle'
-    # 'WAVE_WATCH_3/20180819_06/pickle/ww3_data_20180819_06.pickle'
-    # 'HYCOM_OCEAN_CURRENTS_3D/20180826_00/0m/pickle/hycom_currents_20180826_00.pickle'
     
     event = {
-        'pickle_filepath': 'HYCOM_OCEAN_CURRENTS_3D/20180826_00/0m/pickle/hycom_currents_20180826_00.pickle',
+        'pickle_filepath': 'HYCOM_DATA/20180826_00/0m/ocean_current_speed/pickle/hycom_currents_20180826_00.pickle',
         'data_type': 'current_speed',
         'bucket_name': 'oceanmapper-data-storage', 
         'output_tilepath': 'test_tiles',
@@ -282,10 +296,4 @@ if __name__ == "__main__":
 
     context = {}
     lambda_handler(event,context)
-
-    # with open("gfs_winds_20180725_06.pickle", "rb") as f:
-    #     data = pickle.load(f)
-
-    # with open("wave_data_good.pickle", "rb") as f:
-    #     data = pickle.load(f)
 

@@ -26,8 +26,8 @@ zip -r lambda_package_api.zip *
 docker cp fb43bc2247cb:/lambda_package_api/lambda_package_api.zip ~
 
 cd ~/globalMapper/scripts/python_scripts
-zip -ur ~/lambda_package_api.zip utils api_utils
-zip -urj ~/lambda_package_api.zip api/get_model_field.py api/get_model_timeseries.py
+zip -ur ~/lambda_package_api.zip utils api_utils get_model_field_api.py
+
 
 # copy from current docker container to local machine
 docker ps -a
@@ -42,6 +42,8 @@ zip -ur lambda.zip <PATH_TO_LAMBDA_FUNCTION_FILE>
 #all encompassing lambda package..
 
 zip -ur ~/lambda_package.zip GFS_forecast_info.py GFS_lambda_initiator.py GFS_process_fields.py HYCOM_forecast_info.py HYCOM_3d_lambda_initiator.py HYCOM_process_3d_fields.py RTOFS_forecast_info.py RTOFS_3d_lambda_initiator.py RTOFS_process_3d_daily_fields.py WW3_forecast_info.py WW3_lambda_initiator.py WW3_process_fields.py tile_task_distributor.py process_tiles.py fetch_utils.py s3_bucket_cleaner.py
+
+zip -ur ~/lambda_package.zip GFS_forecast_info.py GFS_lambda_initiator.py GFS_process_fields.py HYCOM_forecast_info.py HYCOM_3d_lambda_initiator.py HYCOM_process_3d_fields.py RTOFS_forecast_info.py RTOFS_3d_lambda_initiator.py RTOFS_process_3d_daily_fields.py WW3_forecast_info.py WW3_lambda_initiator.py WW3_process_fields.py utils
 
 
 --- (SURFACE RTOFS)
@@ -157,10 +159,13 @@ fig.show()
 
 options= {
 opacity: 1,
-maxNativeZoom: 4,
-minNativeZoom: 4,
+maxNativeZoom: 3,
+minNativeZoom: 3,
 }
-hi = L.tileLayer('https://s3.us-east-2.amazonaws.com/oceanmapper-data-storage/HYCOM_OCEAN_CURRENTS_3D/20180825_00/0m/tiles/scalar/{z}/{x}/{y}.png',options).addTo(map);
+
+hi = L.tileLayer('https://s3.us-east-2.amazonaws.com/oceanmapper-data-storage/WAVE_WATCH_3/20180914_00/tiles/scalar/{z}/{x}/{y}.png',options).addTo(map);
+
+hi = L.tileLayer('https://s3.us-east-2.amazonaws.com/oceanmapper-data-storage/HYCOM_OCEAN_CURRENTS_3D/20180914_00/0m/tiles/scalar/{z}/{x}/{y}.png',options).addTo(map);
 
 hi= L.tileLayer('https://s3.us-east-2.amazonaws.com/oceanmapper-data-storage/test_tiles/{z}/{x}/{y}.png',options).addTo(map);
 hi= L.tileLayer('https://s3.us-east-2.amazonaws.com/oceanmapper-data-storage/GFS_WINDS/20180825_06/10m/tiles/scalar/{z}/{x}/{y}.png',options).addTo(map);

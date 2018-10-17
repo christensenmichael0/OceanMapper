@@ -1,37 +1,80 @@
 # some configuration variables for apis
 
 datasets = {
-    'hycom_currents': {
-        's3_folder': 'HYCOM_OCEAN_CURRENTS_3D',
-        'overlay_type': 'ocean',
-        'var_type': 'speed',
-        'data_type': 'json', 
-        'scalar_tiles': True, 
-        'vector_tiles': False
+    'HYCOM_DATA': {
+        'sub_resource': {
+            'ocean_current_speed': {
+                'data_prefix': 'hycom_currents',
+                'variables': ['u_vel','v_vel'],
+                'overlay_type': 'ocean',
+                'data_type': 'json', 
+                'scalar_tiles': True, 
+                'vector_tiles': False,
+                'data_tiles_zoom_level': 3,
+                'units': 'm/s'
+            }
+        }
     },
-    'rtofs_currents': {
-        's3_folder': 'RTOFS_OCEAN_CURRENTS_3D',
-        'overlay_type': 'ocean',
-        'var_type': 'speed',
-        'data_type': 'json',
-        'scalar_tiles': True, 
-        'vector_tiles': False
+    'RTOFS_DATA': {
+        'sub_resource': {
+            'ocean_current_speed': {
+                'data_prefix': 'rtofs_currents',
+                'variables': ['u_vel','v_vel'],
+                'overlay_type': 'ocean',
+                'data_type': 'json', 
+                'scalar_tiles': True, 
+                'vector_tiles': False,
+                'data_tiles_zoom_level': 3,
+                'units': 'm/s'
+            }
+        }
     },
-    'gfs_winds': {
-        's3_folder':'GFS_WINDS',
-        'overlay_type': 'all',
-        'var_type': 'speed',
-        'data_type': 'json',
-        'scalar_tiles': True, 
-        'vector_tiles': False
+    'GFS_DATA': {
+        'sub_resource': {
+            'wind_speed': {
+                'data_prefix': 'gfs_winds',
+                'variables': ['u_vel','v_vel'],
+                'overlay_type': 'all',
+                'data_type': 'json', 
+                'scalar_tiles': True, 
+                'vector_tiles': False,
+                'data_tiles_zoom_level': 2,
+                'units': 'm/s'
+            }
+        }
     },
-    'ww3_data': {
-        's3_folder': 'WAVE_WATCH_3',
-        'sub_resources': ['sig_wave_height','primary_wave_dir','primary_wave_period'],
-        'overlay_type': 'ocean',
-        'var_type': 'non-speed',
-        'data_type': 'pickle',
-        'scalar_tiles': True, 
-        'vector_tiles': True
+    'WW3_DATA': {
+        'sub_resource': {
+            'sig_wave_height': {
+                'data_prefix': 'ww3_htsgwsfc',
+                'variables': ['sig_wave_height'],
+                'overlay_type': 'ocean',
+                'data_type': 'pickle', 
+                'scalar_tiles': True, 
+                'vector_tiles': False,
+                'data_tiles_zoom_level': 1,
+                'units': 'm'
+            },
+            'primary_wave_dir': {
+                'data_prefix': 'ww3_dirpwsfc',
+                'variables': ['primary_wave_dir'],
+                'overlay_type': 'ocean',
+                'data_type': 'pickle', 
+                'scalar_tiles': False, 
+                'vector_tiles': True,
+                'data_tiles_zoom_level': 1,
+                'units': 'deg'
+            },
+            'primary_wave_period': {
+                'data_prefix': 'ww3_perpwsfc',
+                'variables': ['primary_wave_period'],
+                'overlay_type': 'ocean',
+                'data_type': 'pickle',
+                'scalar_tiles': True, 
+                'vector_tiles': False,
+                'data_tiles_zoom_level': 1,
+                'units': 's'
+            }
+        }
     }
 }

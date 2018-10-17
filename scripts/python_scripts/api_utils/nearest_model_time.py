@@ -1,14 +1,17 @@
 import numpy as np
 import datetime
 
-def get_available_model_times(dataset_folder,model_time_datetime,level_formatted,file_type,availability_struct):
+def get_available_model_times(dataset_folder,sub_resource_folder,model_time_datetime,
+        level_formatted,file_type,availability_struct):
     """
-    get_available_model_times(dataset_folder,model_time_datetime,level_formatted,file_type,availability_struct)
+    get_available_model_times(dataset_folder,sub_resource_folder,model_time_datetime,
+        level_formatted,file_type,availability_struct)
 
     This function is used to get the nearest available time with data for a specific model
     -----------------------------------------------------------------------
     Inputs: 
     dataset_folder (str): the s3 'folder' to search
+    sub_resource_folder (str): the s3 sub folder to search (i.e. ocean_current_speeds)
     model_time_datetime (datetime): the requested time to search against
     level_formatted (str): the level (altitude/depth) of the data (i.e. 10m)
     file_type (str): one of [json, pickle]
@@ -17,11 +20,10 @@ def get_available_model_times(dataset_folder,model_time_datetime,level_formatted
     Output: datetime representing the nearest available time (looking in reverse)
     -----------------------------------------------------------------------
     Author: Michael Christensen
-    Date Modified: 09/16/2018
+    Date Modified: 09/20/2018
     """
     dataset_type = file_type
-
-    available_times = availability_struct[dataset_folder]['level'][level_formatted][dataset_type]
+    available_times = availability_struct[dataset_folder][sub_resource_folder]['level'][level_formatted][dataset_type]
 
     available_times_dt = [datetime.datetime.strptime(datetime_str,'%Y%m%d_%H') 
         for datetime_str in available_times]

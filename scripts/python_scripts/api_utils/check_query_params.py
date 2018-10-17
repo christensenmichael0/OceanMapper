@@ -17,12 +17,14 @@ def check_query_params(event_query_params, required_query_params, availability_s
     Output: object detailing the status: OK or FAIL of specific query parameters
     -----------------------------------------------------------------------
     Author: Michael Christensen
-    Date Modified: 09/16/2018
+    Date Modified: 10/11/2018
     """
     query_param_checker_mapping = {
         'time': (check_time_param, []),
-        'model': (check_model_param, []),
-        'sub_resource': (check_model_subresources_param,[]),
+        'start_time': (check_time_param, []),
+        'end_time': (check_time_param, []),
+        'dataset': (check_dataset_param, []),
+        'sub_resource': (check_dataset_subresources_param,[]),
         'level': (check_level_param, []),
         'coordinates': (check_coordinates_param, [])
     }
@@ -34,18 +36,20 @@ def check_query_params(event_query_params, required_query_params, availability_s
         
         input = event_query_params['queryStringParameters'][param] or None
         
-        # need to keep track of the model in certain cases
+        # need to keep track of the specific_dataset in certain cases
         try:
-            model = event_query_params['queryStringParameters']['model']
+            specific_dataset = event_query_params['queryStringParameters']['dataset']
+            sub_resource = event_query_params['queryStringParameters']['sub_resource']
         except Exception as e:
-            model = None
+            specific_dataset = None
+            sub_resource = None
 
-        if param == 'model':
+        if param == 'dataset':
             func_args.extend([input, datasets])
         elif param == 'level':
-            func_args.extend([input, model, datasets, availability_struct])
+            func_args.extend([input, specific_dataset, sub_resource, datasets, availability_struct])
         elif param == 'sub_resource':
-            func_args.extend([input, model, datasets])
+            func_args.extend([input, specific_dataset, datasets])
         else:
             func_args.append(input)
         output_status = func(*func_args)
@@ -63,9 +67,9 @@ def filter_failed_params(query_param_validation):
     return failed_query_param_obj
 
 
-def check_time_param(model_time):
-    datetime_pattern=r'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}Z'
-    datetime_match = re.search(datetime_pattern,model_time)
+def check_time_param(dataset_time):
+    datetime_pattern=r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}Z$'
+    datetime_match = re.search(datetime_pattern,dataset_time)
     
     if datetime_match:
         return 'OK'
@@ -73,16 +77,16 @@ def check_time_param(model_time):
         return 'FAIL'
 
 
-def check_model_param(model,datasets):
-    valid_model = model in datasets.keys()
+def check_dataset_param(specific_dataset,datasets):
+    valid_dataset = specific_dataset in datasets.keys()
     
-    if valid_model:
+    if valid_dataset:
         return 'OK'
     else:
         return 'FAIL'
 
-def check_model_subresources_param(sub_resource,model,datasets):
-    valid_sub_resource = sub_resource in datasets[model]['sub_resources']
+def check_dataset_subresources_param(sub_resource,specific_dataset,datasets):
+    valid_sub_resource = sub_resource in datasets[specific_dataset]['sub_resource']
     
     if valid_sub_resource:
         return 'OK'
@@ -90,14 +94,13 @@ def check_model_subresources_param(sub_resource,model,datasets):
         return 'FAIL'
 
 
-def check_level_param(level, model, datasets, availability_struct):
-    if not level and model == 'ww3_data':
+def check_level_param(level, specific_dataset, sub_resource, datasets, availability_struct):
+    if not level and specific_dataset == 'WW3_DATA':
         return 'OK'
     else:
         try:
             level_formatted = level + 'm'
-            dataset_folder = datasets[model]['s3_folder']
-            if level_formatted in availability_struct[dataset_folder]['level'].keys():
+            if level_formatted in availability_struct[specific_dataset][sub_resource]['level'].keys():
                 return 'OK'
             else:
                 return 'FAIL'
@@ -118,45 +121,81 @@ def check_coordinates_param(coordinates):
 if __name__ == '__main__':
 
     datasets = {
-        'hycom_currents': {
-            's3_folder': 'HYCOM_OCEAN_CURRENTS_3D',
-            'overlay_type': 'ocean',
-            'data_type': 'json', 
-            'scalar_tiles': True, 
-            'vector_tiles': False
-        },
-        'rtofs_currents': {
-            's3_folder': 'RTOFS_OCEAN_CURRENTS_3D',
-            'overlay_type': 'ocean',
-            'data_type': 'json',
-            'scalar_tiles': True, 
-            'vector_tiles': False
-        },
-        'gfs_winds': {
-            's3_folder':'GFS_WINDS',
-            'overlay_type': 'all',
-            'data_type': 'json',
-            'scalar_tiles': True, 
-            'vector_tiles': False
-        },
-        'ww3_data': {
-            's3_folder': 'WAVE_WATCH_3',
-            'sub_resources': ['sig_wave_height','primary_wave_dir','primary_wave_period'],
-            'overlay_type': 'ocean',
-            'data_type': 'pickle',
-            'scalar_tiles': True, 
-            'vector_tiles': True
+    'HYCOM_DATA': {
+        'sub_resource': {
+            'ocean_current_speed': {
+                's3_folder': 'ocean_current_speed',
+                'data_prefix': 'hycom_currents',
+                'overlay_type': 'ocean',
+                'data_type': 'json', 
+                'scalar_tiles': True, 
+                'vector_tiles': False
+            }
+        }
+    },
+    'RTOFS_DATA': {
+        'sub_resource': {
+            'ocean_current_speed': {
+                's3_folder': 'ocean_current_speed',
+                'data_prefix': 'rtofs_currents',
+                'overlay_type': 'ocean',
+                'data_type': 'json', 
+                'scalar_tiles': True, 
+                'vector_tiles': False
+            }
+        }
+    },
+    'GFS_DATA': {
+        'sub_resource': {
+            'wind_speed': {
+                's3_folder': 'wind_speed',
+                'data_prefix': 'gfs_winds',
+                'overlay_type': 'all',
+                'data_type': 'json', 
+                'scalar_tiles': True, 
+                'vector_tiles': False
+            }
+        }
+    },
+    'WW3_DATA': {
+        'sub_resource': {
+            'sig_wave_height': {
+                's3_folder': 'sig_wave_height',
+                'data_prefix': 'ww3_htsgwsfc',
+                'overlay_type': 'ocean',
+                'data_type': 'json', 
+                'scalar_tiles': True, 
+                'vector_tiles': False
+            },
+            'primary_wave_dir': {
+                's3_folder': 'primary_wave_dir',
+                'data_prefix': 'ww3_dirpwsfc',
+                'overlay_type': 'ocean',
+                'data_type': 'json', 
+                'scalar_tiles': False, 
+                'vector_tiles': True
+            },
+            'primary_wave_period': {
+                's3_folder': 'primary_wave_period',
+                'data_prefix': 'ww3_perpwsfc',
+                'overlay_type': 'ocean',
+                'data_type': 'json', 
+                'scalar_tiles': True, 
+                'vector_tiles': False
+            }
         }
     }
+}
     
     event = {
         "queryStringParameters": {
             "level": "10",
-            "model": "hycom_currents",
-            "time": "2018-09-13T08:00Z",
+            "dataset": "HYCOM_DATA",
+            "sub_resource": "ocean_current_speed",
+            "time": "2018-09-16T08:00Z",
             "coordinates": "-72.0,42.0"
         }
     }
 
-    required_query_params = ['time','model','level','coordinates']
+    required_query_params = ['time','dataset','level','coordinates']
     check_query_params(event,required_query_params, datasets)

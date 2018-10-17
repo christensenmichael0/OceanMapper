@@ -4,12 +4,14 @@ import numpy as np
 import json
 import re
 
-from utils.s3_filepath_utils import build_file_path
+from utils.s3_filepath_utils import build_tiledata_path
 from utils.datasets import datasets
+from utils.point_locator import in_ocean
 from api_utils.response_constructor import generate_response
 from api_utils.check_query_params import check_query_params, filter_failed_params
 from api_utils.fetch_data_availability import grab_data_availability
 from api_utils.nearest_model_time import get_available_model_times
+from api_utils.get_model_value import get_model_value
 
 s3 = boto3.client('s3')
 bucket = 'oceanmapper-data-storage'
@@ -19,8 +21,7 @@ def lambda_handler(event, context):
     lambda_handler(event, context):
 
     This function is used in conjunction with aws api gateway (lambda proxy integration)
-    to pass json data representing a specific model field (closest to the requested time looking
-    backwards). If no data is available within 24 hours of the request time then empty data is returned.
+    to pass back the interpolated value of a dataset at a specific geographic coordinate
     -----------------------------------------------------------------------
     Inputs:
 
@@ -32,10 +33,13 @@ def lambda_handler(event, context):
     Output: response object
     -----------------------------------------------------------------------
     Author: Michael Christensen
-    Date Modified: 09/20/2018
+    Date Modified: 10/11/2018
     """
 
-    required_query_params = ['time','dataset','sub_resource','level']
+    # default headers for request
+    headers = {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'}
+
+    required_query_params = ['time','dataset','sub_resource','level','coordinates']
 
     # load data availability file from s3
     availability_struct = grab_data_availability()
@@ -56,9 +60,6 @@ def lambda_handler(event, context):
         }
         return generate_response(404, headers, response_body)
 
-    # default headers for request
-    headers = {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'}
-
     # model time
     model_time = event['queryStringParameters']['time']
     model_time_datetime = datetime.datetime.strptime(model_time,'%Y-%m-%dT%H:%MZ')
@@ -68,67 +69,71 @@ def lambda_handler(event, context):
 
     # sub resource
     sub_resource = event['queryStringParameters']['sub_resource']
+    sub_resource_folder = datasets[dataset]['sub_resource'][sub_resource]
+    dataset_prefix = sub_resource_folder['data_prefix']
+    dataset_units = sub_resource_folder['units']
 
     # model level
     level = event['queryStringParameters']['level']
     level_formatted = str(level) + 'm' if len(str(level)) else '' # wave data have no level
-            
-    sub_resource_folder = datasets[dataset]['sub_resource'][sub_resource]
-    dataset_prefix = sub_resource_folder['data_prefix']
-    dataset_type = sub_resource_folder['data_type']
-    scalar_tiles = sub_resource_folder['scalar_tiles']
-    vector_tiles = sub_resource_folder['vector_tiles']
 
-    available_time = get_available_model_times(dataset,sub_resource, model_time_datetime,
-        level_formatted,dataset_type,availability_struct)
+    # coordinates
+    coords = [float(coord) for coord in event['queryStringParameters']['coordinates'].split(',')]
+    overlay_type = datasets[dataset]['sub_resource'][sub_resource]['overlay_type']
+
+    coord_in_ocean = False # default
+    if overlay_type == 'ocean':
+        coord_in_ocean = in_ocean(coords[0],coords[1])
     
-    if available_time:
-        available_time_str = datetime.datetime.strftime(available_time,'%Y-%m-%dT%H:%MZ')
-
-        data_key, tile_keys = build_file_path(dataset, sub_resource, dataset_prefix, available_time, 
-            dataset_type, scalar_tiles, vector_tiles, level_formatted)
-
-        # get the file (if we arent dealing with waves)
-        if not dataset == 'WW3_DATA':
-            try:
-                raw_data = s3.get_object(Bucket=bucket, Key=data_key)
-                unpacked_data = raw_data.get('Body').read().decode('utf-8')
-            except Exception as e:
-                response_body = {
-                    'status': 'data not available',
-                }
-                return generate_response(404, headers, response_body)
-        else:
-            unpacked_data = None
-        
-        # contruct the response body 
+    # if model is (ocean only) then check the coords to make sure they are in the ocean
+    if not coord_in_ocean and overlay_type == 'ocean':
         response_body = {
-            'model': model,
-            'valid_time': available_time_str,
-            'data': unpacked_data,
-            'tile_paths': tile_keys
+            'data': None,
+            'status': 'point on land',
         }
         return generate_response(200, headers, response_body)
 
+    dataset_vars = sub_resource_folder['variables']
+    dataset_type = 'pickle'
+
+    available_time = get_available_model_times(dataset,sub_resource, model_time_datetime,
+        level_formatted, dataset_type, availability_struct)
+
+    if available_time:
+        available_time_str = datetime.datetime.strftime(available_time,'%Y-%m-%dT%H:%MZ')
+
+        # this is the subsetted .pickle data
+        data_key = build_tiledata_path(dataset, sub_resource, level_formatted, available_time, coords)
+        data_value = get_model_value(coords, data_key, sub_resource, dataset_vars)
+
+        # construct the response body 
+        response_body = {
+            'model': dataset,
+            'valid_time': available_time_str,
+            'data': data_value,
+            'units': dataset_units
+        }
+        return generate_response(200, headers, response_body)
     else:
         response_body = {
             'model': model,
             'valid_time': None,
             'data': None,
-            'tile_paths': None,
+            'units': None,
         }
         return generate_response(200, headers, response_body)
 
-    
+
 if __name__ == '__main__':
-    
+
     event = {
         "queryStringParameters": {
-            "level": "10",
+            "level": "0",
             "dataset": "HYCOM_DATA",
             "sub_resource": "ocean_current_speed",
-            "time": "2018-09-20T08:00Z"
+            "time": "2018-10-20T01:00Z",
+            "coordinates": "-81.58,23.88"
         }
     }
+
     lambda_handler(event,'')
-    

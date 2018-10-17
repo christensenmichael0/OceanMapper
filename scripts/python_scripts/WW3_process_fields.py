@@ -7,15 +7,19 @@ Created on Mon Apr  2 17:20:30 2018
 
 
 import json
+import datetime
+import pickle
+import time
+
 import boto3
 import numpy as np
 from scipy import interpolate
-import datetime
 import netCDF4
-import pickle
-import time
-from fetch_utils import get_opendapp_netcdf
-from tile_task_distributor import tile_task_distributor
+
+from utils.fetch_utils import get_opendapp_netcdf
+from utils.tile_task_distributor import tile_task_distributor
+from utils.pickle_task_distributor import pickle_task_distributor
+from utils.datasets import datasets
 
 
 def lambda_handler(event, context):
@@ -36,11 +40,14 @@ def lambda_handler(event, context):
     Output: A .pickle file are save to S3
     -----------------------------------------------------------------------
     Author: Michael Christensen
-    Date Modified: 08/19/2018
+    Date Modified: 10/08/2018
     """
 
     AWS_BUCKET_NAME = 'oceanmapper-data-storage'
-    TOP_LEVEL_FOLDER = 'WAVE_WATCH_3'
+    TOP_LEVEL_FOLDER = 'WW3_DATA'
+    SUB_RESOURCE_HTSGWSFC = 'sig_wave_height'
+    SUB_RESOURCE_DIRPWSFC = 'primary_wave_dir'
+    SUB_RESOURCE_PERPWSFC = 'primary_wave_period'
         
     # unpack event data
     url = event['url']
@@ -50,14 +57,39 @@ def lambda_handler(event, context):
     file = get_opendapp_netcdf(url) 
     formatted_folder_date = datetime.datetime.strftime(model_field_time,'%Y%m%d_%H')
 
-    output_pickle_path = (TOP_LEVEL_FOLDER + '/' + formatted_folder_date + '/pickle/' +
-        'ww3_data_' + formatted_folder_date + '.pickle')
+    output_pickle_path_htsgwsfc = (TOP_LEVEL_FOLDER + '/' + formatted_folder_date + 
+        '/' + SUB_RESOURCE_HTSGWSFC + '/pickle/' +'ww3_htsgwsfc_' + formatted_folder_date + '.pickle')
 
-    output_tile_scalar_path = (TOP_LEVEL_FOLDER + '/' + formatted_folder_date + 
-        '/tiles/scalar/')
+    output_tile_scalar_path_htsgwsfc = (TOP_LEVEL_FOLDER + '/' + formatted_folder_date + 
+        '/' + SUB_RESOURCE_HTSGWSFC + '/tiles/scalar/')
 
-    output_tile_vector_path = (TOP_LEVEL_FOLDER + '/' + formatted_folder_date + 
-        '/tiles/vector/')
+    output_tile_data_path_htsgwsfc = (TOP_LEVEL_FOLDER + '/' + formatted_folder_date +
+        '/' + SUB_RESOURCE_HTSGWSFC + '/tiles/data/')
+
+    output_pickle_path_dirpwsfc = (TOP_LEVEL_FOLDER + '/' + formatted_folder_date + 
+        '/' + SUB_RESOURCE_DIRPWSFC + '/pickle/' +'ww3_dirpwsfc_' + formatted_folder_date + '.pickle')
+
+    output_tile_vector_path_dirpwsfc = (TOP_LEVEL_FOLDER + '/' + formatted_folder_date + 
+        '/' + SUB_RESOURCE_DIRPWSFC + '/tiles/vector/')
+
+    output_tile_data_path_dirpwsfc = (TOP_LEVEL_FOLDER + '/' + formatted_folder_date +
+        '/' + SUB_RESOURCE_DIRPWSFC + '/tiles/data/')
+
+    output_pickle_path_perpwsfc = (TOP_LEVEL_FOLDER + '/' + formatted_folder_date + 
+        '/' + SUB_RESOURCE_PERPWSFC + '/pickle/' +'ww3_perpwsfc_' + formatted_folder_date + '.pickle')
+
+    output_tile_scalar_path_perpwsfc = (TOP_LEVEL_FOLDER + '/' + formatted_folder_date + 
+        '/' + SUB_RESOURCE_PERPWSFC + '/tiles/scalar/')
+
+    output_tile_data_path_perpwsfc = (TOP_LEVEL_FOLDER + '/' + formatted_folder_date +
+        '/' + SUB_RESOURCE_PERPWSFC + '/tiles/data/')
+
+    # get model origin time
+    init_time = file.variables['time'][0]
+    basetime_int = int(init_time)
+    extra_days = init_time - basetime_int
+    time_origin = (datetime.datetime.fromordinal(basetime_int) + 
+        datetime.timedelta(days = extra_days) - datetime.timedelta(days=1))
 
     lat  = file.variables['lat'][:]
     lon  = file.variables['lon'][:]
@@ -82,7 +114,7 @@ def lambda_handler(event, context):
     # ordered longitude arrays
     lon_ordered = lon_translate[lon_sort_indices]
 
-    # rebuild sig wave height data with correct longitude sorting (monotonic increasing) 
+    # rebuild sig wave height data with correct longitude sorting (monotonic increasing)
     height_data_cleaned = height_raw[lat_sort_indices,:][:,lon_sort_indices]
 
     # rebuild primary wave direction data with correct longitude sorting (monotonic increasing) 
@@ -91,20 +123,46 @@ def lambda_handler(event, context):
     # rebuild primary wave period data with correct longitude sorting (monotonic increasing) 
     period_data_cleaned = primary_period_raw[lat_sort_indices,:][:,lon_sort_indices]
 
-    # assign the raw data to a variable so we can pickle it for use with other scripts
-    raw_data = {'lat': lat_ordered, 'lon': lon_ordered, 'sig_wave_height': height_data_cleaned,
-    'primary_wave_dir': direction_data_cleaned, 'primary_wave_period': period_data_cleaned}
-    raw_data_pickle = pickle.dumps(raw_data)
+    # assign the raw data to variables so we can pickle it for use with other scripts
+    raw_data_htsgwsfc = {'lat': lat_ordered, 'lon': lon_ordered, 'sig_wave_height': height_data_cleaned,
+        'time_origin': time_origin}
+    raw_data_pickle_htsgwsfc = pickle.dumps(raw_data_htsgwsfc)
+
+    raw_data_dirpwsfc = {'lat': lat_ordered, 'lon': lon_ordered,'primary_wave_dir': direction_data_cleaned,
+        'time_origin': time_origin}
+    raw_data_pickle_dirpwsfc = pickle.dumps(raw_data_dirpwsfc)
+
+    raw_data_perpwsfc = {'lat': lat_ordered, 'lon': lon_ordered,'primary_wave_period': period_data_cleaned,
+        'time_origin': time_origin}
+    raw_data_pickle_perpwsfc = pickle.dumps(raw_data_perpwsfc)
 
     client = boto3.client('s3')
-    client.put_object(Body=raw_data_pickle, Bucket=AWS_BUCKET_NAME, Key=output_pickle_path)
+    client.put_object(Body=raw_data_pickle_htsgwsfc, Bucket=AWS_BUCKET_NAME, Key=output_pickle_path_htsgwsfc)
+    client.put_object(Body=raw_data_pickle_dirpwsfc, Bucket=AWS_BUCKET_NAME, Key=output_pickle_path_dirpwsfc)
+    client.put_object(Body=raw_data_pickle_perpwsfc, Bucket=AWS_BUCKET_NAME, Key=output_pickle_path_perpwsfc)
 
     # call an intermediate function to distribute tiling workload
-    tile_task_distributor(output_pickle_path, 'wave_amp', AWS_BUCKET_NAME, 
-        output_tile_scalar_path, range(3,4))
+    tile_task_distributor(output_pickle_path_htsgwsfc, 'wave_amp', AWS_BUCKET_NAME,
+        output_tile_scalar_path_htsgwsfc, range(3,4))
     
-    tile_task_distributor(output_pickle_path, 'wave_dir', AWS_BUCKET_NAME, 
-        output_tile_vector_path, range(3,5))
+    tile_task_distributor(output_pickle_path_dirpwsfc, 'wave_dir', AWS_BUCKET_NAME,
+        output_tile_vector_path_dirpwsfc, range(3,5))
+
+    tile_task_distributor(output_pickle_path_perpwsfc, 'wave_period', AWS_BUCKET_NAME,
+        output_tile_scalar_path_perpwsfc, range(3,4))
+
+    # call an intermediate function to distribute pickling workload (subsetting data by tile)
+    data_zoom_level_htsgwsfc = datasets[TOP_LEVEL_FOLDER]['sub_resource'][SUB_RESOURCE_HTSGWSFC]['data_tiles_zoom_level']
+    pickle_task_distributor(output_pickle_path_htsgwsfc, AWS_BUCKET_NAME, output_tile_data_path_htsgwsfc, 
+        data_zoom_level_htsgwsfc)
+
+    data_zoom_level_dirpwsfc = datasets[TOP_LEVEL_FOLDER]['sub_resource'][SUB_RESOURCE_DIRPWSFC]['data_tiles_zoom_level']
+    pickle_task_distributor(output_pickle_path_dirpwsfc, AWS_BUCKET_NAME, output_tile_data_path_dirpwsfc, 
+        data_zoom_level_dirpwsfc)
+
+    data_zoom_level_perpwsfc = datasets[TOP_LEVEL_FOLDER]['sub_resource'][SUB_RESOURCE_PERPWSFC]['data_tiles_zoom_level']
+    pickle_task_distributor(output_pickle_path_perpwsfc, AWS_BUCKET_NAME, output_tile_data_path_perpwsfc, 
+        data_zoom_level_perpwsfc)
 
     file.close()
 
