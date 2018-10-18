@@ -1,6 +1,7 @@
 import numpy as np
 import pickle
 from scipy import interpolate
+import datetime
 
 import boto3
 
@@ -36,9 +37,9 @@ def get_model_value(coords, data_key, sub_resource, dataset_vars, conn=None):
         data = pickle.loads(body_string)
     except Exception as e:
         if conn:
+            conn.send(None)
             conn.close()
         return
-
 
     if hasattr(data['lat'],'mask'):
         lat = data['lat'].data
@@ -83,9 +84,8 @@ def get_model_value(coords, data_key, sub_resource, dataset_vars, conn=None):
     if conn:
         conn.send(output)
         conn.close()
-
+    
     return output
-
 
 
 if __name__ == '__main__':

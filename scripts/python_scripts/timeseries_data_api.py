@@ -3,6 +3,7 @@ import datetime
 import numpy as np
 import json
 import re
+import os
 
 from multiprocessing import Process, Pipe
 
@@ -38,7 +39,7 @@ def lambda_handler(event, context):
     Output: response object
     -----------------------------------------------------------------------
     Author: Michael Christensen
-    Date Modified: 10/11/2018
+    Date Modified: 10/17/2018
     """
 
     # default headers for request
@@ -90,12 +91,13 @@ def lambda_handler(event, context):
     coords = [float(coord) for coord in event['queryStringParameters']['coordinates'].split(',')]
     overlay_type = datasets[dataset]['sub_resource'][sub_resource]['overlay_type']
 
+    check_ocean = os.getenv('check_ocean', False) # environment variable (easy adjument in lambda env)
     coord_in_ocean = False # default is not in ocean
-    if overlay_type == 'ocean':
+    if overlay_type == 'ocean' and check_ocean:
         coord_in_ocean = in_ocean(coords[0],coords[1]) # this function is slow maybe use coarser ocean polygons
     
     # if model is (ocean only) then check the coords to make sure they are in the ocean
-    if not coord_in_ocean and overlay_type == 'ocean':
+    if not coord_in_ocean and overlay_type == 'ocean' and check_ocean:
         response_body = {
             'data': None,
             'status': 'point on land',
@@ -171,7 +173,7 @@ if __name__ == '__main__':
             "level": "0",
             "dataset": "HYCOM_DATA",
             "sub_resource": "ocean_current_speed",
-            "start_time": "2018-10-15T01:00Z",
+            "start_time": "2018-10-16T01:00Z",
             "end_time": "2018-10-20T19:00Z",
             "coordinates": "-81.58,23.88"
         }
