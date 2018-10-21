@@ -159,7 +159,7 @@ def lambda_handler(event, context):
         return generate_response(200, headers, response_body)
     else:
         response_body = {
-            'model': model,
+            'model': dataset,
             'data': None,
             'units': None,
         }

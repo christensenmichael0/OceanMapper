@@ -103,16 +103,15 @@ def lambda_handler(event, context):
         
         # contruct the response body 
         response_body = {
-            'model': model,
+            'model': dataset,
             'valid_time': available_time_str,
             'data': unpacked_data,
             'tile_paths': tile_keys
         }
         return generate_response(200, headers, response_body)
-
     else:
         response_body = {
-            'model': model,
+            'model': dataset,
             'valid_time': None,
             'data': None,
             'tile_paths': None,
@@ -124,10 +123,10 @@ if __name__ == '__main__':
     
     event = {
         "queryStringParameters": {
-            "level": "10",
+            "level": "0",
             "dataset": "HYCOM_DATA",
             "sub_resource": "ocean_current_speed",
-            "time": "2018-09-20T08:00Z"
+            "time": "2018-10-20T08:00Z"
         }
     }
     lambda_handler(event,'')

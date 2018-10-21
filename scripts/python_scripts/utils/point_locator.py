@@ -1,6 +1,5 @@
 import fiona
 from shapely import geometry
-from shapely.prepared import prep
 
 def in_ocean(point_lon,point_lat):
     """

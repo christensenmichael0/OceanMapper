@@ -17,17 +17,15 @@ docker exec -it fb43bc2247cb bash
 
 mkdir lambda_package_api
 cd lambda_package_api
-pip3 install numpy scipy -t ./
+pip3 install numpy scipy mercantile fiona shapely-t ./
+zip -r lambda_package_api.zip *
+docker cp fb43bc2247cb:/lambda_package_api/lambda_package_api.zip ~
+cd ~/globalMapper/scripts/python_scripts
+zip -ur ~/lambda_package_api.zip utils api_utils get_model_field_api.py point_data_api.py timeseries_data_api.py
 
 mkdir lambda_package
 cd lambda_package
 pip3 install bs4 matplotlib mercantile numpy pyproj scipy netCDF4 pillow cmocean -t ./
-zip -r lambda_package_api.zip *
-docker cp fb43bc2247cb:/lambda_package_api/lambda_package_api.zip ~
-
-cd ~/globalMapper/scripts/python_scripts
-zip -ur ~/lambda_package_api.zip utils api_utils get_model_field_api.py
-
 
 # copy from current docker container to local machine
 docker ps -a
@@ -35,16 +33,17 @@ docker ps -a | grep "dacut" | awk '{print $1}'
 
 docker cp <CONTAINER_ID>:<DOCKER_PATH_TO_ZIP_FILE> <LOCAL_PATH>
 docker cp fb43bc2247cb:/lambda_package/lambda_package.zip ~
+docker cp fb43bc2247cb:/lambda_package_api/lambda_package_.zip ~
+
 
 # add lambda function files to zipped folder
 zip -ur lambda.zip <PATH_TO_LAMBDA_FUNCTION_FILE>
 
 #all encompassing lambda package..
+zip -ur ~/lambda_package.zip GFS_forecast_info.py GFS_lambda_initiator.py GFS_process_fields.py HYCOM_forecast_info.py HYCOM_3d_lambda_initiator.py HYCOM_process_3d_fields.py RTOFS_forecast_info.py RTOFS_3d_lambda_initiator.py RTOFS_process_3d_daily_fields.py WW3_forecast_info.py WW3_lambda_initiator.py WW3_process_fields.py process_tiles.py process_pickle.py utils
 
-zip -ur ~/lambda_package.zip GFS_forecast_info.py GFS_lambda_initiator.py GFS_process_fields.py HYCOM_forecast_info.py HYCOM_3d_lambda_initiator.py HYCOM_process_3d_fields.py RTOFS_forecast_info.py RTOFS_3d_lambda_initiator.py RTOFS_process_3d_daily_fields.py WW3_forecast_info.py WW3_lambda_initiator.py WW3_process_fields.py tile_task_distributor.py process_tiles.py fetch_utils.py s3_bucket_cleaner.py
-
-zip -ur ~/lambda_package.zip GFS_forecast_info.py GFS_lambda_initiator.py GFS_process_fields.py HYCOM_forecast_info.py HYCOM_3d_lambda_initiator.py HYCOM_process_3d_fields.py RTOFS_forecast_info.py RTOFS_3d_lambda_initiator.py RTOFS_process_3d_daily_fields.py WW3_forecast_info.py WW3_lambda_initiator.py WW3_process_fields.py utils
-
+# size of zip folder
+unzip -l yourzipfile.zip
 
 --- (SURFACE RTOFS)
 
@@ -184,6 +183,20 @@ payload['zoom_array'] = list(range(4,7)
 AWS_BUCKET_NAME='oceanmapper-data-storage'
 output_pickle_path='GFS_WINDS/20180813_18/10m/pickle/gfs_winds_20180813_18.pickle'
 output_tile_path='blahblah'
+
+var velocityLayer = L.velocityLayer({
+		displayValues: true,
+		displayOptions: {
+			velocityType: 'GBR Water',
+			displayPosition: 'bottomleft',
+			displayEmptyString: 'No water data'
+		},
+		data: data,
+		maxVelocity: 1.0,
+		velocityScale: 0.1 // arbitrary default 0.005
+	});
+
+  map.addLayer(velocityLayer)
 
 
 

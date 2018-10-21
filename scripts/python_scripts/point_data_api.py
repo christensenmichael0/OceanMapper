@@ -115,10 +115,11 @@ def lambda_handler(event, context):
             'data': data_value,
             'units': dataset_units
         }
+        print(data_value)
         return generate_response(200, headers, response_body)
     else:
         response_body = {
-            'model': model,
+            'model': dataset,
             'valid_time': None,
             'data': None,
             'units': None,
