@@ -1,3 +1,11 @@
+python3 -m venv ~/env/oceanmapper
+source ~/env/oceanmapper/bin/activate
+
+# FRONT END (CRAE)
+https://originmaster.com/running-create-react-app-and-express-crae-on-heroku-c39a39fe7851
+https://github.com/Johnnycon/crae-env
+
+
 # fig, axes = plt.subplots()
 # axes.imshow(data['u_vel'], origin='lower')
 # or 
@@ -26,6 +34,7 @@ zip -ur ~/lambda_package_api.zip utils api_utils get_model_field_api.py point_da
 mkdir lambda_package
 cd lambda_package
 pip3 install bs4 matplotlib mercantile numpy pyproj scipy netCDF4 pillow cmocean -t ./
+zip -r lambda_package.zip *
 
 # copy from current docker container to local machine
 docker ps -a

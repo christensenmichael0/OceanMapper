@@ -2,13 +2,49 @@ import numpy as np
 import pickle
 from scipy import interpolate
 import datetime
+import time
 
 import boto3
+from functools import wraps
 
 s3 = boto3.client('s3')
 bucket = 'oceanmapper-data-storage'
 
+def retry(ExceptionToCheck, tries=5, delay=.1):
+    """
+    retry(ExceptionToCheck, tries=4, delay=.1)
 
+    Retry calling the decorated function a certain number of times with some 
+    sleep interval between.
+
+    http://www.saltycrane.com/blog/2009/11/trying-out-retry-decorator-python/
+    original from: http://wiki.python.org/moin/PythonDecoratorLibrary#Retry
+
+    Inputs:
+    ExceptionToCheck (Exception or tuple): the exception to check. may be a tuple of exceptions to check
+    tries (int): number of times to try (not retry) before giving up
+    delay (float): delay between retries in seconds
+    """
+    def deco_retry(f):
+        @wraps(f)
+        def f_retry(*args, **kwargs):
+            mtries, mdelay = tries, delay
+            while mtries > 1:
+                try:
+                    return f(*args, **kwargs)
+                except ExceptionToCheck as e:
+                    time.sleep(mdelay)
+                    mtries -= 1
+            else:
+                if 'conn' in kwargs:
+                    conn.send(None)
+                    conn.close()
+                return
+
+        return f_retry  # true decorator
+    return deco_retry
+
+@retry(Exception, tries=5, delay=.1)
 def get_model_value(coords, data_key, sub_resource, dataset_vars, conn=None):
     """
     get_model_value(coords, data_key, sub_resource, dataset_vars, conn=None)
@@ -36,10 +72,7 @@ def get_model_value(coords, data_key, sub_resource, dataset_vars, conn=None):
         body_string = pickle_data['Body'].read()
         data = pickle.loads(body_string)
     except Exception as e:
-        if conn:
-            conn.send(None)
-            conn.close()
-        return
+        raise Exception("Failed to load data from s3")
 
     if hasattr(data['lat'],'mask'):
         lat = data['lat'].data
@@ -72,9 +105,9 @@ def get_model_value(coords, data_key, sub_resource, dataset_vars, conn=None):
         var_abs = np.sqrt(u_vel**2 + v_vel**2)
         # if sub_resource is wind then convert this wind vector to the meteorological convention (from)
         if sub_resource == 'wind_speed':
-            compass_deg = 270 - (np.arctan2(v_vel, u_vel) * (180/np.pi))
+            compass_deg = (270 - (np.arctan2(v_vel, u_vel) * (180/np.pi))) % 360
         elif sub_resource == 'ocean_current_speed':
-            compass_deg = 90 - (np.arctan2(v_vel, u_vel) * (180/np.pi))
+            compass_deg = (90 - (np.arctan2(v_vel, u_vel) * (180/np.pi))) % 360
 
         output = {'val': var_abs, 'direction': compass_deg, 'time_origin': time_origin}
     else:
@@ -95,4 +128,4 @@ if __name__ == '__main__':
     sub_resource = 'ocean_current_speed'
     data_key='HYCOM_DATA/20181023_00/ocean_current_speed/0m/pickle/hycom_currents_20181023_00.pickle'
 
-    get_model_value(coords, data_key, sub_resource, dataset_vars)
+    get_model_value(coords, data_key, sub_resource, dataset_vars, conn='mock_con')
