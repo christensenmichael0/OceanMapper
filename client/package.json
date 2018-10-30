@@ -4,6 +4,10 @@
   "private": true,
   "proxy": "http://localhost:3001",
   "dependencies": {
+    "@material-ui/core": "^3.3.2",
+    "@material-ui/icons": "^3.0.1",
+    "esri-leaflet": "^2.2.3",
+    "leaflet": "^1.3.4",
     "leaflet-velocity": "^1.2.4",
     "react": "^16.5.2",
     "react-dom": "^16.5.2",
