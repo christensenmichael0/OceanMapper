@@ -7,6 +7,7 @@ import CssBaseline from '@material-ui/core/CssBaseline';
 import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
 import List from '@material-ui/core/List';
+import Typography from '@material-ui/core/Typography';
 import Divider from '@material-ui/core/Divider';
 import IconButton from '@material-ui/core/IconButton';
 import MenuIcon from '@material-ui/icons/Menu';
@@ -30,8 +31,6 @@ const styles = theme => ({
       easing: theme.transitions.easing.sharp,
       duration: theme.transitions.duration.leavingScreen,
     }),
-    'background': 'transparent',
-    'boxShadow': 'none',
   },
   appBarShift: {
     width: `calc(100% - ${drawerWidth}px)`,
@@ -44,10 +43,6 @@ const styles = theme => ({
   menuButton: {
     marginLeft: 12,
     marginRight: 20,
-    backgroundColor: theme.palette.primary.main,
-    '&:hover': {
-      backgroundColor: theme.palette.secondary.main,
-    },
   },
   hide: {
     display: 'none',
@@ -70,7 +65,13 @@ const styles = theme => ({
     left: 0,
     right: 0,
     bottom: 0,
-    top: 0,
+    top: 56, 
+    [`${theme.breakpoints.up('xs')} and (orientation: landscape)`]: { 
+      top: 48, 
+    }, 
+    [theme.breakpoints.up('sm')]: { 
+      top: 64, 
+    },
   }, 
 });
 
@@ -102,12 +103,16 @@ class PersistentDrawerLeft extends React.Component {
         >
           <Toolbar disableGutters={!open}>
             <IconButton
+              color="inherit"
               aria-label="Open drawer"
               onClick={this.handleDrawerOpen}
               className={classNames(classes.menuButton, open && classes.hide)}
             >
               <MenuIcon />
             </IconButton>
+            <Typography variant="h6" color="inherit" noWrap>
+              Persistent drawer
+            </Typography>
           </Toolbar>
         </AppBar>
         <Drawer
