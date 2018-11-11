@@ -22,4 +22,6 @@ let TOC = [
       },
     ]
   },
-]
+];
+
+export { TOC };
