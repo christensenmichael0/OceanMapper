@@ -20,16 +20,16 @@ we need to send off individual requests for the tiles
 docker run -it dacut/amazon-linux-python-3.6
 
 ** (restart and run)
-docker restart fb43bc2247cb
-docker exec -it fb43bc2247cb bash
+docker restart 62f0320eafbc
+docker exec -it 62f0320eafbc bash
 
 mkdir lambda_package_api
 cd lambda_package_api
 pip3 install numpy scipy mercantile fiona shapely-t ./
 zip -r lambda_package_api.zip *
-docker cp fb43bc2247cb:/lambda_package_api/lambda_package_api.zip ~
+docker cp 62f0320eafbc:/lambda_package_api/lambda_package_api.zip ~
 cd ~/globalMapper/scripts/python_scripts
-zip -ur ~/lambda_package_api.zip utils api_utils get_model_field_api.py point_data_api.py timeseries_data_api.py
+zip -ur ~/lambda_package_api.zip utils api_utils get_model_field_api.py point_data_api.py timeseries_data_api.py profile_data_api.py
 
 mkdir lambda_package
 cd lambda_package

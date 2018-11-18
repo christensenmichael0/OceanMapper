@@ -22,7 +22,7 @@ export const styles = theme => {
         cursor: 'pointer',
       },
       '&$expanded': {
-        minHeight: 64,
+        minHeight: 48, //64
       },
       '&$focused': {
         backgroundColor: theme.palette.grey[300],
@@ -47,7 +47,7 @@ export const styles = theme => {
         paddingRight: 32,
       },
       '&$expanded': {
-        margin: '20px 0',
+        margin: '15px 0',
       },
     },
     /* Styles applied to the `IconButton` component when `expandIcon` is supplied. */

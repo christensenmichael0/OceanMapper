@@ -70,19 +70,31 @@ const styles = theme => ({
 });
 
 class PersistentDrawerLeft extends React.Component {
-  state = {
-    open: false,
-  };
+  constructor(props) {
+    super(props);
+    
+    this.state = {
+      open: false,
+    };
 
-  handleDrawerOpen = () => {
+    this.handleDrawerOpen = this.handleDrawerOpen.bind(this);
+    this.handleDrawerClose = this.handleDrawerClose.bind(this);
+  }
+
+  handleDrawerOpen() {
     this.setState({ open: true });
   };
 
-  handleDrawerClose = () => {
+  handleDrawerClose() {
     this.setState({ open: false });
   };
 
+  componentDidMount() {
+    console.log('drawer component mounted');
+  }
+
   render() {
+    console.log('drawer rendered')
     const { classes, theme } = this.props;
     const { open } = this.state;
 
@@ -120,7 +132,7 @@ class PersistentDrawerLeft extends React.Component {
             </IconButton>
           </div>
           <Divider />
-          <TableOfContents />
+          <TableOfContents {...this.props}/>
         </Drawer>
         <main className={classes.content}>
           <Map />

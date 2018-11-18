@@ -30,6 +30,7 @@ export const styles = theme => {
     /* Styles applied to the root element. */
     root: {
       position: 'relative',
+      marginBottom: '2px',
       transition: theme.transitions.create(['margin'], transition),
       '&:before': {
         position: 'absolute',
@@ -67,7 +68,7 @@ export const styles = theme => {
         marginTop: 0,
       },
       '&:last-child': {
-        marginBottom: 0,
+        marginBottom: '5px',
       },
       '&:before': {
         opacity: 0,
