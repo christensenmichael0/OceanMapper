@@ -18,7 +18,7 @@ const styles = theme => ({
   },
   heading: {
     fontSize: theme.typography.pxToRem(15),
-    fontWeight: theme.typography.fontWeightRegular,
+    fontWeight: theme.typography.fontWeightMedium,
   },
   expansionDetailRoot: {
     display: 'block',
@@ -27,8 +27,7 @@ const styles = theme => ({
 });
 
 function TOCExpansionPanel(props) {
-  const { classes, defaultExpanded } = props;
-
+  const { classes, theme, defaultExpanded } = props;
   return (
     <div className={classes.root}>
       <ExpansionPanel
@@ -54,6 +53,7 @@ function TOCExpansionPanel(props) {
 
 TOCExpansionPanel.propTypes = {
   classes: PropTypes.object.isRequired,
+  theme: PropTypes.object.isRequired,
 };
 
-export default withStyles(styles)(TOCExpansionPanel);
+export default withStyles(styles, { withTheme: true })(TOCExpansionPanel);

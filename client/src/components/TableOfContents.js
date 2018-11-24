@@ -15,11 +15,16 @@ import TOCExpansionPanel from './TOCExpansionPanel';
 import FormGroup from '@material-ui/core/FormGroup';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Switch from '@material-ui/core/Switch';
+import LevelSelector from './LevelSelector';
 
 
 // https://stackoverflow.com/questions/35905988/react-js-how-to-append-a-component-on-click
 
-const styles = theme => ({});
+const styles = theme => ({
+  img: {
+    width: '100%',
+  },
+});
 
 // class TableOfContents extends React.Component {
 //   constructor(props) {
@@ -38,7 +43,8 @@ const styles = theme => ({});
 // }
 
 function TableOfContents(props) {
-  const {toc, ...other} = props;
+  const {toc, classes, ...other} = props;
+  // debugger
   console.log(toc)
 
   const buildContents = categoryObj => {
@@ -49,39 +55,49 @@ function TableOfContents(props) {
             layer['subResources'].map((subresource, indx) => {
               if (subresource['visibleTOC']) {
                 return (
-                  <FormGroup row={false}>
-                    <FormControlLabel
-                      control={
-                        <Switch
-                          checked={props[subresource['id']] ? props[subresource['id']]['isOn'] : false}
-                          color='secondary'
-                          onChange={props.handleLayerToggle.bind(this, subresource['id'])}
-                          value={subresource['id']}
-                        />
-                      }
-                      label={subresource['niceName']}
-                    />
-                  </FormGroup>
+                  <React.Fragment>
+                    <FormGroup row={false}>
+                      <FormControlLabel
+                        control={
+                          <Switch
+                            checked={props[subresource['id']] ? props[subresource['id']]['isOn'] : subresource['defaultOn']}
+                            color='secondary'
+                            onChange={props.handleLayerToggle.bind(this, subresource['id'])}
+                            value={subresource['id']}
+                          />
+                        }
+                        label={subresource['niceName']}
+                      />
+                    </FormGroup>
+                    {(props[subresource['id']] ? props[subresource['id']]['isOn'] : subresource['defaultOn']) && 
+                    <React.Fragment>
+                      {subresource['legendUrl'] ? <img src={subresource['legendUrl']} alt='data legend' className={classNames(classes.img)}/> : ''}
+                      <LevelSelector />
+                      </React.Fragment>
+                    }
+                  </React.Fragment>
                 )
               }
             })
           )
         } else {
-          return (
-            <FormGroup row={false}>
-              <FormControlLabel
-                control={
-                  <Switch
-                    // checked={layer['defaultOn']}
-                    color='secondary'
-                    onChange={()=> console.log('changed!')}
-                    value="checkedA"
-                  />
-                }
-                label={layer['niceName']}
-              />
-            </FormGroup>
-          )
+          if (layer['visibleTOC']) {
+            return (
+              <FormGroup row={false}>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={props[layer['id']] ? props[layer['id']]['isOn'] : layer['defaultOn']}
+                      color='secondary'
+                      onChange={props.handleLayerToggle.bind(this, layer['id'])}
+                      value={layer['id']}
+                    />
+                  }
+                  label={layer['niceName']}
+                />
+              </FormGroup>
+            )
+          }
         }
       })
     )

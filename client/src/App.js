@@ -29,27 +29,27 @@ class App extends Component {
   }
 
   populateAvailableLevels(data) {
-    let dataset, subResource, levels, layers = {}, TOClayers = [...this.state.toc];
+    let dataset, subResource, levels, layers = {}, categories = [...this.state.toc];
     
-    let metocDatasetMappingIndx = this.findObjIndex(TOClayers, 'Category', 'MetOcean');
+    let metocDatasetMappingIndx = this.findObjIndex(categories, 'Category', 'MetOcean');
     for (dataset in data) {
-      let datasetIndx = this.findObjIndex(TOClayers[metocDatasetMappingIndx]['Layers'], 's3Name', dataset);
+      let datasetIndx = this.findObjIndex(categories[metocDatasetMappingIndx]['Layers'], 's3Name', dataset);
       if (datasetIndx === -1) {
       	continue
       }
 
       for (subResource in data[dataset]) {
-      	let subResourceIndx = this.findObjIndex(TOClayers[metocDatasetMappingIndx]['Layers'][datasetIndx]['subResources'],
+      	let subResourceIndx = this.findObjIndex(categories[metocDatasetMappingIndx]['Layers'][datasetIndx]['subResources'],
       		's3Name',subResource);
-        let layerObj = TOClayers[metocDatasetMappingIndx]['Layers'][datasetIndx]['subResources'][subResourceIndx];
-        let categoryVisible = TOClayers[metocDatasetMappingIndx]['visibleTOC'];
+        let layerObj = categories[metocDatasetMappingIndx]['Layers'][datasetIndx]['subResources'][subResourceIndx];
+        let categoryVisible = categories[metocDatasetMappingIndx]['visibleTOC'];
         let layerObjVisible = layerObj['visibleTOC'];
         
         if (categoryVisible && layerObjVisible) {
           let id = layerObj['id']
           
           levels = Object.keys(data[dataset][subResource]['level']).map(level => parseInt(level)).sort(function(a, b){return a-b});
-          TOClayers[metocDatasetMappingIndx]['Layers'][datasetIndx]['subResources'][subResourceIndx]['availableLevels'] = levels;
+          categories[metocDatasetMappingIndx]['Layers'][datasetIndx]['subResources'][subResourceIndx]['availableLevels'] = levels;
 
           // layers[`isOn_${id}`] = layerObj['defaultOn'];
           // layers[id] = layerObj['defaultOn'];
@@ -61,7 +61,7 @@ class App extends Component {
     }
     // Dont mutate data
     // / isLoading should probably be turned off after inital data pull.. keep as is for now
-    this.setState({toc: TOClayers, isLoading: false, ...layers})
+    this.setState({toc: categories, isLoading: false, ...layers})
   }
 
   handleLayerToggle(layerID, event) {
@@ -69,7 +69,21 @@ class App extends Component {
     const layerAttr = Object.assign({}, this.state[layerID], {isOn: event.target.checked})
     this.setState({ [layerID]: layerAttr});
     // this.setState({[layerID]: event.target.checked})
-  } 
+  }
+
+  componentWillMount() {
+    let layers = {}, categories = [...this.state.toc];
+
+    categories.map((category, outerIndx) => {
+      if (category['Category'] !== 'MetOcean' && category['visibleTOC']) {
+        category['Layers'].map((layerObj, innerIndx) => {
+          let id = layerObj['id'];
+          layers[id] = {isOn: layerObj['defaultOn']};
+        })
+      }
+    })
+    this.setState({...layers});
+  }
 
   componentDidMount() {
     console.log('App component mounted');

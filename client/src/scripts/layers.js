@@ -11,7 +11,8 @@ let TOC = [
         {
           id: 'hycom_currents',
           s3Name: 'ocean_current_speed',
-          niceName: 'HYCOM Currents', 
+          niceName: 'HYCOM Currents',
+          legendUrl: 'https://s3.us-east-2.amazonaws.com/oceanmapper-data-storage/map_legends/current_speed_colorbar.png',
           availableLevels: [],
           visibleTOC: true,
           defaultOn: true
@@ -26,7 +27,8 @@ let TOC = [
         {
           id: 'rtofs_currents',
           s3Name: 'ocean_current_speed',
-          niceName: 'RTOFS Currents', 
+          niceName: 'RTOFS Currents',
+          legendUrl: 'https://s3.us-east-2.amazonaws.com/oceanmapper-data-storage/map_legends/current_speed_colorbar.png',
           availableLevels: [],
           visibleTOC: false,
           defaultOn: false
@@ -41,7 +43,8 @@ let TOC = [
         {
           id: 'gfs_winds',
           s3Name: 'wind_speed',
-          niceName: 'GFS Winds', 
+          niceName: 'GFS Winds',
+          legendUrl: 'https://s3.us-east-2.amazonaws.com/oceanmapper-data-storage/map_legends/wind_speed_colorbar.png',
           availableLevels: [],
           visibleTOC: true,
           defaultOn: false
@@ -56,7 +59,8 @@ let TOC = [
         {
           id: 'ww3_sig_wave_height',
           s3Name: 'sig_wave_height',
-          niceName: ' WW3 Signficant Wave Height', 
+          niceName: ' WW3 Signficant Wave Height',
+          legendUrl: 'https://s3.us-east-2.amazonaws.com/oceanmapper-data-storage/map_legends/wave_amp_colorbar.png',
           availableLevels: [],
           visibleTOC: true,
           defaultOn: false
@@ -64,7 +68,8 @@ let TOC = [
         {
           id: 'www_primary_wave_dir',
           s3Name: 'primary_wave_dir',
-          niceName: 'WW3 Primary Wave Direction', 
+          niceName: 'WW3 Primary Wave Direction',
+          legendUrl: '',
           availableLevels: [],
           visibleTOC: true,
           defaultOn: false
@@ -72,7 +77,8 @@ let TOC = [
         {
           id: 'ww3_primary_wave_period',
           s3Name: 'primary_wave_period',
-          niceName: 'WW3 Primary Wave Period', 
+          niceName: 'WW3 Primary Wave Period',
+          legendUrl: 'https://s3.us-east-2.amazonaws.com/oceanmapper-data-storage/map_legends/wave_period_colorbar.png',
           availableLevels: [],
           visibleTOC: true,
           defaultOn: false
@@ -121,7 +127,7 @@ let TOC = [
         id: 'gebco_bathy',
         niceName: 'GEBCO Bathmetry',
         visibleTOC: true,
-        defaultOn: false
+        defaultOn: true
       }
     ]
   },

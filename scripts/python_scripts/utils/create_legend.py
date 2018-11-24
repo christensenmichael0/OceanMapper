@@ -8,6 +8,8 @@ import boto3
 import numpy as np
 import mercantile
 import pyproj
+import matplotlib
+matplotlib.use('agg')
 from matplotlib import pyplot as plt, cm
 import matplotlib.colors as colors
 import cmocean
@@ -24,7 +26,7 @@ cmap_config = {
     'current_speed': {
         'color_map': cm.get_cmap('magma'), 
         'data_range': [0,2],
-        'cb_ticks': [0,0.25,0.5,0.75,1.0,1.25,1.5,1.75,2.0],
+        'cb_ticks': [0,0.5,1.0,1.5,2.0],
         'cb_label': 'Current Speed (m/s)'
     },
     'wave_amp': {
@@ -107,7 +109,7 @@ def create_legend(info):
     data_cmap = cmap_config[data_type]['color_map']
     cmin, cmax = cmap_config[data_type]['data_range']
 
-    FIGSIZE = (6,6)
+    FIGSIZE = (3.5,3.5)
     plt.figure(figsize=FIGSIZE)
 
     if data_type == 'wind_speed' or data_type == 'current_speed':
@@ -204,19 +206,19 @@ if __name__ == "__main__":
 
     data_info_obj = {
         'ww3_period': {
-            'pickle_filepath': 'WW3_DATA/20181023_00/primary_wave_period/pickle/ww3_perpwsfc_20181023_00.pickle',
+            'pickle_filepath': 'WW3_DATA/20181121_00/primary_wave_period/pickle/ww3_perpwsfc_20181121_00.pickle',
             'data_type': 'wave_period',
         },
         'ww3_height': {
-            'pickle_filepath': 'WW3_DATA/20181023_00/sig_wave_height/pickle/ww3_htsgwsfc_20181023_00.pickle',
+            'pickle_filepath': 'WW3_DATA/20181121_00/sig_wave_height/pickle/ww3_htsgwsfc_20181121_00.pickle',
             'data_type': 'wave_amp',
         },
         'hycom_currents': {
-            'pickle_filepath': 'HYCOM_DATA/20181015_00/ocean_current_speed/0m/pickle/hycom_currents_20181015_00.pickle',
+            'pickle_filepath': 'HYCOM_DATA/20181121_00/ocean_current_speed/0m/pickle/hycom_currents_20181121_00.pickle',
             'data_type': 'current_speed',
         },
         'gfs_winds': {
-            'pickle_filepath': 'GFS_DATA/20181026_00/wind_speed/10m/pickle/gfs_winds_20181026_00.pickle',
+            'pickle_filepath': 'GFS_DATA/20181121_00/wind_speed/10m/pickle/gfs_winds_20181121_00.pickle',
             'data_type': 'wind_speed',
         }
     }
