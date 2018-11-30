@@ -72,8 +72,11 @@ function TableOfContents(props) {
                     {(props[subresource['id']] ? props[subresource['id']]['isOn'] : subresource['defaultOn']) && 
                     <React.Fragment>
                       {subresource['legendUrl'] ? <img src={subresource['legendUrl']} alt='data legend' className={classNames(classes.img)}/> : ''}
-                      <LevelSelector />
-                      </React.Fragment>
+                      <LevelSelector 
+                        availableLevels={subresource['availableLevels']}
+                        presentLevel={props[subresource['id']] ? props[subresource['id']]['level'] : null}
+                      />
+                    </React.Fragment>
                     }
                   </React.Fragment>
                 )

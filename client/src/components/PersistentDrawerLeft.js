@@ -13,11 +13,11 @@ import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import TableOfContents from './TableOfContents';
 import Map from './Map';
-import Slider from '@material-ui/lab/Slider';
-import Typography from '@material-ui/core/Typography';
+import TimeSlidler from './TimeSlider';
+import externalStyles from '../scripts/styleVariables';
 
-const drawerWidth = 340;
-const drawerWidthNarrow = 280; // for small viewports (< 600px)
+const drawerWidth = externalStyles.drawerWidth;
+const drawerWidthNarrow = externalStyles.drawerWidthNarrow; // for small viewports (< 600px)
 
 const styles = theme => ({
   root: {
@@ -34,7 +34,7 @@ const styles = theme => ({
   appBarShift: {
     width: `calc(100% - ${drawerWidth}px)`,
     marginLeft: drawerWidth,
-    [`${theme.breakpoints.down('xs')}`]: { 
+    [`${theme.breakpoints.down('sm')}`]: { 
       width: `calc(100% - ${drawerWidthNarrow}px)`,
       marginLeft: drawerWidthNarrow, 
     }, 
@@ -56,14 +56,14 @@ const styles = theme => ({
   },
   drawer: {
     width: drawerWidth,
-    [`${theme.breakpoints.down('xs')}`]: { 
+    [`${theme.breakpoints.down('sm')}`]: { 
       width: drawerWidthNarrow, 
     }, 
     flexShrink: 0,
   },
   drawerPaper: {
     width: drawerWidth, 
-    [`${theme.breakpoints.down('xs')}`]: { 
+    [`${theme.breakpoints.down('sm')}`]: { 
       width: drawerWidthNarrow, 
     }
   },
@@ -79,46 +79,6 @@ const styles = theme => ({
     right: 0,
     bottom: 0,
     top: 0,
-  },
-  sliderDiv: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    // width: `calc(100% - 20px)`,
-    width: '400px',
-    margin: 10,
-    zIndex: 500,
-    overflow: 'hidden',
-    borderRadius: '2px',
-    backgroundColor: theme.palette.primary.main,
-    transition: theme.transitions.create(['left', 'width'], {
-      easing: theme.transitions.easing.sharp,
-      duration: theme.transitions.duration.leavingScreen,
-    }),
-  },
-  sliderDivShift: {
-    left: drawerWidth,
-    // width: `calc(100% - ${drawerWidth}px - 20px)`,
-    transition: theme.transitions.create(['left', 'width'], {
-      easing: theme.transitions.easing.easeOut,
-      duration: theme.transitions.duration.enteringScreen,
-    }),
-  },
-  sliderRoot: {
-    padding: '0 20px',
-  },
-  slider: {
-    padding: '22px 10px',
-    backgroundColor: theme.palette.primary.main
-  },
-  sliderTrackBefore: {
-    backgroundColor: theme.palette.secondary.main
-  },
-  sliderTrackAfter: {
-    backgroundColor: 'black'
-  },
-  sliderThumb: {
-    backgroundColor: theme.palette.secondary.main,
   }
 });
 
@@ -189,24 +149,7 @@ class PersistentDrawerLeft extends React.Component {
         </Drawer>
         <main className={classes.content}>
           <Map />
-          <div className={classNames(classes.sliderDiv, {
-            [classes.sliderDivShift]: open,
-          })}>
-            <Typography id="label">Slider label</Typography>
-            <Slider
-              classes={{
-                container: classes.slider, thumb: classes.sliderThumb,
-                root: classes.sliderRoot,
-                trackBefore:  classes.sliderTrackBefore,
-                trackAfter: classes.sliderTrackAfter 
-              }}
-              value={3}
-              min={0}
-              max={6}
-              step={1}
-              onChange={function(){console.log('slider changed!')}}
-            />
-            </div>
+          <TimeSlidler open={open} {...this.props}/>
         </main>
       </div>
     );

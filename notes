@@ -41,8 +41,8 @@ docker ps -a
 docker ps -a | grep "dacut" | awk '{print $1}'
 
 docker cp <CONTAINER_ID>:<DOCKER_PATH_TO_ZIP_FILE> <LOCAL_PATH>
-docker cp fb43bc2247cb:/lambda_package/lambda_package.zip ~
-docker cp fb43bc2247cb:/lambda_package_api/lambda_package_.zip ~
+docker cp 62f0320eafbc:/lambda_package/lambda_package.zip ~
+docker cp 62f0320eafbc:/lambda_package_api/lambda_package_api.zip ~
 
 
 # add lambda function files to zipped folder

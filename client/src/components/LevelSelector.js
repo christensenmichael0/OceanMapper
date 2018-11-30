@@ -22,48 +22,44 @@ const styles = theme => ({
   }
 });
 
-class LevelSelector extends React.Component {
-  state = {
-    level: 10,
-    name: 'hai',
-    labelWidth: 0,
+function LevelSelector(props) {
+  
+  const handleChange = name => event => {
+    // TODO: this needs to reach back to App.js
+    console.log('change triggered in level selector component!')
+    // props.handleLevelChange(name, value);
+    // this.setState({ [name]: event.target.value });
   };
 
-  componentDidMount() {
-    // this.setState({
-    //   labelWidth: ReactDOM.findDOMNode(this.InputLabelRef).offsetWidth,
-    // });
-  }
-
-  handleChange = name => event => {
-    this.setState({ [name]: event.target.value });
-  };
-
-  render() {
-    const { classes } = this.props;
-
+  const buildLevels = availableLevels => {
     return (
-      <div className={classes.root}>
-        <FormControl className={classes.formControl}>
-          <InputLabel htmlFor="level-select">Level</InputLabel>
-          <Select
-            native
-            autowidth={true}
-            value={this.state.level}
-            onChange={this.handleChange('level')}
-            inputProps={{
-              name: 'level',
-              id: 'level-select',
-            }}
-          >
-            <option value={10} default>10</option>
-            <option value={20}>20</option>
-            <option value={30}>30</option>
-          </Select>
-        </FormControl>
-      </div>
-    );
+      availableLevels.map((level, indx) => 
+        <option value={level} index={indx}>{level}</option>
+      )
+    )
   }
+
+  const { classes, availableLevels, presentLevel } = props;
+
+  return (
+    <div className={classes.root}>
+      <FormControl className={classes.formControl}>
+        <InputLabel htmlFor='level-select'>Level</InputLabel>
+        <Select
+          native
+          autowidth={true}
+          value={presentLevel || 0} // this might fix itself once the onChange is updated
+          onChange={() => console.log('do nothing for now!')} // handleChange('level')
+          inputProps={{
+            name: 'levels',
+            id: 'level-select',
+          }}
+        >
+        {buildLevels(availableLevels)}
+        </Select>
+      </FormControl>
+    </div>
+  );
 }
 
 LevelSelector.propTypes = {

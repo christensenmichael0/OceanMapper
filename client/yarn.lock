@@ -2820,6 +2820,11 @@ cyclist@~0.2.2:
   resolved "https://registry.yarnpkg.com/cyclist/-/cyclist-0.2.2.tgz#1b33792e11e914a2fd6d6ed6447464444e5fa640"
   integrity sha1-GzN5LhHpFKL9bW7WRHRkRE5fpkA=
 
+d3-array@^1.2.4:
+  version "1.2.4"
+  resolved "https://registry.yarnpkg.com/d3-array/-/d3-array-1.2.4.tgz#635ce4d5eea759f6f605863dbcfc30edc737f71f"
+  integrity sha512-KHW6M86R+FUPYGb3R5XiYjXPq7VzwxZ22buHhAEVG5ztoEcZZMLov530mmccaqA1GghZArjQV46fuc8kUqhhHw==
+
 damerau-levenshtein@^1.0.4:
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/damerau-levenshtein/-/damerau-levenshtein-1.0.4.tgz#03191c432cb6eea168bb77f3a55ffdccb8978514"
@@ -6307,6 +6312,11 @@ mkdirp@0.5.1, mkdirp@0.5.x, mkdirp@^0.5.0, mkdirp@^0.5.1, mkdirp@~0.5.0, mkdirp@
   dependencies:
     minimist "0.0.8"
 
+moment@^2.22.2:
+  version "2.22.2"
+  resolved "https://registry.yarnpkg.com/moment/-/moment-2.22.2.tgz#3c257f9839fc0e93ff53149632239eb90783ff66"
+  integrity sha1-PCV/mDn8DpP/UxSWMiOeuQeD/2Y=
+
 move-concurrently@^1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/move-concurrently/-/move-concurrently-1.0.1.tgz#be2c005fda32e0b29af1f05d7c4b33214c701f92"
@@ -7946,6 +7956,15 @@ react-app-polyfill@^0.1.3:
     promise "8.0.2"
     raf "3.4.0"
     whatwg-fetch "3.0.0"
+
+react-compound-slider@^0.16.3:
+  version "0.16.3"
+  resolved "https://registry.yarnpkg.com/react-compound-slider/-/react-compound-slider-0.16.3.tgz#dedf4732dbeed71382f815e1b82c29439dc5e691"
+  integrity sha512-0HQ7sj6bcMWtkFAkhwDMCWYlA3gKqg8BEmZWBiNJPQ25Lu6Hg90xtrO0Fq1e+wWYtKE0Mm1nFS+5CZcRq+LiEg==
+  dependencies:
+    d3-array "^1.2.4"
+    prop-types "^15.6.2"
+    warning "^3.0.0"
 
 react-dev-utils@^6.0.5:
   version "6.0.5"

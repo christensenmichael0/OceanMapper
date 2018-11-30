@@ -35,15 +35,15 @@ def lambda_handler(event, context):
     Notes: Check here for hycom version updates: http://tds.hycom.org/thredds/catalog/datasets/catalog.html
     -----------------------------------------------------------------------
     Author: Michael Christensen
-    Date Modified: 06/24/2018
+    Date Modified: 11/26/2018
     """
 
-    hycom_url = 'http://tds.hycom.org/thredds/catalog/datasets/GLBu0.08/expt_91.2/forecasts/catalog.html'
+    hycom_url = 'https://tds.hycom.org/thredds/catalog/datasets/GLBu0.08/expt_93.0/data/forecasts/catalog.html';
     forecast_info = get_hycom_forecast_info(hycom_url)
     
     zipped_time_and_indx = np.array(tuple(zip(forecast_info['forecast']['field_datetimes'], 
-            forecast_info['forecast']['data_urls'])))  
-        
+            forecast_info['forecast']['data_urls'])))
+    
     for forecast_time, data_url in zipped_time_and_indx:
         # only utilize 1 forecast/day (00:00 UTC) for cost savings 
         if forecast_time.hour == 0:

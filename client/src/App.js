@@ -2,6 +2,8 @@ import React, { Component } from 'react';
 import { withTheme } from '@material-ui/core/styles';
 import PersistentDrawerLeft from './components/PersistentDrawerLeft.js';
 import layers from './scripts/layers';
+import moment from 'moment';
+
 
 // import './App.css';
 // import Map from './Map';
@@ -9,9 +11,14 @@ import layers from './scripts/layers';
 class App extends Component {
   constructor(props) {
     super(props);
+
+    let startTime = moment.utc().startOf('day').subtract(10, "days").valueOf();
+    let endTime = moment.utc().startOf('day').add(8, "days").valueOf();
     
     this.state = {
-      mapTime: new Date().getTime(),
+      startTime: startTime,
+      endTime: endTime,
+      mapTime: moment.utc().startOf('hour').valueOf(),
       isLoading: null,
       error: null,
       toc: layers,
@@ -20,6 +27,7 @@ class App extends Component {
     this.populateAvailableLevels = this.populateAvailableLevels.bind(this);
     this.findObjIndex = this.findObjIndex.bind(this);
     this.handleLayerToggle = this.handleLayerToggle.bind(this);
+    this.handleTimeChange = this.handleTimeChange.bind(this);
   }
 
   // TODO: move this into some kind of utilities file and import
@@ -68,7 +76,10 @@ class App extends Component {
     // create a copy of the entire layer attribute object so not mutating data
     const layerAttr = Object.assign({}, this.state[layerID], {isOn: event.target.checked})
     this.setState({ [layerID]: layerAttr});
-    // this.setState({[layerID]: event.target.checked})
+  }
+
+  handleTimeChange(timeValue) {
+    this.setState({mapTime: timeValue});
   }
 
   componentWillMount() {
@@ -120,7 +131,11 @@ class App extends Component {
     // the map time
     return (
       <div >
-        <PersistentDrawerLeft handleLayerToggle = {this.handleLayerToggle} {...this.state}/>
+        <PersistentDrawerLeft 
+          handleLayerToggle = {this.handleLayerToggle} 
+          handleTimeChange = {this.handleTimeChange}
+          {...this.state}
+        />
       </div>
     );
   }
