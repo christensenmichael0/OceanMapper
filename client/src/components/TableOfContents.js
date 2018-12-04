@@ -26,25 +26,8 @@ const styles = theme => ({
   },
 });
 
-// class TableOfContents extends React.Component {
-//   constructor(props) {
-//     super(props);
-    
-//     this.state = {
-//       open: false,
-//     };
-
-//     this.handleLayerToggle = this.handleLayerToggle.bind(this);
-//   }
-
-//   render() {
-
-//   }
-// }
-
 function TableOfContents(props) {
   const {toc, classes, ...other} = props;
-  // debugger
   console.log(toc)
 
   const buildContents = categoryObj => {
@@ -72,10 +55,11 @@ function TableOfContents(props) {
                     {(props[subresource['id']] ? props[subresource['id']]['isOn'] : subresource['defaultOn']) && 
                     <React.Fragment>
                       {subresource['legendUrl'] ? <img src={subresource['legendUrl']} alt='data legend' className={classNames(classes.img)}/> : ''}
+                      {(props[subresource['id']] ? !isNaN(props[subresource['id']]['level']) : false) && 
                       <LevelSelector 
                         availableLevels={subresource['availableLevels']}
                         presentLevel={props[subresource['id']] ? props[subresource['id']]['level'] : null}
-                      />
+                      />}
                     </React.Fragment>
                     }
                   </React.Fragment>

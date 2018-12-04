@@ -30,12 +30,22 @@ class App extends Component {
     this.handleTimeChange = this.handleTimeChange.bind(this);
   }
 
-  // TODO: move this into some kind of utilities file and import
+  /**
+   * Find the index of a key in an array
+   * @param {array} outerArray array of objects
+   * @param {str} objKey object key
+   * @param {str} objValue object value
+   * @returns {int} index of particular object
+   */
   findObjIndex(outerArray, objKey, objValue) {
   	let objIndex = outerArray.findIndex(innerObj => innerObj[objKey] === objValue);
   	return objIndex
   }
 
+  /**
+   * Parse data and populate available levels for various metocean datasets
+   * @param {obj} data metocean data availability objected fetched from s3
+   */
   populateAvailableLevels(data) {
     let dataset, subResource, levels, layers = {}, categories = [...this.state.toc];
     
@@ -59,9 +69,6 @@ class App extends Component {
           levels = Object.keys(data[dataset][subResource]['level']).map(level => parseInt(level)).sort(function(a, b){return a-b});
           categories[metocDatasetMappingIndx]['Layers'][datasetIndx]['subResources'][subResourceIndx]['availableLevels'] = levels;
 
-          // layers[`isOn_${id}`] = layerObj['defaultOn'];
-          // layers[id] = layerObj['defaultOn'];
-          // debugger
           layers[id] = {isOn: layerObj['defaultOn'], level: levels[0]};
           // TODO add the minimum level as default
         }
@@ -72,12 +79,21 @@ class App extends Component {
     this.setState({toc: categories, isLoading: false, ...layers})
   }
 
+  /**
+   * Fired when a layer is switched on/off
+   * @param {str} layerID layer ID
+   * @param {event} event
+   */
   handleLayerToggle(layerID, event) {
     // create a copy of the entire layer attribute object so not mutating data
     const layerAttr = Object.assign({}, this.state[layerID], {isOn: event.target.checked})
     this.setState({ [layerID]: layerAttr});
   }
 
+  /**
+   * Fired when the time is changed via the slider
+   * @param {int} JS datetime in milliseconds
+   */
   handleTimeChange(timeValue) {
     this.setState({mapTime: timeValue});
   }
@@ -124,11 +140,6 @@ class App extends Component {
 
   render() {
     console.log('App component rendered');
-    // TODO: what needs to be passed to persistentdrawer?
-    // data for TOC
-    // functions describing what to do on certain events
-    // state of various layers (whats on/off)
-    // the map time
     return (
       <div >
         <PersistentDrawerLeft 
