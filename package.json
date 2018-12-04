@@ -16,6 +16,9 @@
     "heroku-postbuild": "yarn build",
     "start": "concurrently \"cd client && PORT=3000 yarn start\" \"cd server && PORT=3001 yarn start\"",
     "start:prod": "cd server && yarn start:prod"
+  },
+  "resolutions": {
+    "**/event-stream": "^4.0.1"
   }
 }
 

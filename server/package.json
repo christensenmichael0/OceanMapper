@@ -23,5 +23,8 @@
   "devDependencies": {
     "babel-register": "^6.26.0",
     "nodemon": "^1.18.4"
+  },
+  "resolutions": {
+    "**/event-stream": "^4.0.1"
   }
 }
