@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 
-
+debugger
 // store the map configuration properties in an object,
 // we could also move this to a separate file & import it if desired.
 let config = {};
@@ -9,6 +9,7 @@ config.params = {
   zoom: 6,
   maxZoom: 14,
   minZoom: 3,
+  attributionControl: false,
   zoomControl: false
 };
 // config.tileLayer = {
@@ -46,7 +47,7 @@ class Map extends Component {
     // code to run just after the component "mounts" / DOM elements are created
     // we could make an AJAX request for the GeoJSON data here if it wasn't stored locally
     // this.getData();
-    
+
     if (!this.state.map) {
       // create the Leaflet map object
       this.inititialize_map(this._mapNode);
@@ -191,6 +192,7 @@ class Map extends Component {
   }
 
   inititialize_map(id) {
+    debugger
     if (this.state.map) return;
     // this function creates the Leaflet map object and is called after the Map component mounts
     let L = window.L;

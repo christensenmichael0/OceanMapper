@@ -9,6 +9,7 @@ import morgan from 'morgan';
 import errorHandler from 'errorhandler';
 
 import downloadFromS3Router from './scripts/downloadFromS3';
+import apiGatewayRouter from './scripts/apiGatewayRouter';
 
 const app = express();
 app.use(bodyParser.json());
@@ -25,7 +26,8 @@ const S3_BUCKET = process.env.S3_BUCKET_NAME;
 app.use(morgan('dev'));
 
 // add other routes below
-app.use('/download', downloadFromS3Router)
+app.use('/download', downloadFromS3Router);
+app.use('/data', apiGatewayRouter);
 
 
 // for testing

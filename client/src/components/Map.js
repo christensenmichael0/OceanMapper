@@ -9,7 +9,8 @@ config.params = {
   zoom: 6,
   maxZoom: 14,
   minZoom: 3,
-  zoomControl: false
+  zoomControl: false,
+  attributionControl: false
 };
 // config.tileLayer = {
 //   uri: 'http://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
