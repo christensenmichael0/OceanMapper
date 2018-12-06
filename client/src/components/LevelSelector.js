@@ -27,6 +27,12 @@ function LevelSelector(props) {
   const handleChange = name => event => {
     // TODO: this needs to reach back to App.js
     console.log('change triggered in level selector component!')
+    // debugger
+
+    // call back to parent with this info
+    // event.target.id
+    // event.target.value
+
     // props.handleLevelChange(name, value);
     // this.setState({ [name]: event.target.value });
   };
@@ -39,7 +45,7 @@ function LevelSelector(props) {
     )
   }
 
-  const { classes, availableLevels, presentLevel } = props;
+  const { classes, availableLevels, presentLevel, id } = props;
 
   return (
     <div className={classes.root}>
@@ -49,10 +55,10 @@ function LevelSelector(props) {
           native
           autowidth={true}
           value={presentLevel || 0} // this might fix itself once the onChange is updated
-          onChange={() => console.log('do nothing for now!')} // handleChange('level')
+          onChange={handleChange('level')} // handleChange('level')
           inputProps={{
             name: 'levels',
-            id: 'level-select',
+            id: id,
           }}
         >
         {buildLevels(availableLevels)}

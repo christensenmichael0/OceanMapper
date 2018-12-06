@@ -43,34 +43,40 @@ class App extends Component {
   }
 
   /**
-   * Parse data and populate available levels for various metocean datasets
-   * @param {obj} data metocean data availability objected fetched from s3
-   */
+  * Parse data and populate available levels for various metocean datasets
+  * @param {obj} data metocean data availability objected fetched from s3
+  */
   populateAvailableLevels(data) {
     let dataset, subResource, levels, layers = {}, categories = [...this.state.toc];
     
     let metocDatasetMappingIndx = this.findObjIndex(categories, 'Category', 'MetOcean');
-    for (dataset in data) {
-      let datasetIndx = this.findObjIndex(categories[metocDatasetMappingIndx]['Layers'], 's3Name', dataset);
-      if (datasetIndx === -1) {
-      	continue
+    let orderedMetOceanLayers = categories[metocDatasetMappingIndx]['Layers'].map(
+      (model, indx) => ({model: model['s3Name'], index: indx}));
+
+    for (let indx=0; indx<orderedMetOceanLayers.length; indx++) {
+      dataset = orderedMetOceanLayers[indx]['model'];
+
+      if (!Object.keys(data).includes(dataset)) {
+        continue
       }
 
-      for (subResource in data[dataset]) {
-      	let subResourceIndx = this.findObjIndex(categories[metocDatasetMappingIndx]['Layers'][datasetIndx]['subResources'],
-      		's3Name',subResource);
-        let layerObj = categories[metocDatasetMappingIndx]['Layers'][datasetIndx]['subResources'][subResourceIndx];
+      let orderedSubresouces = categories[metocDatasetMappingIndx]['Layers'][indx]['subResources'].map(
+        ((subresource, innerIndx) => ({subresource: subresource['s3Name'], index: innerIndx})));
+      
+      for (let innerIndx=0; innerIndx<orderedSubresouces.length; innerIndx++) {
+        subResource = orderedSubresouces[innerIndx]['subresource'];
+
+        let layerObj = categories[metocDatasetMappingIndx]['Layers'][indx]['subResources'][innerIndx];
         let categoryVisible = categories[metocDatasetMappingIndx]['visibleTOC'];
         let layerObjVisible = layerObj['visibleTOC'];
-        
+
         if (categoryVisible && layerObjVisible) {
           let id = layerObj['id']
           
           levels = Object.keys(data[dataset][subResource]['level']).map(level => parseInt(level)).sort(function(a, b){return a-b});
-          categories[metocDatasetMappingIndx]['Layers'][datasetIndx]['subResources'][subResourceIndx]['availableLevels'] = levels;
+          categories[metocDatasetMappingIndx]['Layers'][indx]['subResources'][innerIndx]['availableLevels'] = levels;
 
           layers[id] = {isOn: layerObj['defaultOn'], level: levels[0]};
-          // TODO add the minimum level as default
         }
       }
     }
@@ -78,6 +84,40 @@ class App extends Component {
     // / isLoading should probably be turned off after inital data pull.. keep as is for now
     this.setState({toc: categories, isLoading: false, ...layers})
   }
+
+  // populateAvailableLevels(data) {
+  //   let dataset, subResource, levels, layers = {}, categories = [...this.state.toc];
+    
+  //   let metocDatasetMappingIndx = this.findObjIndex(categories, 'Category', 'MetOcean');
+  //   for (dataset in data) {
+  //     let datasetIndx = this.findObjIndex(categories[metocDatasetMappingIndx]['Layers'], 's3Name', dataset);
+  //     if (datasetIndx === -1) {
+  //     	continue
+  //     }
+
+  //     for (subResource in data[dataset]) {
+  //     	let subResourceIndx = this.findObjIndex(categories[metocDatasetMappingIndx]['Layers'][datasetIndx]['subResources'],
+  //     		's3Name',subResource);
+  //       let layerObj = categories[metocDatasetMappingIndx]['Layers'][datasetIndx]['subResources'][subResourceIndx];
+  //       let categoryVisible = categories[metocDatasetMappingIndx]['visibleTOC'];
+  //       let layerObjVisible = layerObj['visibleTOC'];
+        
+  //       if (categoryVisible && layerObjVisible) {
+  //         let id = layerObj['id']
+          
+  //         levels = Object.keys(data[dataset][subResource]['level']).map(level => parseInt(level)).sort(function(a, b){return a-b});
+  //         categories[metocDatasetMappingIndx]['Layers'][datasetIndx]['subResources'][subResourceIndx]['availableLevels'] = levels;
+
+  //         layers[id] = {isOn: layerObj['defaultOn'], level: levels[0]};
+  //         // TODO add the minimum level as default
+  //         debugger
+  //       }
+  //     }
+  //   }
+  //   // Dont mutate data
+  //   // / isLoading should probably be turned off after inital data pull.. keep as is for now
+  //   this.setState({toc: categories, isLoading: false, ...layers})
+  // }
 
   /**
    * Fired when a layer is switched on/off

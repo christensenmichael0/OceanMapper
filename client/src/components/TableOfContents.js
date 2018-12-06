@@ -28,7 +28,6 @@ const styles = theme => ({
 
 function TableOfContents(props) {
   const {toc, classes, ...other} = props;
-  console.log(toc)
 
   const buildContents = categoryObj => {
     return (
@@ -59,6 +58,7 @@ function TableOfContents(props) {
                       <LevelSelector 
                         availableLevels={subresource['availableLevels']}
                         presentLevel={props[subresource['id']] ? props[subresource['id']]['level'] : null}
+                        id={subresource['id']}
                       />}
                     </React.Fragment>
                     }
