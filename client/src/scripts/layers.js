@@ -14,6 +14,7 @@ let TOC = [
           niceName: 'HYCOM Currents',
           legendUrl: 'https://s3.us-east-2.amazonaws.com/oceanmapper-data-storage/map_legends/current_speed_colorbar.png',
           availableLevels: [],
+          levelName: 'Depth (m)',
           visibleTOC: true,
           defaultOn: true
         }
@@ -30,6 +31,7 @@ let TOC = [
           niceName: 'RTOFS Currents',
           legendUrl: 'https://s3.us-east-2.amazonaws.com/oceanmapper-data-storage/map_legends/current_speed_colorbar.png',
           availableLevels: [],
+          levelName: 'Depth (m)',
           visibleTOC: false,
           defaultOn: false
         }
@@ -46,6 +48,7 @@ let TOC = [
           niceName: 'GFS Winds',
           legendUrl: 'https://s3.us-east-2.amazonaws.com/oceanmapper-data-storage/map_legends/wind_speed_colorbar.png',
           availableLevels: [],
+          levelName: 'Height (m)',
           visibleTOC: true,
           defaultOn: false
         }

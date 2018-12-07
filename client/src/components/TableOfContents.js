@@ -1,16 +1,6 @@
 import React from 'react';
-import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import { withStyles } from '@material-ui/core/styles';
-import List from '@material-ui/core/List';
-import ListSubheader from '@material-ui/core/ListSubheader';
-import Divider from '@material-ui/core/Divider';
-import ListItem from '@material-ui/core/ListItem';
-import ListItemIcon from '@material-ui/core/ListItemIcon';
-import ListItemText from '@material-ui/core/ListItemText';
-import InboxIcon from '@material-ui/icons/MoveToInbox';
-import MailIcon from '@material-ui/icons/Mail';
-import TOCskeleton from '../scripts/layers';
 import TOCExpansionPanel from './TOCExpansionPanel';
 import FormGroup from '@material-ui/core/FormGroup';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
@@ -27,7 +17,7 @@ const styles = theme => ({
 });
 
 function TableOfContents(props) {
-  const {toc, classes, ...other} = props;
+  const {toc, classes } = props;
 
   const buildContents = categoryObj => {
     return (
@@ -37,7 +27,7 @@ function TableOfContents(props) {
             layer['subResources'].map((subresource, indx) => {
               if (subresource['visibleTOC']) {
                 return (
-                  <React.Fragment>
+                  <React.Fragment key={indx}>
                     <FormGroup row={false}>
                       <FormControlLabel
                         control={
@@ -57,20 +47,24 @@ function TableOfContents(props) {
                       {(props[subresource['id']] ? !isNaN(props[subresource['id']]['level']) : false) && 
                       <LevelSelector 
                         availableLevels={subresource['availableLevels']}
+                        levelName={subresource['levelName']}
                         presentLevel={props[subresource['id']] ? props[subresource['id']]['level'] : null}
+                        handleLevelChange={props.handleLevelChange}
                         id={subresource['id']}
                       />}
                     </React.Fragment>
                     }
                   </React.Fragment>
                 )
+              } else {
+                return null
               }
             })
           )
         } else {
           if (layer['visibleTOC']) {
             return (
-              <FormGroup row={false}>
+              <FormGroup key={indx} row={false}>
                 <FormControlLabel
                   control={
                     <Switch
@@ -84,24 +78,28 @@ function TableOfContents(props) {
                 />
               </FormGroup>
             )
+          } else {
+            return null
           }
         }
       })
     )
   }
 
-  const categories = toc.map((category, indx) => {
+  const categories = toc.map((category, index) => {
     // check if visible TOC
     if (category['visibleTOC']) {
       return (
         <TOCExpansionPanel
-          key = {indx.toString()}
+          key = {index}
           categoryName = {category['Category']}
           defaultExpanded = {category['expanded']}
         >
-        {buildContents(toc[indx])}
+        {buildContents(toc[index])}
         </TOCExpansionPanel>
-      )}
+      )} else {
+        return null
+      }
     }
   )
 

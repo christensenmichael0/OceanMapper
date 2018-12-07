@@ -5,7 +5,6 @@ import ExpansionPanel from './ExpansionPanel';
 import ExpansionPanelSummary from './ExpansionPanelSummary';
 import ExpansionPanelDetails from '@material-ui/core/ExpansionPanelDetails';
 import Typography from '@material-ui/core/Typography';
-import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import AddIcon from '@material-ui/icons/Add';
 import RemoveIcon from '@material-ui/icons/Remove';
 
@@ -27,7 +26,7 @@ const styles = theme => ({
 });
 
 function TOCExpansionPanel(props) {
-  const { classes, theme, defaultExpanded } = props;
+  const { classes, defaultExpanded } = props;
   return (
     <div className={classes.root}>
       <ExpansionPanel

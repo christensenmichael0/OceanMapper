@@ -5,9 +5,6 @@ import layers from './scripts/layers';
 import moment from 'moment';
 
 
-// import './App.css';
-// import Map from './Map';
-
 class App extends Component {
   constructor(props) {
     super(props);
@@ -27,6 +24,7 @@ class App extends Component {
     this.populateAvailableLevels = this.populateAvailableLevels.bind(this);
     this.findObjIndex = this.findObjIndex.bind(this);
     this.handleLayerToggle = this.handleLayerToggle.bind(this);
+    this.handleLevelChange = this.handleLevelChange.bind(this);
     this.handleTimeChange = this.handleTimeChange.bind(this);
   }
 
@@ -55,7 +53,7 @@ class App extends Component {
 
     for (let indx=0; indx<orderedMetOceanLayers.length; indx++) {
       dataset = orderedMetOceanLayers[indx]['model'];
-
+      // check that dataset exists within available datasets returned from s3
       if (!Object.keys(data).includes(dataset)) {
         continue
       }
@@ -65,6 +63,10 @@ class App extends Component {
       
       for (let innerIndx=0; innerIndx<orderedSubresouces.length; innerIndx++) {
         subResource = orderedSubresouces[innerIndx]['subresource'];
+        // check that subresource exists within available data returned from s3
+        if (!Object.keys(data[dataset]).includes(subResource)) {
+          continue
+        }
 
         let layerObj = categories[metocDatasetMappingIndx]['Layers'][indx]['subResources'][innerIndx];
         let categoryVisible = categories[metocDatasetMappingIndx]['visibleTOC'];
@@ -85,40 +87,6 @@ class App extends Component {
     this.setState({toc: categories, isLoading: false, ...layers})
   }
 
-  // populateAvailableLevels(data) {
-  //   let dataset, subResource, levels, layers = {}, categories = [...this.state.toc];
-    
-  //   let metocDatasetMappingIndx = this.findObjIndex(categories, 'Category', 'MetOcean');
-  //   for (dataset in data) {
-  //     let datasetIndx = this.findObjIndex(categories[metocDatasetMappingIndx]['Layers'], 's3Name', dataset);
-  //     if (datasetIndx === -1) {
-  //     	continue
-  //     }
-
-  //     for (subResource in data[dataset]) {
-  //     	let subResourceIndx = this.findObjIndex(categories[metocDatasetMappingIndx]['Layers'][datasetIndx]['subResources'],
-  //     		's3Name',subResource);
-  //       let layerObj = categories[metocDatasetMappingIndx]['Layers'][datasetIndx]['subResources'][subResourceIndx];
-  //       let categoryVisible = categories[metocDatasetMappingIndx]['visibleTOC'];
-  //       let layerObjVisible = layerObj['visibleTOC'];
-        
-  //       if (categoryVisible && layerObjVisible) {
-  //         let id = layerObj['id']
-          
-  //         levels = Object.keys(data[dataset][subResource]['level']).map(level => parseInt(level)).sort(function(a, b){return a-b});
-  //         categories[metocDatasetMappingIndx]['Layers'][datasetIndx]['subResources'][subResourceIndx]['availableLevels'] = levels;
-
-  //         layers[id] = {isOn: layerObj['defaultOn'], level: levels[0]};
-  //         // TODO add the minimum level as default
-  //         debugger
-  //       }
-  //     }
-  //   }
-  //   // Dont mutate data
-  //   // / isLoading should probably be turned off after inital data pull.. keep as is for now
-  //   this.setState({toc: categories, isLoading: false, ...layers})
-  // }
-
   /**
    * Fired when a layer is switched on/off
    * @param {str} layerID layer ID
@@ -127,6 +95,16 @@ class App extends Component {
   handleLayerToggle(layerID, event) {
     // create a copy of the entire layer attribute object so not mutating data
     const layerAttr = Object.assign({}, this.state[layerID], {isOn: event.target.checked})
+    this.setState({ [layerID]: layerAttr});
+  }
+
+  /**
+   * Fired when the level (depth) is changed for a MetOcean layer
+   * @param {str} layerID layer ID
+   * @param {event} event
+   */
+  handleLevelChange(layerID, event) {
+    const layerAttr = Object.assign({}, this.state[layerID], {level: parseInt(event.target.value)})
     this.setState({ [layerID]: layerAttr});
   }
 
@@ -141,9 +119,9 @@ class App extends Component {
   componentWillMount() {
     let layers = {}, categories = [...this.state.toc];
 
-    categories.map((category, outerIndx) => {
+    categories.forEach((category, outerIndx) => {
       if (category['Category'] !== 'MetOcean' && category['visibleTOC']) {
-        category['Layers'].map((layerObj, innerIndx) => {
+        category['Layers'].forEach((layerObj, innerIndx) => {
           let id = layerObj['id'];
           layers[id] = {isOn: layerObj['defaultOn']};
         })
@@ -181,9 +159,10 @@ class App extends Component {
   render() {
     console.log('App component rendered');
     return (
-      <div >
+      <div>
         <PersistentDrawerLeft 
-          handleLayerToggle = {this.handleLayerToggle} 
+          handleLayerToggle = {this.handleLayerToggle}
+          handleLevelChange = {this.handleLevelChange}
           handleTimeChange = {this.handleTimeChange}
           {...this.state}
         />

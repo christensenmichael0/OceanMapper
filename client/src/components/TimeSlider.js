@@ -8,7 +8,6 @@ import externalStyles from '../scripts/styleVariables';
 import _LinearScale from 'react-compound-slider/Slider/LinearScale';
 import { Ticks } from "react-compound-slider";
 import Tick from './Tick';
-import moment from 'moment';
 import { formatDateTime } from '../scripts/formatDateTime';
 
 const scale = new _LinearScale();
@@ -84,7 +83,6 @@ function TimeSlider(props) {
   };
 
   const constructTickValueArray = (startTime, endTime, timeInterval) => {
-    const testfun = formatDateTime; // for testing
     let currentTime = startTime, tickValueArray = [startTime];
 
     while (currentTime <= (endTime - timeInterval)) {
@@ -97,7 +95,7 @@ function TimeSlider(props) {
     return tickValueArray
   }
 
-  const { classes, theme, open, startTime, endTime, mapTime} = props;
+  const { classes, open, startTime, endTime, mapTime} = props;
   scale.domain = [startTime, endTime]
 
   let tickVals = constructTickValueArray(startTime, endTime, 3600000*24*3);
@@ -123,16 +121,12 @@ function TimeSlider(props) {
         <Ticks scale={scale} count={4} values={tickVals}>
           {({ ticks }) => (
             <div className={classes.sliderTicks}>
-            {ticks.map(tick => (
-              <Tick key={tick.id} tick={tick} count={ticks.length} />
+            {ticks.map((tick, index) => (
+              <Tick key={index} tick={tick} count={ticks.length} />
             ))}
             </div>
           )}
         </Ticks>
-      {/*
-      <div className={classes.dateTimeExtreme} style={{float: 'left'}}>{formatDateTime(startTime, 'simple')}</div>
-      <div className={classes.dateTimeExtreme} style={{float: 'right'}}>{formatDateTime(endTime, 'simple')}</div>
-    */}
     </div> 
   );
 }
