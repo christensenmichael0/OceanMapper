@@ -15,6 +15,7 @@ let TOC = [
           legendUrl: 'https://s3.us-east-2.amazonaws.com/oceanmapper-data-storage/map_legends/current_speed_colorbar.png',
           availableLevels: [],
           levelName: 'Depth (m)',
+          timeSensitive: true,
           visibleTOC: true,
           defaultOn: true
         }
@@ -32,6 +33,7 @@ let TOC = [
           legendUrl: 'https://s3.us-east-2.amazonaws.com/oceanmapper-data-storage/map_legends/current_speed_colorbar.png',
           availableLevels: [],
           levelName: 'Depth (m)',
+          timeSensitive: true,
           visibleTOC: false,
           defaultOn: false
         }
@@ -49,6 +51,7 @@ let TOC = [
           legendUrl: 'https://s3.us-east-2.amazonaws.com/oceanmapper-data-storage/map_legends/wind_speed_colorbar.png',
           availableLevels: [],
           levelName: 'Height (m)',
+          timeSensitive: true,
           visibleTOC: true,
           defaultOn: false
         }
@@ -65,15 +68,18 @@ let TOC = [
           niceName: ' WW3 Signficant Wave Height',
           legendUrl: 'https://s3.us-east-2.amazonaws.com/oceanmapper-data-storage/map_legends/wave_amp_colorbar.png',
           availableLevels: [],
+          timeSensitive: true,
           visibleTOC: true,
           defaultOn: false
         },
         {
-          id: 'www_primary_wave_dir',
+          id: 'ww3_primary_wave_dir',
           s3Name: 'primary_wave_dir',
           niceName: 'WW3 Primary Wave Direction',
+          overlayPriority: 'high',
           legendUrl: '',
           availableLevels: [],
+          timeSensitive: true,
           visibleTOC: true,
           defaultOn: false
         },
@@ -83,6 +89,7 @@ let TOC = [
           niceName: 'WW3 Primary Wave Period',
           legendUrl: 'https://s3.us-east-2.amazonaws.com/oceanmapper-data-storage/map_legends/wave_period_colorbar.png',
           availableLevels: [],
+          timeSensitive: true,
           visibleTOC: true,
           defaultOn: false
         }
@@ -97,6 +104,7 @@ let TOC = [
       {
         id: 'active_drilling',
         niceName: 'Active Drilling',
+        timeSensitive: false,
         visibleTOC: true,
         defaultOn: false
       }
@@ -110,6 +118,8 @@ let TOC = [
       {
         id: 'tropcial_storms_track_forecast',
         niceName: 'Track Forecast',
+        overlayPriority: 'medium',
+        timeSensitive: false,
         visibleTOC: true,
         defaultOn: false
       }
@@ -123,12 +133,15 @@ let TOC = [
       {
         id: 'gom_lease_blocks',
         niceName: 'GOM Lease Blocks',
+        timeSensitive: false,
         visibleTOC: true,
         defaultOn: false
       },
       {
         id: 'gebco_bathy',
         niceName: 'GEBCO Bathmetry',
+        overlayPriority: 'medium',
+        timeSensitive: false,
         visibleTOC: true,
         defaultOn: true
       }

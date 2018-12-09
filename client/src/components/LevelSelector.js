@@ -33,7 +33,7 @@ function LevelSelector(props) {
         <InputLabel htmlFor='level-select'>{levelName}</InputLabel>
         <Select
           native
-          autowidth={true}
+          autowidth='true'
           value={presentLevel || 0} // this might fix itself once the onChange is updated
           onChange={handleLevelChange.bind(this, id)} // handleChange(id)
           inputProps={{

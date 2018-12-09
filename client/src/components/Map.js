@@ -26,21 +26,67 @@ config.params = {
 // this eventually gets passed down to the Filter component
 // let subwayLineNames = [];
 
+// https://gis.stackexchange.com/questions/183720/does-leaflet-support-user-defined-layer-identifiers
+
+// var layer = L.tileLayer('foo');
+// var group = L.layerGroup([layer]);
+// var id = group.getLayerId(layer);
+// ...
+// group.getLayer(id);
+
+
+// L.LayerGroup.include({
+//     customGetLayer: function (id) {
+//         for (var i in this._layers) {
+//             if (this._layers[i].id == id) {
+//                 return this._layers[i];
+//             }
+//         }
+//     }
+// });
+
 class Map extends Component {
   constructor(props) {
     super(props);
     this.state = {
       map: null,
+      mapTime: null,
+      mapLayers: [],
+      layerGroup: null,
+      leafletLayers: null,
       tileLayer: null,
       geojsonLayer: null,
       geojson: null,
     };
     this._mapNode = null;
     this.updateMap = this.updateMap.bind(this);
+    this.determineLayerDiff = this.determineLayerDiff.bind(this);
     this.onEachFeature = this.onEachFeature.bind(this);
     this.pointToLayer = this.pointToLayer.bind(this);
     this.filterFeatures = this.filterFeatures.bind(this);
     this.filterGeoJSONLayer = this.filterGeoJSONLayer.bind(this);
+  }
+
+  determineLayerDiff(prevProps, prevState) {
+    // check for time change first (Map.js mapTime vs prevProps mapTime... make use of timeSensitive prop to only update those layers that are time
+    // sensitive if nothing else is different
+
+    // loop through prevProps.mapLayers and compare to prevState..
+    // if prev state is empty then immediatelly return prevProps.mapLayers
+    // if not return the array of objects to trigger actions for
+
+    let layerUpdates = [];
+    if (!prevState.mapTime) {
+      return prevProps.mapLayers
+    } else if (prevState.mapTime !== prevProps.mapTime) {
+      // loop through all timesensitive layers and call functions to remove/readd layer based on new time
+      console.log('time changed');
+      return ['timechanged']
+    } else {
+      // loop through all layers to see whats now on/off
+      console.log('layer status changed!');
+      return ['layerStatusChanged']
+    }
   }
 
   componentDidMount() {
@@ -56,6 +102,19 @@ class Map extends Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
+    let layerUpdates=[];
+    // debugger
+    if (prevProps.initializedLayers) {
+      // debugger
+      layerUpdates = this.determineLayerDiff(prevProps, prevState);
+      // debugger
+      // if (layerUpdates.length) {
+      //   // trigger layer updates... loop through and call the layers respective update function
+      // }
+    }
+
+    
+
     // code to run when the component receives new props or state
     // check to see if geojson is stored, map is created, and geojson overlay needs to be added
     // if (this.state.geojson && this.state.map && !this.state.geojsonLayer) {
@@ -203,8 +262,8 @@ class Map extends Component {
          position:'topright'
     }).addTo(map);
 
-    // set our map state
-    this.setState({ map });
+    // set our map state and empty layergroup that we will populate
+    this.setState({ map, layerGroup: L.layerGroup([]) });
   }
 
   render() {

@@ -32,7 +32,8 @@ function TableOfContents(props) {
                       <FormControlLabel
                         control={
                           <Switch
-                            checked={props[subresource['id']] ? props[subresource['id']]['isOn'] : subresource['defaultOn']}
+                            checked={props['mapLayers'][subresource['id']] ? 
+                              props['mapLayers'][subresource['id']]['isOn'] : subresource['defaultOn']}
                             color='secondary'
                             onChange={props.handleLayerToggle.bind(this, subresource['id'])}
                             value={subresource['id']}
@@ -41,14 +42,14 @@ function TableOfContents(props) {
                         label={subresource['niceName']}
                       />
                     </FormGroup>
-                    {(props[subresource['id']] ? props[subresource['id']]['isOn'] : subresource['defaultOn']) && 
+                    {(props['mapLayers'][subresource['id']] ? props['mapLayers'][subresource['id']]['isOn'] : subresource['defaultOn']) && 
                     <React.Fragment>
-                      {subresource['legendUrl'] ? <img src={subresource['legendUrl']} alt='data legend' className={classNames(classes.img)}/> : ''}
-                      {(props[subresource['id']] ? !isNaN(props[subresource['id']]['level']) : false) && 
+                      {subresource['legendUrl'] ? <img src={subresource['legendUrl']} alt='data-legend' className={classNames(classes.img)}/> : ''}
+                      {(props['mapLayers'][subresource['id']] ? !isNaN(props['mapLayers'][subresource['id']]['level']) : false) && 
                       <LevelSelector 
                         availableLevels={subresource['availableLevels']}
                         levelName={subresource['levelName']}
-                        presentLevel={props[subresource['id']] ? props[subresource['id']]['level'] : null}
+                        presentLevel={props['mapLayers'][subresource['id']] ? props['mapLayers'][subresource['id']]['level'] : null}
                         handleLevelChange={props.handleLevelChange}
                         id={subresource['id']}
                       />}
@@ -68,7 +69,7 @@ function TableOfContents(props) {
                 <FormControlLabel
                   control={
                     <Switch
-                      checked={props[layer['id']] ? props[layer['id']]['isOn'] : layer['defaultOn']}
+                      checked={props['mapLayers'][layer['id']] ? props['mapLayers'][layer['id']]['isOn'] : layer['defaultOn']}
                       color='secondary'
                       onChange={props.handleLayerToggle.bind(this, layer['id'])}
                       value={layer['id']}

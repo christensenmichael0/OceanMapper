@@ -108,7 +108,7 @@ class PersistentDrawerLeft extends React.Component {
 
   render() {
     console.log('drawer rendered')
-    const { classes, theme } = this.props;
+    const { classes, theme, ...other } = this.props;
     const { open } = this.state;
 
     return (
@@ -145,11 +145,11 @@ class PersistentDrawerLeft extends React.Component {
             </IconButton>
           </div>
           <Divider />
-          <TableOfContents {...this.props}/>
+          <TableOfContents {...other}/>
         </Drawer>
         <main className={classes.content}>
-          <Map />
-          <TimeSlidler open={open} {...this.props}/>
+          <Map {...other}/>
+          <TimeSlidler open={open} {...other}/>
         </main>
       </div>
     );

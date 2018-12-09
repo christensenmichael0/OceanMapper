@@ -16,6 +16,9 @@ class App extends Component {
       startTime: startTime,
       endTime: endTime,
       mapTime: moment.utc().startOf('hour').valueOf(),
+      initializedLayers: false,
+      mapLayers: [],
+      orderedMapLayers: [],
       isLoading: null,
       error: null,
       toc: layers,
@@ -45,7 +48,9 @@ class App extends Component {
   * @param {obj} data metocean data availability objected fetched from s3
   */
   populateAvailableLevels(data) {
-    let dataset, subResource, levels, layers = {}, categories = [...this.state.toc];
+    let dataset, subResource, levels, categories = [...this.state.toc], 
+      metOceanLayers = [], mapLayers = Object.assign({},this.state.mapLayers), 
+      orderedMapLayers = [...this.state.orderedMapLayers];
     
     let metocDatasetMappingIndx = this.findObjIndex(categories, 'Category', 'MetOcean');
     let orderedMetOceanLayers = categories[metocDatasetMappingIndx]['Layers'].map(
@@ -78,13 +83,26 @@ class App extends Component {
           levels = Object.keys(data[dataset][subResource]['level']).map(level => parseInt(level)).sort(function(a, b){return a-b});
           categories[metocDatasetMappingIndx]['Layers'][indx]['subResources'][innerIndx]['availableLevels'] = levels;
 
-          layers[id] = {isOn: layerObj['defaultOn'], level: levels[0]};
+          mapLayers[id] = {isOn: layerObj['defaultOn'], level: levels[0], timeSensitive: layerObj['timeSensitive']};
+
+          // add layer id to metOceanLayers list (this list maintains the order the layers are in)
+          metOceanLayers.push(id);
         }
       }
     }
+
+    // TODO: assign update function in layers.js for each layer... so it gets passed to Map.js
+    // can store update functions in Map.js... not really category specific... like bathy and GOM lease blocks
+    // require different calls to get/display data
+    let metOceanInjectionIndex = this.state.orderedMapLayers.indexOf('MetOcean');
+    if (metOceanInjectionIndex > -1) {
+      orderedMapLayers[metocDatasetMappingIndx] = metOceanLayers
+      orderedMapLayers = orderedMapLayers.flat() // flatten array
+    }
+
     // Dont mutate data
     // / isLoading should probably be turned off after inital data pull.. keep as is for now
-    this.setState({toc: categories, isLoading: false, ...layers})
+    this.setState({toc: categories, isLoading: false, initializedLayers: true, mapLayers: mapLayers, orderedMapLayers})
   }
 
   /**
@@ -93,9 +111,20 @@ class App extends Component {
    * @param {event} event
    */
   handleLayerToggle(layerID, event) {
-    // create a copy of the entire layer attribute object so not mutating data
-    const layerAttr = Object.assign({}, this.state[layerID], {isOn: event.target.checked})
-    this.setState({ [layerID]: layerAttr});
+    // dont mutate state data
+    let layerIndx, mapLayers = Object.assign({}, this.state.mapLayers), orderedMapLayers = [...this.state.orderedMapLayers];
+
+    // get the index of the layer
+    layerIndx = orderedMapLayers.indexOf(layerID)
+
+    // if turning the layer on find out where it was in the list... remove it from there and add to the end of the list
+    if (event.target.checked) {
+      orderedMapLayers.splice(layerIndx,1);
+      orderedMapLayers.push(layerID);
+    }
+
+    mapLayers[layerID]['isOn'] = event.target.checked
+    this.setState({ mapLayers, orderedMapLayers})
   }
 
   /**
@@ -104,8 +133,10 @@ class App extends Component {
    * @param {event} event
    */
   handleLevelChange(layerID, event) {
-    const layerAttr = Object.assign({}, this.state[layerID], {level: parseInt(event.target.value)})
-    this.setState({ [layerID]: layerAttr});
+    let mapLayers = Object.assign({},this.state.mapLayers);
+    mapLayers[layerID]['level'] = parseInt(event.target.value);
+    
+    this.setState({mapLayers});
   }
 
   /**
@@ -117,43 +148,56 @@ class App extends Component {
   }
 
   componentWillMount() {
-    let layers = {}, categories = [...this.state.toc];
+    let categories = [...this.state.toc], mapLayers = Object.assign({},this.state.mapLayers), 
+      orderedMapLayers = [...this.state.orderedMapLayers];
 
     categories.forEach((category, outerIndx) => {
       if (category['Category'] !== 'MetOcean' && category['visibleTOC']) {
         category['Layers'].forEach((layerObj, innerIndx) => {
           let id = layerObj['id'];
-          layers[id] = {isOn: layerObj['defaultOn']};
+          mapLayers[id] = {isOn: layerObj['defaultOn'], timeSensitive: layerObj['timeSensitive']};
+          orderedMapLayers.push(id);
         })
+      } else {
+        orderedMapLayers.push('MetOcean'); // this is a placeholder (injection point for active metocean layers)
       }
     })
-    this.setState({...layers});
+    this.setState({mapLayers, orderedMapLayers})
   }
 
   componentDidMount() {
     console.log('App component mounted');
     // https://www.robinwieruch.de/react-fetching-data/
-    this.setState({ isLoading: true });
+    let categories = [...this.state.toc], error = null;
+    
+    let metocDatasetMappingIndx = this.findObjIndex(categories, 'Category', 'MetOcean');
+    let fetchDataAvailablity = categories[metocDatasetMappingIndx]['visibleTOC'];
+    // abort if MetOcean category isnt visible in TOC
+    if (fetchDataAvailablity) {
+      this.setState({ isLoading: true });
 
-    fetch('/download/data_availability.json')
-      .then(response => {
-        if (response.ok) {
-          return response.json();
-        } 
-        throw new Error('Request failed!');
-      }, networkError => {
-        this.setState({ error: networkError, isLoading: false });
-      })
-      .then(data => {
-        let error = null;
-        if (!('error' in data)) {
-          console.log(data);
-          this.populateAvailableLevels(data)
-        } else {
-          error = data['error']['message']
-        }
-        this.setState({ error, isLoading: false })
-      })
+      fetch('/download/data_availability.json')
+        .then(response => {
+          if (response.ok) {
+            return response.json();
+          } 
+          throw new Error('Request failed!');
+        }, networkError => {
+          this.setState({ error: networkError, isLoading: false });
+        })
+        .then(data => {
+          // let error = null;
+          if (!('error' in data)) {
+            console.log(data);
+            this.populateAvailableLevels(data)
+          } else {
+            error = data['error']['message']
+          }
+          this.setState({ error, isLoading: false })
+        })
+      } else {
+        this.setState({ error, isLoading: false, initializedLayers: true })
+      }
   }
 
   render() {
