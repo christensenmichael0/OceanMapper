@@ -79,7 +79,18 @@ const styles = theme => ({
 function TimeSlider(props) {
   
   const handleChange = (event, value) => {
+    // this is called repeatedly when sliding
     props.handleTimeChange(value);
+  };
+
+  const handleDragEnd = (event) => {
+    let mapLayers = Object.assign({},props.mapLayers), orderedMapLayers = [...props.orderedMapLayers];
+    
+    // loop through orderlayers and update necessary layers depending on timeSensitive param 
+    orderedMapLayers.forEach((layer)=> {
+      let layerObj = mapLayers[layer];
+      if (layerObj['timeSensitive'] && layerObj['isOn']) props.updateLeafletLayer({id: layer, ...layerObj});
+    });
   };
 
   const constructTickValueArray = (startTime, endTime, timeInterval) => {
@@ -90,8 +101,6 @@ function TimeSlider(props) {
       tickValueArray.push(currentTime);
     }
     tickValueArray.push(endTime);
-    // let blah = tickValueArray.map(dt => formatDateTime(dt,'YYYY-MM-DD HH:mm',''));
-    // console.log(blah);
     return tickValueArray
   }
 
@@ -117,6 +126,7 @@ function TimeSlider(props) {
           max={endTime}
           step={3600000}
           onChange={handleChange}
+          onDragEnd={handleDragEnd}
         />
         <Ticks scale={scale} count={4} values={tickVals}>
           {({ ticks }) => (

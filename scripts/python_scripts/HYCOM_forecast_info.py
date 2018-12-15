@@ -23,10 +23,12 @@ def get_hycom_forecast_info(hycom_url):
     contains the full forecast extent (168hrs) as well as an array of all opendapp 
     urls (1 for each timestep) as well as an array containing the various depth levels
     supported by this model.
+
+    Model Info: https://www.hycom.org/dataserver/gofs-3pt1/analysis
     -----------------------------------------------------------------------
     Input: {string} hycom_url - the HYCOM forecast data catalog url
 
-    i.e. https://tds.hycom.org/thredds/catalog/datasets/GLBu0.08/expt_93.0/data/forecasts/catalog.html
+    i.e. http://tds.hycom.org/thredds/catalog/datasets/GLBy0.08/expt_93.0/data/forecasts/catalog.html
     -----------------------------------------------------------------------
     Output: object with this structure:
 
@@ -42,7 +44,7 @@ def get_hycom_forecast_info(hycom_url):
     forecast_dict = {}
     for anchor in soup.findAll('a', href=True):
         anchor_str = anchor['href']
-        match = re.search(r'hycom_glb_930_(\d{10})_t(\d{3})_uv3z.nc$', anchor_str)
+        match = re.search(r'hycom_glby_930_(\d{10})_t(\d{3})_uv3z.nc$', anchor_str)
     
         if match:
             unformatted_date = match.group(1)
@@ -59,7 +61,12 @@ def get_hycom_forecast_info(hycom_url):
     max_forecast_run_date = unique_dates[0]
     
     # use the forecast which gets full coverage (at this point in time its 168 hrs into the future)
-    previous_forecast_extent = forecast_dict[unique_dates[1]][-1]['forecast_hour_extent']
+    # deal with possibility of only 1 date available
+    if len(unique_dates) > 1:
+        previous_forecast_extent = forecast_dict[unique_dates[1]][-1]['forecast_hour_extent']
+    else:
+        previous_forecast_extent = 0 
+    
     present_forecast_extent = forecast_dict[unique_dates[0]][-1]['forecast_hour_extent']
 
     if present_forecast_extent >= previous_forecast_extent:
@@ -68,7 +75,7 @@ def get_hycom_forecast_info(hycom_url):
         latest_date = unique_dates[1]
 
     formatted_latest_date = datetime.datetime.strftime(latest_date, '%Y%m%d%H')
-    base_opendapp_url = 'http://tds.hycom.org/thredds/dodsC/datasets/GLBu0.08/expt_93.0/data/forecasts/hycom_glb_930_';
+    base_opendapp_url = 'http://tds.hycom.org/thredds/dodsC/datasets/GLBy0.08/expt_93.0/data/forecasts/hycom_glby_930_'
 
     data_urls = []
     field_datetimes=[]
@@ -92,7 +99,7 @@ def get_hycom_forecast_info(hycom_url):
     return forecast_info
 
 if __name__ == "__main__":
-    hycom_url = 'https://tds.hycom.org/thredds/catalog/datasets/GLBu0.08/expt_93.0/data/forecasts/catalog.html';
+    hycom_url = "http://tds.hycom.org/thredds/catalog/datasets/GLBy0.08/expt_93.0/data/forecasts/catalog.html"
     get_hycom_forecast_info(hycom_url)
 
 

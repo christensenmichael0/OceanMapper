@@ -72,12 +72,15 @@ def lambda_handler(event, context):
     # get model origin time
     time_origin = datetime.datetime.strptime(file.variables['tau'].time_origin,'%Y-%m-%d %H:%M:%S')
 
-    lat = file.variables['lat'][:]
+    # resolution is scaled down since we are running into memory exceedence issues with lambda functions
+    skip = 2
+
+    lat = file.variables['lat'][::skip] # [:]
     lon = file.variables['lon'][:]
 
     # transform masked values to 0
-    u_data_raw = file.variables['water_u'][0,model_level_indx,:,:] #[time,level,lat,lon] -- only 1 time for HYCOM
-    v_data_raw = file.variables['water_v'][0,model_level_indx,:,:]
+    u_data_raw = file.variables['water_u'][0,model_level_indx,::skip,:] #[time,level,lat,lon] -- only 1 time for HYCOM
+    v_data_raw = file.variables['water_v'][0,model_level_indx,::skip,:]
 	
     u_data_mask_applied = np.where(~u_data_raw.mask, u_data_raw, 0)
     v_data_mask_applied = np.where(~v_data_raw.mask, v_data_raw, 0)
@@ -168,7 +171,7 @@ def lambda_handler(event, context):
 
     # call an intermediate function to distribute tiling workload
     tile_task_distributor(output_pickle_path, 'current_speed', AWS_BUCKET_NAME, 
-        output_tile_scalar_path, range(3,4))
+        output_tile_scalar_path, range(3,5))
 
     # call an intermediate function to distribute pickling workload (subsetting data by tile)
     data_zoom_level = datasets[TOP_LEVEL_FOLDER]['sub_resource'][SUB_RESOURCE]['data_tiles_zoom_level']

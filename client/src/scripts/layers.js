@@ -15,9 +15,15 @@ let TOC = [
           legendUrl: 'https://s3.us-east-2.amazonaws.com/oceanmapper-data-storage/map_legends/current_speed_colorbar.png',
           availableLevels: [],
           levelName: 'Depth (m)',
+          addDataFunc: 'getModelField',
+          maxNativeZoom: 4,
+          minNativeZoom: 3,
+          streamFlowLayer: true,
+          maxVelocity: 1.0,
+          velocityScale: 0.1,
           timeSensitive: true,
           visibleTOC: true,
-          defaultOn: true
+          defaultOn: false
         }
       ]
     },
@@ -33,6 +39,12 @@ let TOC = [
           legendUrl: 'https://s3.us-east-2.amazonaws.com/oceanmapper-data-storage/map_legends/current_speed_colorbar.png',
           availableLevels: [],
           levelName: 'Depth (m)',
+          addDataFunc: 'getModelField',
+          maxNativeZoom: 4,
+          minNativeZoom: 3,
+          streamFlowLayer: true,
+          maxVelocity: 1.0,
+          velocityScale: 0.01,
           timeSensitive: true,
           visibleTOC: false,
           defaultOn: false
@@ -51,9 +63,15 @@ let TOC = [
           legendUrl: 'https://s3.us-east-2.amazonaws.com/oceanmapper-data-storage/map_legends/wind_speed_colorbar.png',
           availableLevels: [],
           levelName: 'Height (m)',
+          addDataFunc: 'getModelField',
+          maxNativeZoom: 3,
+          minNativeZoom: 3,
+          streamFlowLayer: true,
+          maxVelocity: 20.0,
+          velocityScale: 0.01,
           timeSensitive: true,
           visibleTOC: true,
-          defaultOn: false
+          defaultOn: true
         }
       ]
     },
@@ -68,6 +86,9 @@ let TOC = [
           niceName: ' WW3 Signficant Wave Height',
           legendUrl: 'https://s3.us-east-2.amazonaws.com/oceanmapper-data-storage/map_legends/wave_amp_colorbar.png',
           availableLevels: [],
+          addDataFunc: 'getModelField',
+          maxNativeZoom: 3,
+          minNativeZoom: 3,
           timeSensitive: true,
           visibleTOC: true,
           defaultOn: false
@@ -79,6 +100,9 @@ let TOC = [
           overlayPriority: 'high',
           legendUrl: '',
           availableLevels: [],
+          addDataFunc: 'getModelField',
+          maxNativeZoom: 4,
+          minNativeZoom: 3,
           timeSensitive: true,
           visibleTOC: true,
           defaultOn: false
@@ -89,6 +113,9 @@ let TOC = [
           niceName: 'WW3 Primary Wave Period',
           legendUrl: 'https://s3.us-east-2.amazonaws.com/oceanmapper-data-storage/map_legends/wave_period_colorbar.png',
           availableLevels: [],
+          addDataFunc: 'getModelField',
+          maxNativeZoom: 3,
+          minNativeZoom: 3,
           timeSensitive: true,
           visibleTOC: true,
           defaultOn: false
@@ -104,6 +131,7 @@ let TOC = [
       {
         id: 'active_drilling',
         niceName: 'Active Drilling',
+        addDataFunc: 'placeholder',
         timeSensitive: false,
         visibleTOC: true,
         defaultOn: false
@@ -119,6 +147,7 @@ let TOC = [
         id: 'tropcial_storms_track_forecast',
         niceName: 'Track Forecast',
         overlayPriority: 'medium',
+        addDataFunc: 'placeholder',
         timeSensitive: false,
         visibleTOC: true,
         defaultOn: false
@@ -133,6 +162,7 @@ let TOC = [
       {
         id: 'gom_lease_blocks',
         niceName: 'GOM Lease Blocks',
+        addDataFunc: 'placeholder',
         timeSensitive: false,
         visibleTOC: true,
         defaultOn: false
@@ -141,6 +171,7 @@ let TOC = [
         id: 'gebco_bathy',
         niceName: 'GEBCO Bathmetry',
         overlayPriority: 'medium',
+        addDataFunc: 'getGebcoBathy',
         timeSensitive: false,
         visibleTOC: true,
         defaultOn: true

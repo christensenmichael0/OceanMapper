@@ -12,7 +12,7 @@ import MenuIcon from '@material-ui/icons/Menu';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import TableOfContents from './TableOfContents';
-import Map from './Map';
+// import Map from './Map';
 import TimeSlidler from './TimeSlider';
 import externalStyles from '../scripts/styleVariables';
 
@@ -28,6 +28,7 @@ const styles = theme => ({
       easing: theme.transitions.easing.sharp,
       duration: theme.transitions.duration.leavingScreen,
     }),
+    'zIndex': 999,
     'background': 'transparent',
     'boxShadow': 'none',
   },
@@ -148,7 +149,7 @@ class PersistentDrawerLeft extends React.Component {
           <TableOfContents {...other}/>
         </Drawer>
         <main className={classes.content}>
-          <Map {...other}/>
+          {/* <Map {...other}/> */}
           <TimeSlidler open={open} {...other}/>
         </main>
       </div>

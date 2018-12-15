@@ -126,7 +126,7 @@ if __name__ == '__main__':
             "level": "0",
             "dataset": "HYCOM_DATA",
             "sub_resource": "ocean_current_speed",
-            "time": "2018-10-20T08:00Z"
+            "time": "2018-12-20T08:00Z"
         }
     }
     lambda_handler(event,'')

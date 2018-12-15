@@ -8,7 +8,8 @@
     "node": "8.10.0"
   },
   "dependencies": {
-    "concurrently": "^4.0.1"
+    "concurrently": "^4.0.1",
+    "deep-equal": "^1.0.1"
   },
   "scripts": {
     "build": "concurrently \"cd client && yarn build\" \"cd server && yarn build\"",
@@ -21,5 +22,3 @@
     "**/event-stream": "^4.0.1"
   }
 }
-
-

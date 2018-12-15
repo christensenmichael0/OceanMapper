@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import deepEqual from 'deep-equal';
 
 
 // store the map configuration properties in an object,
@@ -49,43 +50,65 @@ class Map extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      map: null,
+      // map: null,
       mapTime: null,
-      mapLayers: [],
-      layerGroup: null,
+      mapLayers: null,
       leafletLayers: null,
       tileLayer: null,
       geojsonLayer: null,
       geojson: null,
     };
+
+    // move mapTime and mapLayers onto this instead of keeping in state
+
     this._mapNode = null;
     this.updateMap = this.updateMap.bind(this);
     this.determineLayerDiff = this.determineLayerDiff.bind(this);
+    this.addTestLayer = this.addTestLayer.bind(this);
+
     this.onEachFeature = this.onEachFeature.bind(this);
     this.pointToLayer = this.pointToLayer.bind(this);
     this.filterFeatures = this.filterFeatures.bind(this);
     this.filterGeoJSONLayer = this.filterGeoJSONLayer.bind(this);
   }
 
-  determineLayerDiff(prevProps, prevState) {
+  determineLayerDiff(mapLayers, parentLayers) {
     // check for time change first (Map.js mapTime vs prevProps mapTime... make use of timeSensitive prop to only update those layers that are time
     // sensitive if nothing else is different
 
     // loop through prevProps.mapLayers and compare to prevState..
     // if prev state is empty then immediatelly return prevProps.mapLayers
     // if not return the array of objects to trigger actions for
+    
+    let layerUpdates = [], layerIndx, layerName, previousLayerProps, isEqual;
+    if (!this.mapTime) {
+      for (layerIndx=0; layerIndx<parentLayers['orderedMapLayers'].length; layerIndx++) {
+        layerName = parentLayers['orderedMapLayers'][layerIndx];
+        previousLayerProps = parentLayers['mapLayers'][layerName];
+        layerUpdates.push({id: layerName,...previousLayerProps})
+      }
 
-    let layerUpdates = [];
-    if (!prevState.mapTime) {
-      return prevProps.mapLayers
-    } else if (prevState.mapTime !== prevProps.mapTime) {
+      return layerUpdates
+
+    } else if (this.state.mapTime !== parentLayers['mapTime']) {
       // loop through all timesensitive layers and call functions to remove/readd layer based on new time
       console.log('time changed');
-      return ['timechanged']
+      return [];
     } else {
-      // loop through all layers to see whats now on/off
-      console.log('layer status changed!');
-      return ['layerStatusChanged']
+      // loop through all layers to see if anything is different between parent and map class
+      for (layerIndx=0; layerIndx<parentLayers['orderedMapLayers'].length; layerIndx++) {
+        // debugger
+        layerName = parentLayers['orderedMapLayers'][layerIndx];
+        previousLayerProps = parentLayers['mapLayers'][layerName];
+        isEqual = deepEqual(previousLayerProps,this.mapLayers[layerName])
+        debugger
+        if (!isEqual) {
+          console.log('bang!');
+          layerUpdates.push(previousLayerProps)
+        }
+      }
+      
+      return layerUpdates;
     }
   }
 
@@ -94,24 +117,58 @@ class Map extends Component {
     // we could make an AJAX request for the GeoJSON data here if it wasn't stored locally
     // this.getData();
     
-    if (!this.state.map) {
+    // if (!this.state.map) {
+    if (!this.map) {
       // create the Leaflet map object
       this.inititialize_map(this._mapNode);
       // TODO: make some api calls for data 
     }
   }
 
-  componentDidUpdate(prevProps, prevState) {
-    let layerUpdates=[];
-    // debugger
-    if (prevProps.initializedLayers) {
-      // debugger
-      layerUpdates = this.determineLayerDiff(prevProps, prevState);
-      // debugger
-      // if (layerUpdates.length) {
-      //   // trigger layer updates... loop through and call the layers respective update function
-      // }
-    }
+  // componentWillReceiveProps(nextProps) {
+  //   console.log('rec props')
+  //   // debugger
+  // }
+
+  // componentDidUpdate(prevProps, prevState) {
+  //   let layerUpdates;
+  //   // debugger
+  //   if (prevProps.initializedLayers) {
+  //     // debugger
+  //     layerUpdates = this.determineLayerDiff(prevProps);
+  //     // take care not to go into infinite loop... only call setState if there are updates to be made
+  //     // trigger functions for objects in layerDif['updatedMapLayers']
+  //     //debugger
+  //     if (layerUpdates.length) {
+  //       // debugger
+  //       // trigger layer updates... loop through and call the layers respective update function
+  //       layerUpdates.forEach((layerObj) => {
+  //         this.addTestLayer(layerObj);
+  //       });
+
+  //       // this.setState({mapTime: prevProps['mapTime'], mapLayers: prevProps['mapLayers']})
+  //       //debugger
+  //       console.log('got past state change');
+  //       // set properties instead of setting state
+  //       // this.mapTime = prevProps['mapTime'];
+  //       // this.mapLayers = prevProps['mapLayers'];
+  //     }
+  //   }
+  //   //debugger
+  //   console.log('hi');
+  // }
+
+  addTestLayer(layerObj) {
+    // marker2=L.marker([0,10],{pane: 'test'})
+    console.log('layer being added');
+    let L = window.L;
+
+    let rand_lat = Math.floor(Math.random() * 11); 
+    let marker=L.marker([rand_lat,0]).bindPopup(layerObj['id']);
+
+    marker.addTo(this.map);
+    this.layerGroup.addLayer(marker)
+  }
 
     
 
@@ -127,7 +184,7 @@ class Map extends Component {
     //   // filter / re-render the geojson overlay
     //   this.filterGeoJSONLayer();
     // }
-  }
+  //}
 
   componentWillMount() {
     // code to run just before rendering the component
@@ -137,7 +194,7 @@ class Map extends Component {
   componentWillUnmount() {
     // code to run just before unmounting the component
     // this destroys the Leaflet map object & related event listeners
-    this.state.map.remove();
+    // this.state.map.remove();
   }
 
   getData() {
@@ -149,17 +206,6 @@ class Map extends Component {
     // });
   }
 
-  updateMap(e) {
-    // let subwayLine = e.target.value;
-    // // change the subway line filter
-    // if (subwayLine === "All lines") {
-    //   subwayLine = "*";
-    // }
-    // // update our state with the new filter value
-    // this.setState({
-    //   subwayLinesFilter: subwayLine
-    // });
-  }
 
   addGeoJSONLayer(geojson) {
     // create a native Leaflet GeoJSON SVG Layer to add as an interactive overlay to the map
@@ -251,7 +297,9 @@ class Map extends Component {
   }
 
   inititialize_map(id) {
-    if (this.state.map) return;
+    // if (this.state.map) return;
+    if (this.map) return;
+
     // this function creates the Leaflet map object and is called after the Map component mounts
     let L = window.L;
     let map = this.map = L.map(id, config.params);
@@ -262,11 +310,50 @@ class Map extends Component {
          position:'topright'
     }).addTo(map);
 
-    // set our map state and empty layergroup that we will populate
-    this.setState({ map, layerGroup: L.layerGroup([]) });
+    // add an empty layer group to the map
+    this.layerGroup = L.layerGroup([]);
+    this.layerGroup.addTo(map);
+
+    // set our map state 
+    // this.setState({ map });
+
+  }
+
+  updateMap() {
+    // TODO continue on this path.. render calls this function which triggers necessary DOM actions
+    let layerUpdates;
+    if (this.props.initializedLayers) {
+      debugger
+      layerUpdates = this.determineLayerDiff(this.mapLayers, this.props);
+
+      if (layerUpdates.length) {
+        // debugger
+        // trigger layer updates... loop through and call the layers respective update function
+        layerUpdates.forEach((layerObj) => {
+          this.addTestLayer(layerObj);
+        });
+
+        // set properties instead of setting state
+        this.mapTime = this.props.mapTime;
+        this.mapLayers = Object.assign({},this.props.mapLayers);
+      }
+    }
   }
 
   render() {
+    // TODO: include function to update layers here... use determine diff function which can then call another function
+    // to manipulate DOM.. we don't need componentDidUpdate.. componentWillRecieveProps.. (THIS ISNT WORKING)
+
+    // PASS THE DIEFFERENCE ARRAY FROM THE PARENT... that can be saved in the parent state... it gets generated whenever
+    // a layer is toggled, level is changed, or time is changed... still need a function here to do DOM manipulation
+
+    // IF difference object is empty then need to add them all.... rerenders do happen when none of these actions happen.. what to do about that?
+
+    // CAN ALSO add custom info in leaflet layer inside options... could use this to check props.mapLayers vs whats on the map (this might be the way to go)...
+    // loop through all items in a layer group... might not need difference... would be good if we can find a layer by its id on the map
+
+
+
     return (
       <div ref={(node) => this._mapNode = node} id="map" />
     )
