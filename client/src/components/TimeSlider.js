@@ -83,6 +83,8 @@ function TimeSlider(props) {
     props.handleTimeChange(value);
   };
 
+  // https://stackoverflow.com/questions/23123138/perform-debounce-in-react-js
+  // need debouncing ?
   const handleDragEnd = (event) => {
     let mapLayers = Object.assign({},props.mapLayers), orderedMapLayers = [...props.orderedMapLayers];
     

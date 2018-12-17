@@ -8,9 +8,8 @@ import layers from './scripts/layers';
 import moment from 'moment';
 import '@ansur/leaflet-pulse-icon/dist/L.Icon.Pulse.js';
 import '@ansur/leaflet-pulse-icon/dist/L.Icon.Pulse.css';
-import { formatDateTime } from './scripts/formatDateTime';
 import { getData, getModelField } from './scripts/dataFetchingUtils';
-// import $ from 'jquery';
+import priorityMap from './scripts/layerPriority';
 
 // leaflet gateway
 const L = window.L;
@@ -62,7 +61,9 @@ class App extends Component {
     this.addLeafletLayer = this.addLeafletLayer.bind(this);
     this.removeLeafletLayer = this.removeLeafletLayer.bind(this);
     this.updateLeafletLayer= this.updateLeafletLayer.bind(this);
+    this.buildTileLayer = this.buildTileLayer.bind(this);
     this.buildStreamlineLayer = this.buildStreamlineLayer.bind(this);
+    this.addToLeafletLayerGroup = this.addToLeafletLayerGroup.bind(this);
     this.populateAvailableLevels = this.populateAvailableLevels.bind(this);
     this.findObjIndex = this.findObjIndex.bind(this);
     this.handleLayerToggle = this.handleLayerToggle.bind(this);
@@ -85,12 +86,24 @@ class App extends Component {
     // add click event listener
     map.on('click', this.onMapClick);
 
+    // map.on('layeradd', function(layer, layername){
+    //   console.log('hittttt');
+    //   debugger
+    // });
+
     // layer/leaflet layer binding
     this.layerBindings = {};
 
     // add an empty layer group to the map
     this.leafletLayerGroup = L.layerGroup([]);
     this.leafletLayerGroup.addTo(map);
+
+    // create map panes
+    let pane;
+    for (pane in priorityMap) {
+      map.createPane(pane);
+      map.getPane(pane).style.zIndex = priorityMap[pane];
+    }
   }
 
   /**
@@ -156,7 +169,9 @@ class App extends Component {
             minNativeZoom: layerObj['minNativeZoom'],
             maxVelocity: layerObj['maxVelocity'],
             velocityScale: layerObj['velocityScale'],
-            streamFlowLayer: layerObj['streamFlowLayer']
+            streamFlowLayer: layerObj['streamFlowLayer'],
+            overlayPriority: layerObj['overlayPriority'],
+            opacity: layerObj['defaultOpacity']
           };
 
           // add layer id to metOceanLayers list (this list maintains the order the layers are in)
@@ -200,8 +215,7 @@ class App extends Component {
       orderedMapLayers.push(layerID);
       this.addLeafletLayer({id: layerID, ...mapLayers[layerID], isOn: true});
     } else {
-      let lid = this.layerBindings[layerID];
-      this.removeLeafletLayer(lid);
+      this.removeLeafletLayer(layerID);     
     }
 
     mapLayers[layerID]['isOn'] = event.target.checked
@@ -217,11 +231,7 @@ class App extends Component {
     let mapLayers = Object.assign({},this.state.mapLayers);
     mapLayers[layerID]['level'] = parseInt(event.target.value);
 
-    // get previous layer binding
-    let lid = this.layerBindings[layerID];
-
-    // remove old layer and add new layer
-    this.removeLeafletLayer(lid);
+    this.removeLeafletLayer(layerID);
     this.addLeafletLayer({id: layerID, ...mapLayers[layerID]});
     
     this.setState({mapLayers});
@@ -237,76 +247,55 @@ class App extends Component {
 
   // timeslider can call this function repeatedly instead
   updateLeafletLayer(layerObj) {
-    // get previous layer binding
-    let lid = this.layerBindings[layerObj['id']];
-
     // remove old layer and add new layer
-    this.removeLeafletLayer(lid);
-    this.addLeafletLayer(layerObj);
+    this.removeLeafletLayer(layerObj['id']).then(()=>{this.addLeafletLayer(layerObj)});
   }
 
+  // TODO: add to correct pane... also need to set the date-valid time in the TOC
+  // fix issue when sliding out of range... i.e. no scalar or vector
   addLeafletLayer(layerObj) {
-
-    // mapLayers[id] = {
-    //         dataset,
-    //         subResource,
-    //         isOn: layerObj['defaultOn'], 
-    //         level: levels[0], 
-    //         timeSensitive: layerObj['timeSensitive'], 
-    //         addDataFunc: layerObj['getModelField'],
-    //         streamFlowLayer: layerObj['streamFlowLayer']
-    //       };
-    
-
-    // for testing
-    // let level = "0";
-    // let dataset = "HYCOM_DATA";
-    // let subResource = "ocean_current_speed";
-    // let time = "2018-12-14T08:00Z";
-
-    
-    // getModelField(dataset, subResource, level, time).then(res=> {debugger; console.log('hi')}).catch(alert)
-    //getData().then(res=> {debugger; console.log('hi')}).catch(alert)
-    // end testing
-
-    
     let addFuncType = layerObj['addDataFunc'];
     switch(addFuncType) {
       case 'getModelField':
-        let maxVelocity = layerObj['maxVelocity'];
-        let velocityScale = layerObj['velocityScale'];
+        let level = isNaN(layerObj['level']) ? '' : layerObj['level']
         
         getModelField(layerObj['dataset'], layerObj['subResource'], layerObj['level'], this.state.mapTime).then(
           res => {
-            // parse data and add streamflows
-            // TODO: this only applies for certain layers need to add that logic in
-            // add in logic for scalar vs vecotr
             let data = JSON.parse(res['data']);
-            let streamLayer = this.buildStreamlineLayer(data, maxVelocity, velocityScale);
 
-            // TODO: set opacity here the max/min zoom should also be set in layers.js
-            let tileOptions = {
-              opacity: 1,
-              maxNativeZoom: layerObj['maxNativeZoom'],
-              minNativeZoom: layerObj['minNativeZoom'],
-            }
-            debugger
-            let tileLayer = L.tileLayer(`https://s3.us-east-2.amazonaws.com/oceanmapper-data-storage/${res['tile_paths']['scalar']}`,tileOptions);
-            this.leafletLayerGroup.addLayer(tileLayer);
-            this.leafletLayerGroup.addLayer(streamLayer);
+            // add tile and streamflow data
+            let maxVelocity = layerObj['maxVelocity'];
+            let velocityScale = layerObj['velocityScale'];
+            let tileLayer = this.buildTileLayer(layerObj,res).then(tileLayer => { 
+              if (this.layerBindings.hasOwnProperty(layerObj['id'])) {
+                this.removeLeafletLayer(layerObj['id']).then(() => {
 
-            // get internal Leaflet _id and assign key/val pair in layerBindings
-            let lid_stream = this.leafletLayerGroup.getLayerId(streamLayer);
-            this.layerBindings[`${layerObj['id']}_streamlines`] = lid_stream;
+                  // add tile layer
+                  this.addToLeafletLayerGroup(tileLayer, layerObj, false)
 
-            let lid_tile = this.leafletLayerGroup.getLayerId(tileLayer);
-            this.layerBindings[layerObj['id']] = lid_tile;
+                  // add stream layer
+                  if (layerObj['streamFlowLayer']) {
+                    this.buildStreamlineLayer(data, maxVelocity, velocityScale).then(streamLayer => {
+                      this.addToLeafletLayerGroup(streamLayer, layerObj, true)
+                    })
+                  }
+                })
+              } else {
+                this.leafletLayerGroup.addLayer(tileLayer);
+                let lid_tile = this.leafletLayerGroup.getLayerId(tileLayer);
+                this.layerBindings[layerObj['id']] = lid_tile;
 
-            // let tileLayer = L.tileLayer('https://s3.us-east-2.amazonaws.com/oceanmapper-data-storage/HYCOM_OCEAN_CURRENTS_3D/20180914_00/0m/tiles/scalar/{z}/{x}/{y}.png',options).addTo(map);
-            console.log('hi');
-          }).catch(alert)
-
-
+                if (layerObj['streamFlowLayer']) {
+                  this.buildStreamlineLayer(data, maxVelocity, velocityScale).then(streamLayer => {
+                    this.leafletLayerGroup.addLayer(streamLayer);
+                    let lid_stream = this.leafletLayerGroup.getLayerId(streamLayer);        
+                    this.layerBindings[`${layerObj['id']}_streamlines`] = lid_stream;
+                  })
+                }
+              }
+            })
+          }
+        ).catch(alert) // TODO: make a formal modal out of this
         break;
       case 'getGebcoBathy':
         //code block
@@ -317,7 +306,6 @@ class App extends Component {
 
 
     // marker2=L.marker([0,10],{pane: 'test'})
-    console.log('layer being added');
 
     // let rand_lat = Math.floor(Math.random() * 11); 
     // let marker = L.marker([rand_lat,0]).bindPopup(layerObj['id']);
@@ -329,18 +317,51 @@ class App extends Component {
     // this.layerBindings[layerObj['id']] = lid;
   }
 
-  removeLeafletLayer(leafletLayerID) {
-    this.leafletLayerGroup.removeLayer(leafletLayerID);
+  async removeLeafletLayer(layerID) {
+     
+    try {
+      await this.leafletLayerGroup.removeLayer(this.layerBindings[layerID]);
+      delete this.layerBindings[layerID]
+
+      if (this.layerBindings.hasOwnProperty(`${layerID}_streamlines`)) {
+        await this.leafletLayerGroup.removeLayer(this.layerBindings[`${layerID}_streamlines`]);
+        delete this.layerBindings[`${layerID}_streamlines`]
+      }
+
+    } catch (err) {
+      console.log(err);
+    } 
   }
 
-  buildStreamlineLayer(data, maxVelocity, scale) {
-    debugger
-    let velocityLayer = L.velocityLayer({
-      displayValues: true,
+  addToLeafletLayerGroup(layerHandle, layerObj, streamline=false) {
+    this.leafletLayerGroup.addLayer(layerHandle);
+    let lid_layer = this.leafletLayerGroup.getLayerId(layerHandle);
+    let layerKeyStr = streamline ? `${layerObj['id']}_streamlines` : layerObj['id'];
+    this.layerBindings[layerKeyStr] = lid_layer;
+  }
+
+  async buildTileLayer(layerObj,res) {
+    // add tile imagery data
+    let tileOptions = {
+      opacity: layerObj['opacity'],
+      maxNativeZoom: layerObj['maxNativeZoom'],
+      minNativeZoom: layerObj['minNativeZoom'],
+    }
+
+    let tilepath = res['tile_paths']['scalar'] ? 'scalar' : 'vector';
+    let tileLayer = await L.tileLayer(`https://s3.us-east-2.amazonaws.com/oceanmapper-data-storage/${res['tile_paths'][tilepath]}`,
+      tileOptions);
+
+    return tileLayer;
+  }
+
+  async buildStreamlineLayer(data, maxVelocity, scale) {
+    let velocityLayer = await L.velocityLayer({
+      displayValues: false,
       displayOptions: {
-        velocityType: 'ocean current',
+        velocityType: 'fluid',
         displayPosition: 'bottomleft',
-        displayEmptyString: 'No ocean current data'
+        displayEmptyString: 'No velocity data'
       },
       data: data,
       maxVelocity: maxVelocity, //20.0,
@@ -348,8 +369,6 @@ class App extends Component {
     });
     return velocityLayer;
   }
-
-  //map.addLayer(velocityLayer)
 
   onMapClick(e) {
     let popupContent = `<h4>${e.latlng.toString()}</h4>`;
@@ -371,7 +390,9 @@ class App extends Component {
           mapLayers[id] = {
             isOn: layerObj['defaultOn'], 
             timeSensitive: layerObj['timeSensitive'],
-            addDataFunc: layerObj['addDataFunc']
+            addDataFunc: layerObj['addDataFunc'],
+            opacity: layerObj['defaultOpacity'],
+            overlayPriority: layerObj['overlayPriority']
           };
           orderedMapLayers.push(id);  
         })

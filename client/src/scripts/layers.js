@@ -23,6 +23,7 @@ let TOC = [
           velocityScale: 0.1,
           timeSensitive: true,
           visibleTOC: true,
+          defaultOpacity: 1.0,
           defaultOn: false
         }
       ]
@@ -47,6 +48,7 @@ let TOC = [
           velocityScale: 0.01,
           timeSensitive: true,
           visibleTOC: false,
+          defaultOpacity: 1.0,
           defaultOn: false
         }
       ]
@@ -71,7 +73,8 @@ let TOC = [
           velocityScale: 0.01,
           timeSensitive: true,
           visibleTOC: true,
-          defaultOn: true
+          defaultOpacity: 1.0,
+          defaultOn: false
         }
       ]
     },
@@ -91,6 +94,7 @@ let TOC = [
           minNativeZoom: 3,
           timeSensitive: true,
           visibleTOC: true,
+          defaultOpacity: 1.0,
           defaultOn: false
         },
         {
@@ -105,7 +109,8 @@ let TOC = [
           minNativeZoom: 3,
           timeSensitive: true,
           visibleTOC: true,
-          defaultOn: false
+          defaultOpacity: 1.0,
+          defaultOn: true
         },
         {
           id: 'ww3_primary_wave_period',
@@ -118,6 +123,7 @@ let TOC = [
           minNativeZoom: 3,
           timeSensitive: true,
           visibleTOC: true,
+          defaultOpacity: 1.0,
           defaultOn: false
         }
       ]
@@ -150,6 +156,7 @@ let TOC = [
         addDataFunc: 'placeholder',
         timeSensitive: false,
         visibleTOC: true,
+        defaultOpacity: 1.0,
         defaultOn: false
       }
     ]
@@ -174,6 +181,7 @@ let TOC = [
         addDataFunc: 'getGebcoBathy',
         timeSensitive: false,
         visibleTOC: true,
+        defaultOpacity: 1.0,
         defaultOn: true
       }
     ]

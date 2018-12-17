@@ -4,8 +4,8 @@ import datetime
 import numpy as np
 import mercantile
 import pyproj
-import matplotlib
-matplotlib.use('agg')
+# import matplotlib
+# matplotlib.use('agg')
 from matplotlib import pyplot as plt, cm
 import matplotlib.colors as colors
 import cmocean
@@ -112,7 +112,7 @@ def lambda_handler(event, context):
 
         ## filled contour (use SORTED indexes for the EPSG3857 drawing surface)
         contourf = ax.contourf(proj_lon_array, proj_lat_array, data_array[sa,:][:,so], 
-            levels=lvls, cmap=data_cmap)
+            levels=lvls, cmap=data_cmap, extend='both')
 
         ax.set_frame_on(False)
         ax.set_clip_on(False)
@@ -130,8 +130,7 @@ def lambda_handler(event, context):
 
         lvls = range(cmin, cmax)
         ax.contourf(proj_lon_array, proj_lat_array, height_raw[sa,:][:,so], cmap=palette,
-        levels=lvls)
-
+        levels=lvls, extend='both')
         ax.set_frame_on(False)
         ax.set_clip_on(False)
         ax.set_position([0, 0, 1, 1])
@@ -184,7 +183,7 @@ def lambda_handler(event, context):
         
         lvls = range(cmin, cmax)
         ax.contourf(proj_lon_array, proj_lat_array, period_raw[sa,:][:,so], cmap=palette,
-        levels=lvls)
+        levels=lvls, extend='both')
 
         ax.set_frame_on(False)
         ax.set_clip_on(False)
@@ -286,8 +285,8 @@ def make_tile_figure(height=256, width=256, dpi=256):
 if __name__ == "__main__":
     
     event = {
-        'pickle_filepath': 'HYCOM_DATA/20180826_00/0m/ocean_current_speed/pickle/hycom_currents_20180826_00.pickle',
-        'data_type': 'current_speed',
+        'pickle_filepath': 'WW3_DATA/20181216_00/sig_wave_height/pickle/ww3_htsgwsfc_20181216_00.pickle',
+        'data_type': 'wave_amp',
         'bucket_name': 'oceanmapper-data-storage', 
         'output_tilepath': 'test_tiles',
         'xyz_info': {'start_indx': 0, 'end_indx': 50},
