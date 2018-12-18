@@ -26,8 +26,5 @@ export const getData = async (endpoint) => {
   }
 }
 
-
-// export const dataFetchMap = {
-//   'getModelField': getModelField,
-//   'getGebcoBathy': 'http://tileservice.charts.noaa.gov/tiles/50000_1/{z}/{x}/{y}.png'
-// }
+export const nauticalChartEndpoint = 'http://tileservice.charts.noaa.gov/tiles/50000_1/{z}/{x}/{y}.png';
+export const gebcoBathyEndpoint = 'https://gis.ngdc.noaa.gov/arcgis/rest/services/web_mercator/gebco_2014_contours/MapServer/tile/{z}/{y}/{x}';

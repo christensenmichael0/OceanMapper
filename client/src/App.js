@@ -8,7 +8,7 @@ import layers from './scripts/layers';
 import moment from 'moment';
 import '@ansur/leaflet-pulse-icon/dist/L.Icon.Pulse.js';
 import '@ansur/leaflet-pulse-icon/dist/L.Icon.Pulse.css';
-import { getData, getModelField } from './scripts/dataFetchingUtils';
+import { getData, getModelField, gebcoBathyEndpoint } from './scripts/dataFetchingUtils';
 import priorityMap from './scripts/layerPriority';
 
 // leaflet gateway
@@ -63,6 +63,7 @@ class App extends Component {
     this.updateLeafletLayer= this.updateLeafletLayer.bind(this);
     this.buildTileLayer = this.buildTileLayer.bind(this);
     this.buildStreamlineLayer = this.buildStreamlineLayer.bind(this);
+    this.buildBathyLayer = this.buildBathyLayer.bind(this);
     this.addToLeafletLayerGroup = this.addToLeafletLayerGroup.bind(this);
     this.populateAvailableLevels = this.populateAvailableLevels.bind(this);
     this.findObjIndex = this.findObjIndex.bind(this);
@@ -85,11 +86,6 @@ class App extends Component {
 
     // add click event listener
     map.on('click', this.onMapClick);
-
-    // map.on('layeradd', function(layer, layername){
-    //   console.log('hittttt');
-    //   debugger
-    // });
 
     // layer/leaflet layer binding
     this.layerBindings = {};
@@ -262,6 +258,11 @@ class App extends Component {
         getModelField(layerObj['dataset'], layerObj['subResource'], layerObj['level'], this.state.mapTime).then(
           res => {
             let data = JSON.parse(res['data']);
+            // if requested date is outside of data range
+            if (!res['tile_paths']) {
+              // update date valid text
+              return
+            }
 
             // add tile and streamflow data
             let maxVelocity = layerObj['maxVelocity'];
@@ -281,15 +282,11 @@ class App extends Component {
                   }
                 })
               } else {
-                this.leafletLayerGroup.addLayer(tileLayer);
-                let lid_tile = this.leafletLayerGroup.getLayerId(tileLayer);
-                this.layerBindings[layerObj['id']] = lid_tile;
+                this.addToLeafletLayerGroup(tileLayer, layerObj, false)
 
                 if (layerObj['streamFlowLayer']) {
                   this.buildStreamlineLayer(data, maxVelocity, velocityScale).then(streamLayer => {
-                    this.leafletLayerGroup.addLayer(streamLayer);
-                    let lid_stream = this.leafletLayerGroup.getLayerId(streamLayer);        
-                    this.layerBindings[`${layerObj['id']}_streamlines`] = lid_stream;
+                    this.addToLeafletLayerGroup(streamLayer, layerObj, true)
                   })
                 }
               }
@@ -298,7 +295,15 @@ class App extends Component {
         ).catch(alert) // TODO: make a formal modal out of this
         break;
       case 'getGebcoBathy':
-        //code block
+        let tileLayer = this.buildBathyLayer(layerObj,gebcoBathyEndpoint).then(tileLayer => { 
+          if (this.layerBindings.hasOwnProperty(layerObj['id'])) {
+            this.removeLeafletLayer(layerObj['id']).then(() => {
+              this.addToLeafletLayerGroup(tileLayer, layerObj, false);
+            })
+          } else {
+            this.addToLeafletLayerGroup(tileLayer, layerObj, false);
+          }
+        })
         break;
       default:
         //code block
@@ -348,6 +353,9 @@ class App extends Component {
       minNativeZoom: layerObj['minNativeZoom'],
     }
 
+    // add pane as an option is the layer contains overlayPriority key
+    tileOptions = layerObj['overlayPriority'] ? {...tileOptions, pane: layerObj['overlayPriority']} : tileOptions;
+
     let tilepath = res['tile_paths']['scalar'] ? 'scalar' : 'vector';
     let tileLayer = await L.tileLayer(`https://s3.us-east-2.amazonaws.com/oceanmapper-data-storage/${res['tile_paths'][tilepath]}`,
       tileOptions);
@@ -368,6 +376,19 @@ class App extends Component {
       velocityScale: scale// 0.01 // arbitrary default 0.005
     });
     return velocityLayer;
+  }
+
+  async buildBathyLayer(layerObj, tileEndpoint) {
+    // add tile imagery data
+    let tileOptions = {
+      opacity: layerObj['opacity']
+    }
+
+    // add pane as an option if the layer contains overlayPriority key
+    tileOptions = layerObj['overlayPriority'] ? {...tileOptions, pane: layerObj['overlayPriority']} : tileOptions;
+    let tileLayer = await L.tileLayer(tileEndpoint,tileOptions);
+
+    return tileLayer;
   }
 
   onMapClick(e) {
