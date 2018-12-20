@@ -8,8 +8,12 @@ import layers from './scripts/layers';
 import moment from 'moment';
 import '@ansur/leaflet-pulse-icon/dist/L.Icon.Pulse.js';
 import '@ansur/leaflet-pulse-icon/dist/L.Icon.Pulse.css';
-import { getData, getModelField, gebcoBathyEndpoint } from './scripts/dataFetchingUtils';
+import { getData, 
+        getModelField, 
+        gebcoBathyEndpoint, 
+        boemEnpoint } from './scripts/dataFetchingUtils';
 import priorityMap from './scripts/layerPriority';
+import _ from 'lodash';
 
 // leaflet gateway
 const L = window.L;
@@ -61,6 +65,7 @@ class App extends Component {
     this.addLeafletLayer = this.addLeafletLayer.bind(this);
     this.removeLeafletLayer = this.removeLeafletLayer.bind(this);
     this.updateLeafletLayer= this.updateLeafletLayer.bind(this);
+    this.debouncedUpdateLeafletLayer = _.debounce(this.debouncedUpdateLeafletLayer.bind(this),500);
     this.buildTileLayer = this.buildTileLayer.bind(this);
     this.buildStreamlineLayer = this.buildStreamlineLayer.bind(this);
     this.buildBathyLayer = this.buildBathyLayer.bind(this);
@@ -70,6 +75,7 @@ class App extends Component {
     this.handleLayerToggle = this.handleLayerToggle.bind(this);
     this.handleLevelChange = this.handleLevelChange.bind(this);
     this.handleTimeChange = this.handleTimeChange.bind(this);
+    this.updateValidTime = this.updateValidTime.bind(this);
   }
 
   inititializeMap(id) {
@@ -158,7 +164,8 @@ class App extends Component {
             dataset,
             subResource,
             isOn: layerObj['defaultOn'], 
-            level: levels[0], 
+            level: levels[0],
+            validTime: '',
             timeSensitive: layerObj['timeSensitive'], 
             addDataFunc: layerObj['addDataFunc'],
             maxNativeZoom: layerObj['maxNativeZoom'],
@@ -238,13 +245,47 @@ class App extends Component {
    * @param {int} JS datetime in milliseconds
    */
   handleTimeChange(timeValue) {
+    console.log('i heard handleTimeChange');
+    // testing
+    this.updateLeafletLayer('blah'); // don't need input arg
+    // end testing
+
     this.setState({mapTime: timeValue});
+  }
+
+  updateValidTime(layerID,validTime) {
+    console.log(' heard updateValidTime');
+    let mapLayers = Object.assign({},this.state.mapLayers);
+    mapLayers[layerID]['validTime'] = validTime;
+    this.setState({mapLayers});
   }
 
   // timeslider can call this function repeatedly instead
   updateLeafletLayer(layerObj) {
     // remove old layer and add new layer
-    this.removeLeafletLayer(layerObj['id']).then(()=>{this.addLeafletLayer(layerObj)});
+    // this.removeLeafletLayer(layerObj['id']).then(()=>{this.addLeafletLayer(layerObj)});
+    this.debouncedUpdateLeafletLayer(layerObj);
+
+    // _.debounce(this.removeLeafletLayer(layerObj['id']).then(()=> {
+    //   console.log('in updateLeafletLayer')
+    //   this.addLeafletLayer(layerObj)
+    // }),200);
+  }
+
+  debouncedUpdateLeafletLayer(layerObj) {
+    // testing
+    console.log('updating leaflet layers!');
+    let mapLayers = Object.assign({},this.state.mapLayers), orderedMapLayers = [...this.state.orderedMapLayers];
+    
+    // loop through orderlayers and update necessary layers depending on timeSensitive param 
+    orderedMapLayers.forEach((layer)=> {
+      let layerObj = {...mapLayers[layer],id: layer};
+      
+      if (layerObj['timeSensitive'] && layerObj['isOn']) {
+        this.removeLeafletLayer(layerObj['id']).then(()=>{this.addLeafletLayer(layerObj)});
+      };
+    });
+    // end testing 
   }
 
   // TODO: add to correct pane... also need to set the date-valid time in the TOC
@@ -258,9 +299,12 @@ class App extends Component {
         getModelField(layerObj['dataset'], layerObj['subResource'], layerObj['level'], this.state.mapTime).then(
           res => {
             let data = JSON.parse(res['data']);
+            // update valid time here? TODO: something is wrong when clicking on timeslider vs sliding it
+            this.updateValidTime(layerObj['id'], res['valid_time'])
+
             // if requested date is outside of data range
             if (!res['tile_paths']) {
-              // update date valid text
+              // TODO: update date valid text
               return
             }
 
@@ -304,6 +348,28 @@ class App extends Component {
             this.addToLeafletLayerGroup(tileLayer, layerObj, false);
           }
         })
+        break;
+      case 'getLeaseAreas':
+        // let tileLayer = this.buildBathyLayer(layerObj,gebcoBathyEndpoint).then(tileLayer => { 
+        //   if (this.layerBindings.hasOwnProperty(layerObj['id'])) {
+        //     this.removeLeafletLayer(layerObj['id']).then(() => {
+        //       this.addToLeafletLayerGroup(tileLayer, layerObj, false);
+        //     })
+        //   } else {
+        //     this.addToLeafletLayerGroup(tileLayer, layerObj, false);
+        //   }
+        // })
+        break;
+      case 'getLeaseBlocks':
+        // let tileLayer = this.buildBathyLayer(layerObj,gebcoBathyEndpoint).then(tileLayer => { 
+        //   if (this.layerBindings.hasOwnProperty(layerObj['id'])) {
+        //     this.removeLeafletLayer(layerObj['id']).then(() => {
+        //       this.addToLeafletLayerGroup(tileLayer, layerObj, false);
+        //     })
+        //   } else {
+        //     this.addToLeafletLayerGroup(tileLayer, layerObj, false);
+        //   }
+        // })
         break;
       default:
         //code block
@@ -378,6 +444,9 @@ class App extends Component {
     return velocityLayer;
   }
 
+  // TODO: see if i can make this more generic so it can be used with other layers
+  // add another optional argument.. extra options
+  // also ability to choose between tilelayer and wms tilelayer... thats prob a required arg
   async buildBathyLayer(layerObj, tileEndpoint) {
     // add tile imagery data
     let tileOptions = {
@@ -426,7 +495,6 @@ class App extends Component {
 
 
   componentDidMount() {
-    console.log('App component mounted');
     let categories = [...this.state.toc], error = null;
 
     if (!this.map) {
@@ -453,7 +521,6 @@ class App extends Component {
         .then(data => {
           // let error = null;
           if (!('error' in data)) {
-            console.log(data);
             this.populateAvailableLevels(data)
           } else {
             error = data['error']['message']
@@ -475,7 +542,6 @@ class App extends Component {
   render() {
     const { classes } = this.props;
 
-    console.log('App component rendered');
     return (
       <div>
         <PersistentDrawerLeft 

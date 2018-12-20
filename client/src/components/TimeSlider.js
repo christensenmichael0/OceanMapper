@@ -9,6 +9,7 @@ import _LinearScale from 'react-compound-slider/Slider/LinearScale';
 import { Ticks } from "react-compound-slider";
 import Tick from './Tick';
 import { formatDateTime } from '../scripts/formatDateTime';
+import _ from 'lodash';
 
 const scale = new _LinearScale();
 const drawerWidth = externalStyles.drawerWidth;
@@ -81,7 +82,14 @@ function TimeSlider(props) {
   const handleChange = (event, value) => {
     // this is called repeatedly when sliding
     props.handleTimeChange(value);
+    // console.log('***orig time slide shift***');
+    // debouncedhandleChange(value)
   };
+
+  // const debouncedhandleChange = _.debounce(value => {
+  //   props.handleTimeChange(value);
+  //   console.log('***time slide shift***');
+  // }, 200)
 
   // https://stackoverflow.com/questions/23123138/perform-debounce-in-react-js
   // need debouncing ?
@@ -128,7 +136,7 @@ function TimeSlider(props) {
           max={endTime}
           step={3600000}
           onChange={handleChange}
-          onDragEnd={handleDragEnd}
+          onDragEnd={()=> console.log('drag ended.. real func is commented')}//{handleDragEnd}
         />
         <Ticks scale={scale} count={4} values={tickVals}>
           {({ ticks }) => (

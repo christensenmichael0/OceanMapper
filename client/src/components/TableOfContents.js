@@ -1,6 +1,7 @@
 import React from 'react';
 import classNames from 'classnames';
 import { withStyles } from '@material-ui/core/styles';
+import Typography from '@material-ui/core/Typography';
 import TOCExpansionPanel from './TOCExpansionPanel';
 import FormGroup from '@material-ui/core/FormGroup';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
@@ -44,6 +45,9 @@ function TableOfContents(props) {
                     </FormGroup>
                     {(props['mapLayers'][subresource['id']] ? props['mapLayers'][subresource['id']]['isOn'] : subresource['defaultOn']) && 
                     <React.Fragment>
+                      <Typography variant="overline" gutterBottom>
+                        Date Valid: {props['mapLayers'][subresource['id']] ? props['mapLayers'][subresource['id']]['validTime'] : ''}
+                      </Typography>
                       {subresource['legendUrl'] ? <img src={subresource['legendUrl']} alt='data-legend' className={classNames(classes.img)}/> : ''}
                       {(props['mapLayers'][subresource['id']] ? !isNaN(props['mapLayers'][subresource['id']]['level']) : false) && 
                       <LevelSelector 

@@ -167,9 +167,21 @@ let TOC = [
     expanded: false,
     Layers: [
       {
-        id: 'gom_lease_blocks',
-        niceName: 'GOM Lease Blocks',
-        addDataFunc: 'placeholder',
+        id: 'ocs_leasing_extents',
+        niceName: 'BOEM OCS Protraction Diagrams & Leasing Maps',
+        overlayPriority: 'medium',
+        endPoint: 'https://gis.boem.gov/arcgis/services/BOEM_BSEE/MMC_Layers/MapServer/WmsServer',
+        addDataFunc: 'getLeaseAreas',
+        timeSensitive: false,
+        visibleTOC: true,
+        defaultOn: false
+      },
+      {
+        id: 'ocs_lease_blocks',
+        niceName: 'BOEM OCS Lease Blocks',
+        overlayPriority: 'medium',
+        endPoint: 'https://gis.boem.gov/arcgis/services/BOEM_BSEE/MMC_Layers/MapServer/WmsServer',
+        addDataFunc: 'getLeaseBlocks',
         timeSensitive: false,
         visibleTOC: true,
         defaultOn: false
@@ -178,6 +190,7 @@ let TOC = [
         id: 'gebco_bathy',
         niceName: 'GEBCO Bathmetry',
         overlayPriority: 'medium',
+        endPoint: 'https://gis.ngdc.noaa.gov/arcgis/rest/services/web_mercator/gebco_2014_contours/MapServer/tile/{z}/{y}/{x}',
         addDataFunc: 'getGebcoBathy',
         timeSensitive: false,
         visibleTOC: true,
