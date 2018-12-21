@@ -171,7 +171,7 @@ def lambda_handler(event, context):
 
     # call an intermediate function to distribute tiling workload
     tile_task_distributor(output_pickle_path, 'current_speed', AWS_BUCKET_NAME, 
-        output_tile_scalar_path, range(3,5))
+        output_tile_scalar_path, range(3,4))
 
     # call an intermediate function to distribute pickling workload (subsetting data by tile)
     data_zoom_level = datasets[TOP_LEVEL_FOLDER]['sub_resource'][SUB_RESOURCE]['data_tiles_zoom_level']

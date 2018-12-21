@@ -16,13 +16,13 @@ let TOC = [
           availableLevels: [],
           levelName: 'Depth (m)',
           addDataFunc: 'getModelField',
-          maxNativeZoom: 4,
+          maxNativeZoom: 3,
           minNativeZoom: 3,
           streamFlowLayer: true,
           maxVelocity: 1.0,
           velocityScale: 0.1,
           timeSensitive: true,
-          visibleTOC: true,
+          visibleTOC: false,
           defaultOpacity: 1.0,
           defaultOn: false
         }
@@ -31,7 +31,7 @@ let TOC = [
     {
       s3Name: 'RTOFS_DATA',
       niceName: 'RTOFS',
-      visibleTOC: false,
+      visibleTOC: true,
       subResources: [
         {
           id: 'rtofs_currents',
@@ -41,13 +41,13 @@ let TOC = [
           availableLevels: [],
           levelName: 'Depth (m)',
           addDataFunc: 'getModelField',
-          maxNativeZoom: 4,
+          maxNativeZoom: 3,
           minNativeZoom: 3,
           streamFlowLayer: true,
           maxVelocity: 1.0,
-          velocityScale: 0.01,
+          velocityScale: 0.15,
           timeSensitive: true,
-          visibleTOC: false,
+          visibleTOC: true,
           defaultOpacity: 1.0,
           defaultOn: false
         }
@@ -110,7 +110,7 @@ let TOC = [
           timeSensitive: true,
           visibleTOC: true,
           defaultOpacity: 1.0,
-          defaultOn: true
+          defaultOn: false
         },
         {
           id: 'ww3_primary_wave_period',
@@ -173,7 +173,8 @@ let TOC = [
         endPoint: 'https://gis.boem.gov/arcgis/services/BOEM_BSEE/MMC_Layers/MapServer/WmsServer',
         addDataFunc: 'getLeaseAreas',
         timeSensitive: false,
-        visibleTOC: true,
+        movementSensitive: true,
+        visibleTOC: false,
         defaultOn: false
       },
       {
@@ -195,7 +196,7 @@ let TOC = [
         timeSensitive: false,
         visibleTOC: true,
         defaultOpacity: 1.0,
-        defaultOn: true
+        defaultOn: false
       }
     ]
   },

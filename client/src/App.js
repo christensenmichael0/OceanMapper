@@ -11,7 +11,7 @@ import '@ansur/leaflet-pulse-icon/dist/L.Icon.Pulse.css';
 import { getData, 
         getModelField, 
         gebcoBathyEndpoint, 
-        boemEnpoint } from './scripts/dataFetchingUtils';
+        boemEndpoint } from './scripts/dataFetchingUtils';
 import priorityMap from './scripts/layerPriority';
 import _ from 'lodash';
 
@@ -62,13 +62,14 @@ class App extends Component {
     this._mapNode = null;
     this.inititializeMap = this.inititializeMap.bind(this);
     this.onMapClick = this.onMapClick.bind(this);
+    this.onMapBoundsChange = this.onMapBoundsChange.bind(this);
     this.addLeafletLayer = this.addLeafletLayer.bind(this);
     this.removeLeafletLayer = this.removeLeafletLayer.bind(this);
-    this.updateLeafletLayer= this.updateLeafletLayer.bind(this);
     this.debouncedUpdateLeafletLayer = _.debounce(this.debouncedUpdateLeafletLayer.bind(this),500);
     this.buildTileLayer = this.buildTileLayer.bind(this);
     this.buildStreamlineLayer = this.buildStreamlineLayer.bind(this);
     this.buildBathyLayer = this.buildBathyLayer.bind(this);
+    this.buildGeneralTileLayer = this.buildGeneralTileLayer.bind(this);
     this.addToLeafletLayerGroup = this.addToLeafletLayerGroup.bind(this);
     this.populateAvailableLevels = this.populateAvailableLevels.bind(this);
     this.findObjIndex = this.findObjIndex.bind(this);
@@ -83,7 +84,7 @@ class App extends Component {
     if (this.map) return;
 
     let map = this.map = L.map(id, mapConfig.params);
-    L.esri.basemapLayer("DarkGray").addTo(map);
+    L.esri.basemapLayer("DarkGray").addTo(map); // DarkGray
 
     // zoom control position
     L.control.zoom({
@@ -92,6 +93,9 @@ class App extends Component {
 
     // add click event listener
     map.on('click', this.onMapClick);
+
+    // add move event listener (for lease blocks).. seems to handle zoom change too
+    map.on('moveend', this.onMapBoundsChange); // moveend, zoomend
 
     // layer/leaflet layer binding
     this.layerBindings = {};
@@ -245,36 +249,18 @@ class App extends Component {
    * @param {int} JS datetime in milliseconds
    */
   handleTimeChange(timeValue) {
-    console.log('i heard handleTimeChange');
-    // testing
-    this.updateLeafletLayer('blah'); // don't need input arg
-    // end testing
-
+    this.debouncedUpdateLeafletLayer(); 
     this.setState({mapTime: timeValue});
   }
 
   updateValidTime(layerID,validTime) {
-    console.log(' heard updateValidTime');
     let mapLayers = Object.assign({},this.state.mapLayers);
     mapLayers[layerID]['validTime'] = validTime;
     this.setState({mapLayers});
   }
 
-  // timeslider can call this function repeatedly instead
-  updateLeafletLayer(layerObj) {
-    // remove old layer and add new layer
-    // this.removeLeafletLayer(layerObj['id']).then(()=>{this.addLeafletLayer(layerObj)});
-    this.debouncedUpdateLeafletLayer(layerObj);
-
-    // _.debounce(this.removeLeafletLayer(layerObj['id']).then(()=> {
-    //   console.log('in updateLeafletLayer')
-    //   this.addLeafletLayer(layerObj)
-    // }),200);
-  }
-
-  debouncedUpdateLeafletLayer(layerObj) {
-    // testing
-    console.log('updating leaflet layers!');
+  // https://stackoverflow.com/questions/23123138/perform-debounce-in-react-js
+  debouncedUpdateLeafletLayer() {
     let mapLayers = Object.assign({},this.state.mapLayers), orderedMapLayers = [...this.state.orderedMapLayers];
     
     // loop through orderlayers and update necessary layers depending on timeSensitive param 
@@ -285,33 +271,27 @@ class App extends Component {
         this.removeLeafletLayer(layerObj['id']).then(()=>{this.addLeafletLayer(layerObj)});
       };
     });
-    // end testing 
   }
 
-  // TODO: add to correct pane... also need to set the date-valid time in the TOC
-  // fix issue when sliding out of range... i.e. no scalar or vector
   addLeafletLayer(layerObj) {
-    let addFuncType = layerObj['addDataFunc'];
+    let options, addFuncType = layerObj['addDataFunc'];
     switch(addFuncType) {
       case 'getModelField':
-        let level = isNaN(layerObj['level']) ? '' : layerObj['level']
-        
         getModelField(layerObj['dataset'], layerObj['subResource'], layerObj['level'], this.state.mapTime).then(
           res => {
             let data = JSON.parse(res['data']);
-            // update valid time here? TODO: something is wrong when clicking on timeslider vs sliding it
-            this.updateValidTime(layerObj['id'], res['valid_time'])
-
-            // if requested date is outside of data range
+            // update valid time here.. check if requested date is outside of data range
             if (!res['tile_paths']) {
-              // TODO: update date valid text
+              this.updateValidTime(layerObj['id'], 'n/a')
               return
+            } else {
+              this.updateValidTime(layerObj['id'], res['valid_time'])
             }
 
             // add tile and streamflow data
             let maxVelocity = layerObj['maxVelocity'];
             let velocityScale = layerObj['velocityScale'];
-            let tileLayer = this.buildTileLayer(layerObj,res).then(tileLayer => { 
+            this.buildTileLayer(layerObj,res).then(tileLayer => { 
               if (this.layerBindings.hasOwnProperty(layerObj['id'])) {
                 this.removeLeafletLayer(layerObj['id']).then(() => {
 
@@ -339,7 +319,8 @@ class App extends Component {
         ).catch(alert) // TODO: make a formal modal out of this
         break;
       case 'getGebcoBathy':
-        let tileLayer = this.buildBathyLayer(layerObj,gebcoBathyEndpoint).then(tileLayer => { 
+      // this.buildBathyLayer(layerObj,gebcoBathyEndpoint)
+        this.buildGeneralTileLayer(layerObj,gebcoBathyEndpoint).then(tileLayer => { 
           if (this.layerBindings.hasOwnProperty(layerObj['id'])) {
             this.removeLeafletLayer(layerObj['id']).then(() => {
               this.addToLeafletLayerGroup(tileLayer, layerObj, false);
@@ -350,7 +331,9 @@ class App extends Component {
         })
         break;
       case 'getLeaseAreas':
-        // let tileLayer = this.buildBathyLayer(layerObj,gebcoBathyEndpoint).then(tileLayer => { 
+        // TODO: will be doing this differently
+        // options = {layers: '19', format: 'image/png', transparent: true};
+        // this.buildGeneralTileLayer(layerObj,layerObj['endPoint'],{}},true).then(tileLayer => { 
         //   if (this.layerBindings.hasOwnProperty(layerObj['id'])) {
         //     this.removeLeafletLayer(layerObj['id']).then(() => {
         //       this.addToLeafletLayerGroup(tileLayer, layerObj, false);
@@ -361,15 +344,16 @@ class App extends Component {
         // })
         break;
       case 'getLeaseBlocks':
-        // let tileLayer = this.buildBathyLayer(layerObj,gebcoBathyEndpoint).then(tileLayer => { 
-        //   if (this.layerBindings.hasOwnProperty(layerObj['id'])) {
-        //     this.removeLeafletLayer(layerObj['id']).then(() => {
-        //       this.addToLeafletLayerGroup(tileLayer, layerObj, false);
-        //     })
-        //   } else {
-        //     this.addToLeafletLayerGroup(tileLayer, layerObj, false);
-        //   }
-        // })
+        options = {layers: '18', format: 'image/png', transparent: true};
+        this.buildGeneralTileLayer(layerObj,layerObj['endPoint'],options,true).then(tileLayer => { 
+          if (this.layerBindings.hasOwnProperty(layerObj['id'])) {
+            this.removeLeafletLayer(layerObj['id']).then(() => {
+              this.addToLeafletLayerGroup(tileLayer, layerObj, false);
+            })
+          } else {
+            this.addToLeafletLayerGroup(tileLayer, layerObj, false);
+          }
+        })
         break;
       default:
         //code block
@@ -444,9 +428,28 @@ class App extends Component {
     return velocityLayer;
   }
 
-  // TODO: see if i can make this more generic so it can be used with other layers
+  // TODO: this will replace buildBathyLayer and be used for lease blocks, hurricanes.. more?
   // add another optional argument.. extra options
   // also ability to choose between tilelayer and wms tilelayer... thats prob a required arg
+  async buildGeneralTileLayer(layerObj, endpointURL, extraOptions = {}, wmsTileLayer = false) {
+    // add tile imagery data
+    let tileOptions = {opacity: layerObj['opacity'], ...extraOptions};
+
+    // add pane as an option if the layer contains overlayPriority key
+    tileOptions = layerObj['overlayPriority'] ? {...tileOptions, pane: layerObj['overlayPriority']} : tileOptions;
+
+    let outputTileLayer;
+    if (wmsTileLayer) {
+      outputTileLayer = await L.tileLayer.wms(endpointURL,tileOptions);
+    } else {
+      outputTileLayer = await L.tileLayer(endpointURL,tileOptions);
+    }
+
+    return outputTileLayer;
+  }
+
+
+
   async buildBathyLayer(layerObj, tileEndpoint) {
     // add tile imagery data
     let tileOptions = {
@@ -469,6 +472,15 @@ class App extends Component {
     marker.openPopup();
   }
 
+  onMapBoundsChange() {
+    // TODO: check to see if any movement type layers are on (like proctracted lease blocks)... if they are
+    // need to trigger their removal and adding.. started building this code in LEASE_BLOCKS.js
+    // referencing the map node in react.. need its dimensions.. height, width, also map extents in epsg:3857.. see work
+    // i did already to this end
+    // debugger
+    console.log('i heard movement!!');
+  }
+
   componentWillMount() {
     let categories = [...this.state.toc], mapLayers = Object.assign({},this.state.mapLayers), 
       orderedMapLayers = [...this.state.orderedMapLayers];
@@ -482,7 +494,8 @@ class App extends Component {
             timeSensitive: layerObj['timeSensitive'],
             addDataFunc: layerObj['addDataFunc'],
             opacity: layerObj['defaultOpacity'],
-            overlayPriority: layerObj['overlayPriority']
+            overlayPriority: layerObj['overlayPriority'],
+            endPoint: layerObj['endPoint']
           };
           orderedMapLayers.push(id);  
         })
@@ -548,7 +561,6 @@ class App extends Component {
           handleLayerToggle = {this.handleLayerToggle}
           handleLevelChange = {this.handleLevelChange}
           handleTimeChange = {this.handleTimeChange}
-          updateLeafletLayer = {this.updateLeafletLayer}
           {...this.state}
         />
         <div ref={(node) => this._mapNode = node} id="map" className={classNames(classes.map)} />

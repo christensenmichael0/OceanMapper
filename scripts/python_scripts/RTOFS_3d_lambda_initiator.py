@@ -51,7 +51,7 @@ def lambda_handler(event, context):
 
             # only grab the upper 10m
             levels = output_info['general']['levels']
-            stop_depth_indx = levels.index(10) + 1
+            stop_depth_indx = levels.index(100) + 1
             for level_indx, level_depth in enumerate(levels[:stop_depth_indx]):
                 # build payload for initiation of lambda function
                 payload = {}

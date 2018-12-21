@@ -49,7 +49,7 @@ docker cp 62f0320eafbc:/lambda_package_api/lambda_package_api.zip ~
 zip -ur lambda.zip <PATH_TO_LAMBDA_FUNCTION_FILE>
 
 #all encompassing lambda package..
-zip -ur ~/lambda_package.zip GFS_forecast_info.py GFS_lambda_initiator.py GFS_process_fields.py HYCOM_forecast_info.py HYCOM_3d_lambda_initiator.py HYCOM_process_3d_fields.py RTOFS_forecast_info.py RTOFS_3d_lambda_initiator.py RTOFS_process_3d_daily_fields.py WW3_forecast_info.py WW3_lambda_initiator.py WW3_process_fields.py process_tiles.py process_pickle.py utils
+zip -ur ~/lambda_package.zip GFS_forecast_info.py GFS_lambda_initiator.py GFS_process_fields.py HYCOM_forecast_info.py HYCOM_3d_lambda_initiator.py HYCOM_process_3d_fields.py RTOFS_forecast_info.py RTOFS_3d_lambda_initiator.py RTOFS_process_3d_daily_fields.py WW3_forecast_info.py WW3_lambda_initiator.py WW3_process_fields.py process_tiles.py process_pickle.py build_model_times.py utils
 
 # size of zip folder
 unzip -l yourzipfile.zip

@@ -18,6 +18,8 @@ import netCDF4
 
 from utils.fetch_utils import get_opendapp_netcdf
 from utils.tile_task_distributor import tile_task_distributor
+from utils.pickle_task_distributor import pickle_task_distributor
+from utils.datasets import datasets
 
 
 def lambda_handler(event, context):
@@ -38,11 +40,13 @@ def lambda_handler(event, context):
     Output: A .json file and a .pickle file are save to S3
     -----------------------------------------------------------------------
     Author: Michael Christensen
-    Date Modified: 08/19/2018
+    Date Modified: 12/20/2018
     """
 
     AWS_BUCKET_NAME = 'oceanmapper-data-storage'
     TOP_LEVEL_FOLDER = 'RTOFS_DATA'
+    SUB_RESOURCE = 'ocean_current_speed'
+    DATA_PREFIX = 'rtofs_currents'
         
     # unpack event data
     url = event['url']
@@ -59,15 +63,17 @@ def lambda_handler(event, context):
 
     formatted_folder_date = datetime.datetime.strftime(model_field_time,'%Y%m%d_%H')
     
-    # update this when fetching 4d data (right now only use surface depth
-    output_json_path = (TOP_LEVEL_FOLDER + '/' + formatted_folder_date + '/ocean_current_speed/' +
-        str(model_level_depth) + 'm/json/' +'rtofs_currents_' + formatted_folder_date + '.json')
+    output_json_path = (TOP_LEVEL_FOLDER + '/' + formatted_folder_date + '/' + SUB_RESOURCE + '/' +
+        str(model_level_depth) + 'm/json/' + DATA_PREFIX + '_' + formatted_folder_date + '.json')
 
-    output_pickle_path = (TOP_LEVEL_FOLDER + '/' + formatted_folder_date + '/ocean_current_speed/' +
-        str(model_level_depth) + 'm/pickle/' +'rtofs_currents_' + formatted_folder_date + '.pickle')
+    output_pickle_path = (TOP_LEVEL_FOLDER + '/' + formatted_folder_date + '/' + SUB_RESOURCE + '/' +
+        str(model_level_depth) + 'm/pickle/' + DATA_PREFIX + '_' + formatted_folder_date + '.pickle')
 
-    output_tile_scalar_path = (TOP_LEVEL_FOLDER + '/' + formatted_folder_date + '/ocean_current_speed/' +
+    output_tile_scalar_path = (TOP_LEVEL_FOLDER + '/' + formatted_folder_date + '/' + SUB_RESOURCE + '/' +
         str(model_level_depth) + 'm/tiles/scalar/')
+
+    output_tile_data_path = (TOP_LEVEL_FOLDER + '/' + formatted_folder_date + '/' + SUB_RESOURCE + '/' +
+        str(model_level_depth) + 'm/tiles/data/')
 
     # get model origin time
     if 'nowcast' in u_comp_url:
@@ -143,7 +149,7 @@ def lambda_handler(event, context):
     			'refTime': datetime.datetime.strftime(model_field_time,'%Y-%m-%d %H:%M:%S'),
                 'timeOrigin': datetime.datetime.strftime(time_origin,'%Y-%m-%d %H:%M:%S'),
     			},
-    			'data': [float('{:.3f}'.format(el)) if el > 0.01 else 0 for el in u_data_interp[::-1].flatten().tolist()]
+    			'data': [float('{:.3f}'.format(el)) if np.abs(el) > 0.0001 else 0 for el in u_data_interp[::-1].flatten().tolist()]
     		},
     		{'header': {
     			'parameterUnit': "m.s-1",
@@ -161,7 +167,7 @@ def lambda_handler(event, context):
     			'refTime': datetime.datetime.strftime(model_field_time,'%Y-%m-%d %H:%M:%S'),
                 'timeOrigin': datetime.datetime.strftime(time_origin,'%Y-%m-%d %H:%M:%S'),
     			},
-    			'data': [float('{:.3f}'.format(el)) if el > 0.01 else 0 for el in v_data_interp[::-1].flatten().tolist()]
+    			'data': [float('{:.3f}'.format(el)) if np.abs(el) > 0.0001 else 0 for el in v_data_interp[::-1].flatten().tolist()]
     		},
       ]
 
@@ -172,6 +178,10 @@ def lambda_handler(event, context):
     # call an intermediate function to distribute tiling workload
     tile_task_distributor(output_pickle_path, 'current_speed', AWS_BUCKET_NAME, 
         output_tile_scalar_path, range(3,4))
+
+    # call an intermediate function to distribute pickling workload (subsetting data by tile)
+    data_zoom_level = datasets[TOP_LEVEL_FOLDER]['sub_resource'][SUB_RESOURCE]['data_tiles_zoom_level']
+    pickle_task_distributor(output_pickle_path, AWS_BUCKET_NAME, output_tile_data_path, data_zoom_level)
 
     file_u.close()
     file_v.close()
