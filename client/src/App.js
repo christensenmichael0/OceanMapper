@@ -59,16 +59,17 @@ class App extends Component {
       toc: layers,
     };
 
-    this._mapNode = null;
+    this._mapNode = React.createRef();
     this.inititializeMap = this.inititializeMap.bind(this);
     this.onMapClick = this.onMapClick.bind(this);
     this.onMapBoundsChange = this.onMapBoundsChange.bind(this);
     this.addLeafletLayer = this.addLeafletLayer.bind(this);
     this.removeLeafletLayer = this.removeLeafletLayer.bind(this);
+    this.addLayer = this.addLayer.bind(this);
     this.debouncedUpdateLeafletLayer = _.debounce(this.debouncedUpdateLeafletLayer.bind(this),500);
-    this.buildTileLayer = this.buildTileLayer.bind(this);
+    this.buildMetocTileLayer = this.buildMetocTileLayer.bind(this);
     this.buildStreamlineLayer = this.buildStreamlineLayer.bind(this);
-    this.buildBathyLayer = this.buildBathyLayer.bind(this);
+    this.buildImageLayer = this.buildImageLayer.bind(this);
     this.buildGeneralTileLayer = this.buildGeneralTileLayer.bind(this);
     this.addToLeafletLayerGroup = this.addToLeafletLayerGroup.bind(this);
     this.populateAvailableLevels = this.populateAvailableLevels.bind(this);
@@ -253,13 +254,26 @@ class App extends Component {
     this.setState({mapTime: timeValue});
   }
 
+  /**
+   * Fired when the time is changed via the slider. This function updates
+   * the date valid time of a particular layer
+   * 
+   * @param {str} layerID
+   * @param {int} validTime JS time in ms
+   */
   updateValidTime(layerID,validTime) {
     let mapLayers = Object.assign({},this.state.mapLayers);
     mapLayers[layerID]['validTime'] = validTime;
     this.setState({mapLayers});
   }
 
-  // https://stackoverflow.com/questions/23123138/perform-debounce-in-react-js
+  /**
+   * Loops through ordered layers and checks if a particular layer is sensitive to time.
+   * A check is performed to see if the layer is on and remove it before adding the layer again
+   * for the new map time. The function is debounced so to limit the frequency it can be invoked.
+   *
+   * Note: https://stackoverflow.com/questions/23123138/perform-debounce-in-react-js
+   */
   debouncedUpdateLeafletLayer() {
     let mapLayers = Object.assign({},this.state.mapLayers), orderedMapLayers = [...this.state.orderedMapLayers];
     
@@ -273,6 +287,12 @@ class App extends Component {
     });
   }
 
+  /**
+   * Adds various leaflet layers using different logic depending on the addFuncType prop of 
+   * a given layer
+   * 
+   * @param {obj} layerObj
+   */
   addLeafletLayer(layerObj) {
     let options, addFuncType = layerObj['addDataFunc'];
     switch(addFuncType) {
@@ -291,7 +311,7 @@ class App extends Component {
             // add tile and streamflow data
             let maxVelocity = layerObj['maxVelocity'];
             let velocityScale = layerObj['velocityScale'];
-            this.buildTileLayer(layerObj,res).then(tileLayer => { 
+            this.buildMetocTileLayer(layerObj,res).then(tileLayer => { 
               if (this.layerBindings.hasOwnProperty(layerObj['id'])) {
                 this.removeLeafletLayer(layerObj['id']).then(() => {
 
@@ -319,61 +339,33 @@ class App extends Component {
         ).catch(alert) // TODO: make a formal modal out of this
         break;
       case 'getGebcoBathy':
-      // this.buildBathyLayer(layerObj,gebcoBathyEndpoint)
         this.buildGeneralTileLayer(layerObj,gebcoBathyEndpoint).then(tileLayer => { 
-          if (this.layerBindings.hasOwnProperty(layerObj['id'])) {
-            this.removeLeafletLayer(layerObj['id']).then(() => {
-              this.addToLeafletLayerGroup(tileLayer, layerObj, false);
-            })
-          } else {
-            this.addToLeafletLayerGroup(tileLayer, layerObj, false);
-          }
+          this.addLayer(layerObj,tileLayer);
         })
         break;
       case 'getLeaseAreas':
-        // TODO: will be doing this differently
-        // options = {layers: '19', format: 'image/png', transparent: true};
-        // this.buildGeneralTileLayer(layerObj,layerObj['endPoint'],{}},true).then(tileLayer => { 
-        //   if (this.layerBindings.hasOwnProperty(layerObj['id'])) {
-        //     this.removeLeafletLayer(layerObj['id']).then(() => {
-        //       this.addToLeafletLayerGroup(tileLayer, layerObj, false);
-        //     })
-        //   } else {
-        //     this.addToLeafletLayerGroup(tileLayer, layerObj, false);
-        //   }
-        // })
+        this.buildImageLayer(layerObj,layerObj['endPoint'],'show:10').then(imageLayer => { 
+          this.addLayer(layerObj,imageLayer);
+        })
         break;
       case 'getLeaseBlocks':
-        options = {layers: '18', format: 'image/png', transparent: true};
-        this.buildGeneralTileLayer(layerObj,layerObj['endPoint'],options,true).then(tileLayer => { 
-          if (this.layerBindings.hasOwnProperty(layerObj['id'])) {
-            this.removeLeafletLayer(layerObj['id']).then(() => {
-              this.addToLeafletLayerGroup(tileLayer, layerObj, false);
-            })
-          } else {
-            this.addToLeafletLayerGroup(tileLayer, layerObj, false);
-          }
+        this.buildImageLayer(layerObj,layerObj['endPoint'],'show:11').then(imageLayer => { 
+          this.addLayer(layerObj,imageLayer);
         })
         break;
       default:
         //code block
     }
-
-
-    // marker2=L.marker([0,10],{pane: 'test'})
-
-    // let rand_lat = Math.floor(Math.random() * 11); 
-    // let marker = L.marker([rand_lat,0]).bindPopup(layerObj['id']);
-
-    // marker.addTo(this.map);
-    // this.leafletLayerGroup.addLayer(marker)
-    // get internal Leaflet _id and assign key/val pair in layerBindings
-    // let lid = this.leafletLayerGroup.getLayerId(marker);
-    // this.layerBindings[layerObj['id']] = lid;
   }
 
-  async removeLeafletLayer(layerID) {
-     
+  /**
+   * Asynchronous function to remove a leaflet layer and update layerBindings object of the parent class. 
+   * A check is perfomed to see if streamlines exist for a particular layer and removes
+   * that layer as well if it is found.
+   * 
+   * @param {str} layerID the layer id (as stored in state)
+   */
+  async removeLeafletLayer(layerID) {   
     try {
       await this.leafletLayerGroup.removeLayer(this.layerBindings[layerID]);
       delete this.layerBindings[layerID]
@@ -388,6 +380,16 @@ class App extends Component {
     } 
   }
 
+  addLayer(layerObj, leafletLayer){
+    if (this.layerBindings.hasOwnProperty(layerObj['id'])) {
+      this.removeLeafletLayer(layerObj['id']).then(() => {
+        this.addToLeafletLayerGroup(leafletLayer, layerObj, false);
+      })
+    } else {
+      this.addToLeafletLayerGroup(leafletLayer, layerObj, false);
+    }
+  }
+
   addToLeafletLayerGroup(layerHandle, layerObj, streamline=false) {
     this.leafletLayerGroup.addLayer(layerHandle);
     let lid_layer = this.leafletLayerGroup.getLayerId(layerHandle);
@@ -395,7 +397,7 @@ class App extends Component {
     this.layerBindings[layerKeyStr] = lid_layer;
   }
 
-  async buildTileLayer(layerObj,res) {
+  async buildMetocTileLayer(layerObj,res) {
     // add tile imagery data
     let tileOptions = {
       opacity: layerObj['opacity'],
@@ -448,19 +450,32 @@ class App extends Component {
     return outputTileLayer;
   }
 
-
-
-  async buildBathyLayer(layerObj, tileEndpoint) {
-    // add tile imagery data
-    let tileOptions = {
+  async buildImageLayer(layerObj, imageEndpoint,layerStr='') {
+    let imageOptions = {
       opacity: layerObj['opacity']
     }
 
     // add pane as an option if the layer contains overlayPriority key
-    tileOptions = layerObj['overlayPriority'] ? {...tileOptions, pane: layerObj['overlayPriority']} : tileOptions;
-    let tileLayer = await L.tileLayer(tileEndpoint,tileOptions);
+    imageOptions = layerObj['overlayPriority'] ? {...imageOptions, pane: layerObj['overlayPriority']} : imageOptions;
+   
+    let max_lat = this.map.getBounds()._northEast.lat;
+    let min_lat = this.map.getBounds()._southWest.lat;
+    let min_lon = this.map.getBounds()._southWest.lng;
+    let max_lon = this.map.getBounds()._northEast.lng;
 
-    return tileLayer;
+    let ne_corner = L.CRS.EPSG3857.project(L.latLng(max_lat, max_lon));
+    let sw_corner = L.CRS.EPSG3857.project(L.latLng(min_lat, min_lon));
+    let imageBounds = [[min_lat,min_lon],[max_lat,max_lon]]
+        
+    let width = this._mapNode.current.clientWidth;
+    let height = this._mapNode.current.clientHeight;
+
+    // TODO: im not using imageEndpoint here.. also need to pass in dif layer if doing small lease blocks
+    // construct imageUrl
+    let imageUrl = `https://gis.boem.gov/arcgis/rest/services/BOEM_BSEE/MMC_Layers/MapServer/export?dpi=96&transparent=true&format=png32&layers=${layerStr}&bbox=${sw_corner.x},${sw_corner.y},${ne_corner.x},${ne_corner.y}&bboxSR=102100&imageSR=102100&size=${width},${height}&f=image`;
+
+    let imageLayer = await L.imageOverlay(imageUrl, imageBounds, imageOptions);
+    return imageLayer;
   }
 
   onMapClick(e) {
@@ -478,7 +493,19 @@ class App extends Component {
     // referencing the map node in react.. need its dimensions.. height, width, also map extents in epsg:3857.. see work
     // i did already to this end
     // debugger
-    console.log('i heard movement!!');
+
+    // TODO this basically repeats some logic i already have... see if we can move this logic into a func..
+    // pass the prop I care about.. movementSensitive.. timeSensitive
+    let mapLayers = Object.assign({},this.state.mapLayers), orderedMapLayers = [...this.state.orderedMapLayers];
+    
+    // loop through orderlayers and update necessary layers depending on timeSensitive param 
+    orderedMapLayers.forEach((layer)=> {
+      let layerObj = {...mapLayers[layer],id: layer};
+      
+      if (layerObj['movementSensitive'] && layerObj['isOn']) {
+        this.removeLeafletLayer(layerObj['id']).then(()=>{this.addLeafletLayer(layerObj)});
+      };
+    });
   }
 
   componentWillMount() {
@@ -492,6 +519,7 @@ class App extends Component {
           mapLayers[id] = {
             isOn: layerObj['defaultOn'], 
             timeSensitive: layerObj['timeSensitive'],
+            movementSensitive: layerObj['movementSensitive'],
             addDataFunc: layerObj['addDataFunc'],
             opacity: layerObj['defaultOpacity'],
             overlayPriority: layerObj['overlayPriority'],
@@ -512,7 +540,7 @@ class App extends Component {
 
     if (!this.map) {
       // create the Leaflet map object
-      this.inititializeMap(this._mapNode); 
+      this.inititializeMap(this._mapNode.current);
     }
     
     let metocDatasetMappingIndx = this.findObjIndex(categories, 'Category', 'MetOcean');
@@ -554,6 +582,7 @@ class App extends Component {
 
   render() {
     const { classes } = this.props;
+    // ref={(node) => this._mapNode = node}
 
     return (
       <div>
@@ -563,7 +592,7 @@ class App extends Component {
           handleTimeChange = {this.handleTimeChange}
           {...this.state}
         />
-        <div ref={(node) => this._mapNode = node} id="map" className={classNames(classes.map)} />
+        <div ref={this._mapNode} id="map" className={classNames(classes.map)} />
       </div>
     );
   }

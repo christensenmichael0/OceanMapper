@@ -169,12 +169,12 @@ let TOC = [
       {
         id: 'ocs_leasing_extents',
         niceName: 'BOEM OCS Protraction Diagrams & Leasing Maps',
-        overlayPriority: 'medium',
+        overlayPriority: 'high',
         endPoint: 'https://gis.boem.gov/arcgis/services/BOEM_BSEE/MMC_Layers/MapServer/WmsServer',
         addDataFunc: 'getLeaseAreas',
         timeSensitive: false,
         movementSensitive: true,
-        visibleTOC: false,
+        visibleTOC: true,
         defaultOn: false
       },
       {
@@ -184,6 +184,7 @@ let TOC = [
         endPoint: 'https://gis.boem.gov/arcgis/services/BOEM_BSEE/MMC_Layers/MapServer/WmsServer',
         addDataFunc: 'getLeaseBlocks',
         timeSensitive: false,
+        movementSensitive: true,
         visibleTOC: true,
         defaultOn: false
       },

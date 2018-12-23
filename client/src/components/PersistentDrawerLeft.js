@@ -150,7 +150,10 @@ class PersistentDrawerLeft extends React.Component {
         </Drawer>
         <main className={classes.content}>
           {/* <Map {...other}/> */}
-          <TimeSlidler open={open} {...other}/>
+          <TimeSlidler
+            open={open} 
+            {...other}
+          />
         </main>
       </div>
     );

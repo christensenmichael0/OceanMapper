@@ -32,7 +32,7 @@ const styles = theme => ({
     }),
     [`${theme.breakpoints.down('sm')}`]: { 
       width: `calc(100% - ${timeSliderMargin*2}px)`,
-    }, 
+    },
   },
   sliderDivShift: {
     left: drawerWidth,
@@ -73,6 +73,11 @@ const styles = theme => ({
     position: 'relative',
     width: '90%',
     margin: 'auto'
+  },
+  sliderHide: {
+    [`${theme.breakpoints.down('xs')}`]: { 
+      display: 'none', 
+    }
   }
 });
 
@@ -90,7 +95,7 @@ function TimeSlider(props) {
       tickValueArray.push(currentTime);
     }
     tickValueArray.push(endTime);
-    return tickValueArray
+    return tickValueArray;
   }
 
   const { classes, open, startTime, endTime, mapTime} = props;
@@ -100,8 +105,8 @@ function TimeSlider(props) {
 
   return (     
     <div className={classNames(classes.sliderDiv, {
-      [classes.sliderDivShift]: open,
-    })}>
+      [classes.sliderDivShift]: open, [classes.sliderHide]: open
+      })}>
         <Typography style={{textAlign: 'center'}} id="label">{formatDateTime(mapTime,'YYYY-MM-DD HH:mm',' UTC')}</Typography>
         <Slider
           classes={{
