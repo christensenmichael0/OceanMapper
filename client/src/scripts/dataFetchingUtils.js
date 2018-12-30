@@ -1,7 +1,5 @@
 import { formatDateTime } from './formatDateTime';
 
-
-// TODO: getModelField constructs endpoint url using input params and then calls getData(endpoint)
 export const getModelField = (dataset, subResource, level, time) => {
   let formattedTime = `${formatDateTime(time, 'YYYY-MM-DDTHH:mm', '')}Z`;
   let levelStr = isNaN(level) ? 'level=' : `level=${level}`;
@@ -26,7 +24,3 @@ export const getData = async (endpoint) => {
   }
 }
 
-// TODO: move these into layers.js
-export const nauticalChartEndpoint = 'http://tileservice.charts.noaa.gov/tiles/50000_1/{z}/{x}/{y}.png';
-export const gebcoBathyEndpoint = 'https://gis.ngdc.noaa.gov/arcgis/rest/services/web_mercator/gebco_2014_contours/MapServer/tile/{z}/{y}/{x}';
-export const boemEnpoint = '"https://gis.boem.gov/arcgis/services/BOEM_BSEE/MMC_Layers/MapServer/WmsServer';

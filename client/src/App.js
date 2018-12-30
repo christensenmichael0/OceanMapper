@@ -10,8 +10,8 @@ import '@ansur/leaflet-pulse-icon/dist/L.Icon.Pulse.js';
 import '@ansur/leaflet-pulse-icon/dist/L.Icon.Pulse.css';
 import { getData, 
         getModelField, 
-        gebcoBathyEndpoint, 
-        boemEndpoint } from './scripts/dataFetchingUtils';
+        gebcoBathyEndpoint
+        } from './scripts/dataFetchingUtils';
 import priorityMap from './scripts/layerPriority';
 import _ from 'lodash';
 
@@ -339,7 +339,7 @@ class App extends Component {
         ).catch(alert) // TODO: make a formal modal out of this
         break;
       case 'getGebcoBathy':
-        this.buildGeneralTileLayer(layerObj,gebcoBathyEndpoint).then(tileLayer => { 
+        this.buildGeneralTileLayer(layerObj,layerObj['endPoint']).then(tileLayer => { 
           this.addLayer(layerObj,tileLayer);
         })
         break;
@@ -518,10 +518,10 @@ class App extends Component {
           let id = layerObj['id'];
           mapLayers[id] = {
             isOn: layerObj['defaultOn'], 
-            timeSensitive: layerObj['timeSensitive'],
-            movementSensitive: layerObj['movementSensitive'],
+            timeSensitive: layerObj['timeSensitive'] || false,
+            movementSensitive: layerObj['movementSensitive'] || false,
             addDataFunc: layerObj['addDataFunc'],
-            opacity: layerObj['defaultOpacity'],
+            opacity: layerObj['defaultOpacity'] || 1,
             overlayPriority: layerObj['overlayPriority'],
             endPoint: layerObj['endPoint']
           };

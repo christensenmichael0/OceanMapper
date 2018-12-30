@@ -198,7 +198,20 @@ let TOC = [
         visibleTOC: true,
         defaultOpacity: 1.0,
         defaultOn: false
-      }
+      },
+      {
+        id: 'transparent_basemap',
+        niceName: 'Transparent Basemap',
+        overlayPriority: 'high',
+        endPoint: 'https://s3.us-east-2.amazonaws.com/oceanmapper-data-storage/coastline_tiles/{z}/{x}/{y}.png',
+        addDataFunc: 'getTransparentBasemap',
+        maxNativeZoom: 9,
+        minNativeZoom: 3,
+        timeSensitive: false,
+        visibleTOC: false,
+        defaultOpacity: 1.0,
+        defaultOn: false
+      },
     ]
   },
 ];

@@ -5,6 +5,8 @@ source ~/env/oceanmapper/bin/activate
 https://originmaster.com/running-create-react-app-and-express-crae-on-heroku-c39a39fe7851
 https://github.com/Johnnycon/crae-env
 
+http://blog.davidelner.com/create-map-with-tilemill-and-leaflet/
+
 
 # fig, axes = plt.subplots()
 # axes.imshow(data['u_vel'], origin='lower')
@@ -96,80 +98,24 @@ zip -ur ~/lambda_ww3_grab_initiator.zip WW3_forecast_info.py WW3_lambda_initiato
 # creating the upload package for grab_ww3 (WW3_process_fields.py)
 zip -ur ~/lambda_ww3_grab_s3_save.zip WW3_process_fields.py fetch_utils.py
 
--90 21.94304553343818
--67.5 40.979898069620134
+--- (BOEM)
 
-# adding image to map test
+// getCapabilities
+// https://gis.boem.gov/arcgis/services/BOEM_BSEE/MMC_Layers/MapServer/WMSServer?request=GetCapabilities&service=WMS
 
--90 0
--45 40.979898069620134
+// Interactive Mapper
+// https://www.arcgis.com/home/webmap/viewer.html?url=https%3A%2F%2Fgis.boem.gov%2Farcgis%2Frest%2Fservices%2FBOEM_BSEE%2FMMC_Layers%2FMapServer&source=sd
 
-var imageUrl = 'http://services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/3/3/2'
-var imageBounds = [[0, -90], [40.979898069620134, -45]];
-hi = L.imageOverlay(imageUrl, imageBounds).addTo(map);
-
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png?{foo}', {foo: 'bar'}).addTo(map);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png?{foo}', {foo: 'bar'}).addTo(map);
-
-
-var imageUrl2 = 'https://s3.us-east-2.amazonaws.com/oceanmapper-data-storage/2_2_1.png';
-var imageBounds2 = [[0, 0], [66.51326044311185, 90]];
-hi2 = L.imageOverlay(imageUrl2, imageBounds2).addTo(map);
-
-var imageUrl = 'https://s3.us-east-2.amazonaws.com/oceanmapper-data-storage/4_4_6.png';
-var imageBounds = [[21.94304553343818, -90], [40.979898069620134, -67.5]];
-hi = L.imageOverlay(imageUrl, imageBounds).addTo(map);
-
-
-var imageUrl1 = 'https://s3.us-east-2.amazonaws.com/oceanmapper-data-storage/5_8_12.png';
-var imageBounds1 = [[31.95216223802497, -90], [40.979898069620134, -78.75]];
-var image_1 = L.imageOverlay(imageUrl1, imageBounds1).addTo(map);
-
-var imageUrl2 = 'https://s3.us-east-2.amazonaws.com/oceanmapper-data-storage/5_8_13.png';
-var imageBounds2 = [[21.94304553343818, -90], [31.95216223802497, -78.75]];
-var image_2 = L.imageOverlay(imageUrl2, imageBounds2).addTo(map);
-
-var imageUrl3 = 'https://s3.us-east-2.amazonaws.com/oceanmapper-data-storage/5_9_11.png';
-var imageBounds3 = [[40.979898069620134, -78.75], [48.922499263758255, -67.5]];
-var image_3 = L.imageOverlay(imageUrl3, imageBounds3).addTo(map);
-
-var imageUrl4 = 'https://s3.us-east-2.amazonaws.com/oceanmapper-data-storage/5_9_12.png';
-var imageBounds4 = [[31.95216223802497, -78.75], [40.979898069620134, -67.5]];
-var image_4 = L.imageOverlay(imageUrl4, imageBounds4).addTo(map);
-
-var imageBounds = [[21.94304553343818, -90], [40.979898069620134, -67.5]];
-L.imageOverlay(imageUrl, imageBounds).addTo(map);
-
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png?{foo}', {foo: 'bar'}).addTo(map);
+// General info
+// https://gis.boem.gov/arcgis/rest/services/BOEM_BSEE/MMC_Layers/MapServer
 
 options= {
 opacity: 1,
-}
-L.tileLayer('https://s3.us-east-2.amazonaws.com/oceanmapper-data-storage/test_tiles/{z}/{x}/{y}.png',options).addTo(map);
-
--73.125 40.979898069620134
--67.5 45.089035564831036
-
-var imageUrl = 'https://s3.us-east-2.amazonaws.com/oceanmapper-data-storage/cape_cod.png';
-var imageBounds = [[40.979898069620134, -73.125], [45.089035564831036, -67.5]];
-var image = L.imageOverlay(imageUrl, imageBounds).addTo(map);
-
-
-# waves
-# https://matplotlib.org/gallery/images_contours_and_fields/image_masked.html
-
-fig, axes = plt.subplots()
-palette = copy.copy(plt.cm.rainbow)
-palette.set_bad(alpha = 0.0)
-axes.pcolormesh(height_raw,cmap=palette)
-# axes.pcolormesh(height_raw,cmap=palette,norm=colors.BoundaryNorm([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15],ncolors=palette.N))
-fig.show()
-
-options= {
-opacity: 1,
-maxNativeZoom: 3,
+maxNativeZoom: 7,
 minNativeZoom: 3,
 }
+
+hi = L.tileLayer('https://s3.us-east-2.amazonaws.com/oceanmapper-data-storage/coastline_tiles/{z}/{x}/{y}.png',options).addTo(map);
 
 hi = L.tileLayer('https://s3.us-east-2.amazonaws.com/oceanmapper-data-storage/WAVE_WATCH_3/20180914_00/tiles/scalar/{z}/{x}/{y}.png',options).addTo(map);
 
