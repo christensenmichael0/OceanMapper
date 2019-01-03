@@ -55,31 +55,31 @@ layers = [
     'name': 'states_lines',
     'shapefile_path': '/home/mchriste/Desktop/shapefiles/ne_10m_admin_1_states_provinces/ne_10m_admin_1_states_provinces.shp',
     'linewidth': 0.3,
-    'edgecolor': 'gray'
+    'edgecolor': '#b3b3b3'
   },
   {
     'name': 'countries',
     'shapefile_path': '/home/mchriste/Desktop/shapefiles/ne_10m_admin_0_countries/ne_10m_admin_0_countries.shp',
     'linewidth': 0.5,
-    'edgecolor': 'black'
+    'edgecolor': '#cccccc'
   },
   {
     'name': 'ne_10m_rivers_lake_centerlines',
     'shapefile_path': '/home/mchriste/Desktop/shapefiles/ne_10m_rivers_lake_centerlines/ne_10m_rivers_lake_centerlines.shp',
     'linewidth': 0.3,
-    'edgecolor': 'blue'
+    'edgecolor': '#00ccff'
   },
   {
     'name': 'lakes',
     'shapefile_path': '/home/mchriste/Desktop/shapefiles/ne_10m_lakes/ne_10m_lakes.shp',
     'linewidth': 0.3,
-    'edgecolor': 'blue'
+    'edgecolor': '#00ccff'
   }
 ]
 
 # project to EPSG:3857 for plotting
 EPSG3857 = pyproj.Proj(init='EPSG:3857')
-tile_zoom_levels = range(3,10)
+tile_zoom_levels = range(3,9)
 
 for zoom in tile_zoom_levels:
   # create the figure and axes

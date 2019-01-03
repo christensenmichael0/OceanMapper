@@ -166,11 +166,13 @@ class App extends Component {
           categories[metocDatasetMappingIndx]['Layers'][indx]['subResources'][innerIndx]['availableLevels'] = levels;
 
           mapLayers[id] = {
+            id,
             dataset,
             subResource,
             isOn: layerObj['defaultOn'], 
             level: levels[0],
             validTime: '',
+            overlayType: layerObj['overlayType'],
             timeSensitive: layerObj['timeSensitive'], 
             addDataFunc: layerObj['addDataFunc'],
             maxNativeZoom: layerObj['maxNativeZoom'],
@@ -186,7 +188,7 @@ class App extends Component {
           metOceanLayers.push(id);
 
           // add layer to map if its on by default
-          if (mapLayers[id]['isOn']) this.addLeafletLayer({id,...mapLayers[id]});  
+          if (mapLayers[id]['isOn']) this.addLeafletLayer(mapLayers[id]); 
         }
       }
     }
@@ -212,18 +214,33 @@ class App extends Component {
    */
   handleLayerToggle(layerID, event) {
     // dont mutate state data
-    let layerIndx, mapLayers = Object.assign({}, this.state.mapLayers), orderedMapLayers = [...this.state.orderedMapLayers];
+    let layerIndx, mapLayers = Object.assign({}, this.state.mapLayers), 
+      orderedMapLayers = [...this.state.orderedMapLayers], transparentBasemapID = 'transparent_basemap',
+      transparentBasemapIndx;
 
-    // get the index of the layer
+    // get the index of the layer and of the transparent basemap (if necessary)
     layerIndx = orderedMapLayers.indexOf(layerID)
+    if (mapLayers[layerID]['overlayType'] === 'all') {
+      transparentBasemapIndx = orderedMapLayers.indexOf(transparentBasemapID);
+    }
 
     // if turning the layer on find out where it was in the list... remove it from there and add to the end of the list
     if (event.target.checked) {
       orderedMapLayers.splice(layerIndx,1);
       orderedMapLayers.push(layerID);
-      this.addLeafletLayer({id: layerID, ...mapLayers[layerID], isOn: true});
+      // need to update position of transparent basemap in certain cases
+      if (transparentBasemapIndx) {
+        orderedMapLayers.splice(transparentBasemapIndx,1);
+        orderedMapLayers.push(transparentBasemapID);
+      }
+      this.addLeafletLayer({...mapLayers[layerID], isOn: true});
     } else {
       this.removeLeafletLayer(layerID);     
+    }
+
+    // logic to update status of transparent basemap if necessary
+    if (transparentBasemapIndx) {
+      mapLayers[transparentBasemapID]['isOn'] = event.target.checked
     }
 
     mapLayers[layerID]['isOn'] = event.target.checked
@@ -240,7 +257,7 @@ class App extends Component {
     mapLayers[layerID]['level'] = parseInt(event.target.value);
 
     this.removeLeafletLayer(layerID);
-    this.addLeafletLayer({id: layerID, ...mapLayers[layerID]});
+    this.addLeafletLayer(mapLayers[layerID]);
     
     this.setState({mapLayers});
   }
@@ -279,8 +296,7 @@ class App extends Component {
     
     // loop through orderlayers and update necessary layers depending on timeSensitive param 
     orderedMapLayers.forEach((layer)=> {
-      let layerObj = {...mapLayers[layer],id: layer};
-      
+      let layerObj = mapLayers[layer];
       if (layerObj['timeSensitive'] && layerObj['isOn']) {
         this.removeLeafletLayer(layerObj['id']).then(()=>{this.addLeafletLayer(layerObj)});
       };
@@ -294,7 +310,7 @@ class App extends Component {
    * @param {obj} layerObj
    */
   addLeafletLayer(layerObj) {
-    let options, addFuncType = layerObj['addDataFunc'];
+    let options, addFuncType = layerObj['addDataFunc'], mapLayers = Object.assign({},this.state.mapLayers);
     switch(addFuncType) {
       case 'getModelField':
         getModelField(layerObj['dataset'], layerObj['subResource'], layerObj['level'], this.state.mapTime).then(
@@ -318,6 +334,15 @@ class App extends Component {
                   // add tile layer
                   this.addToLeafletLayerGroup(tileLayer, layerObj, false)
 
+                  // TODO: this logic is repeated below in else block
+                  // add transparent basemap
+                  if (layerObj['overlayType'] === 'all') {
+                    let transparentBasemap = mapLayers['transparent_basemap'];
+                    this.buildGeneralTileLayer(transparentBasemap,transparentBasemap['endPoint']).then(tileMapLayer => {
+                      this.addLayer(transparentBasemap,tileMapLayer);
+                    });
+                  }
+
                   // add stream layer
                   if (layerObj['streamFlowLayer']) {
                     this.buildStreamlineLayer(data, maxVelocity, velocityScale).then(streamLayer => {
@@ -326,7 +351,25 @@ class App extends Component {
                   }
                 })
               } else {
+                // add tile layer
                 this.addToLeafletLayerGroup(tileLayer, layerObj, false)
+
+                // new (TODO: repeated logic.. wrap this logic in a function)
+                // add transparent basemap
+                if (layerObj['overlayType'] === 'all') {
+                  let transparentBasemap = mapLayers['transparent_basemap'];
+                  
+                  let extraOptions = {
+                    minNativeZoom: transparentBasemap['minNativeZoom'], 
+                    maxNativeZoom: transparentBasemap['maxNativeZoom']
+                  };
+
+                  this.buildGeneralTileLayer(transparentBasemap,transparentBasemap['endPoint'],extraOptions).then(
+                    tileMapLayer => {
+                    this.addLayer(transparentBasemap,tileMapLayer);
+                  });
+                }
+                // end new
 
                 if (layerObj['streamFlowLayer']) {
                   this.buildStreamlineLayer(data, maxVelocity, velocityScale).then(streamLayer => {
@@ -365,10 +408,17 @@ class App extends Component {
    * 
    * @param {str} layerID the layer id (as stored in state)
    */
-  async removeLeafletLayer(layerID) {   
+  async removeLeafletLayer(layerID) {
+    let mapLayers = Object.assign({},this.state.mapLayers) 
     try {
+      // TODO: need to remove transparent basemap in some cases
+      if (mapLayers[layerID]['overlayType'] === 'all') {
+        console.log('remove the transparent basemap!');
+        await this.leafletLayerGroup.removeLayer(this.layerBindings['transparent_basemap']);
+        delete this.layerBindings['transparent_basemap'];
+      }
       await this.leafletLayerGroup.removeLayer(this.layerBindings[layerID]);
-      delete this.layerBindings[layerID]
+      delete this.layerBindings[layerID];
 
       if (this.layerBindings.hasOwnProperty(`${layerID}_streamlines`)) {
         await this.leafletLayerGroup.removeLayer(this.layerBindings[`${layerID}_streamlines`]);
@@ -377,7 +427,7 @@ class App extends Component {
 
     } catch (err) {
       console.log(err);
-    } 
+    }
   }
 
   addLayer(layerObj, leafletLayer){
@@ -500,8 +550,7 @@ class App extends Component {
     
     // loop through orderlayers and update necessary layers depending on timeSensitive param 
     orderedMapLayers.forEach((layer)=> {
-      let layerObj = {...mapLayers[layer],id: layer};
-      
+      let layerObj = mapLayers[layer];
       if (layerObj['movementSensitive'] && layerObj['isOn']) {
         this.removeLeafletLayer(layerObj['id']).then(()=>{this.addLeafletLayer(layerObj)});
       };
@@ -517,9 +566,12 @@ class App extends Component {
         category['Layers'].forEach((layerObj, innerIndx) => {
           let id = layerObj['id'];
           mapLayers[id] = {
+            id,
             isOn: layerObj['defaultOn'], 
             timeSensitive: layerObj['timeSensitive'] || false,
             movementSensitive: layerObj['movementSensitive'] || false,
+            minNativeZoom: layerObj['minNativeZoom'],
+            maxNativeZoom: layerObj['maxNativeZoom'],
             addDataFunc: layerObj['addDataFunc'],
             opacity: layerObj['defaultOpacity'] || 1,
             overlayPriority: layerObj['overlayPriority'],
@@ -574,7 +626,7 @@ class App extends Component {
       // add non metoc layers to map 
       this.state.orderedMapLayers.forEach(nonMetocLayer => {
           if (nonMetocLayer !== 'MetOcean') {
-            if (this.state.mapLayers[nonMetocLayer]['isOn']) this.addLeafletLayer({id: nonMetocLayer,...this.state.mapLayers[nonMetocLayer]})
+            if (this.state.mapLayers[nonMetocLayer]['isOn']) this.addLeafletLayer(this.state.mapLayers[nonMetocLayer])
           }
         }
       )
