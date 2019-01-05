@@ -209,9 +209,9 @@ let TOC = [
         id: 'transparent_basemap',
         niceName: 'Transparent Basemap',
         overlayPriority: 'high',
-        endPoint: 'https://s3.us-east-2.amazonaws.com/oceanmapper-data-storage/coastline_tiles/{z}/{x}/{y}.png',
+        endPoint: 'https://s3.us-east-2.amazonaws.com/oceanmapper-data-storage/basemap_tiles/{z}/{x}/{y}.png',
         addDataFunc: 'getTransparentBasemap',
-        maxNativeZoom: 4, // change to 8 when ready
+        maxNativeZoom: 8, // change to 8 when ready
         minNativeZoom: 3,
         timeSensitive: false,
         visibleTOC: false,
