@@ -27,6 +27,17 @@ docker run -it dacut/amazon-linux-python-3.6
 docker restart 62f0320eafbc
 docker exec -it 62f0320eafbc bash
 
+mkdir lambda_package_active_drilling
+cd lambda_package_active_drilling
+pip3 install geopandas PyPDF2 requests -t ./
+zip -r lambda_package_active_drilling.zip *
+docker cp 62f0320eafbc:/lambda_package_active_drilling/lambda_package_active_drilling.zip ~
+cd ~/globalMapper/scripts/python_scripts
+zip -ur ~/lambda_package_active_drilling.zip fetch_active_drilling.py
+cd ~/Desktop/shapefiles
+zip -ur ~/lambda_package_active_drilling.zip blocks/
+
+
 mkdir lambda_package_api
 cd lambda_package_api
 pip3 install numpy scipy mercantile fiona shapely-t ./
