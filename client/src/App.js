@@ -57,6 +57,7 @@ class App extends Component {
       isLoading: null,
       error: null,
       toc: layers,
+      deepwater_activity: null
     };
 
     this._mapNode = React.createRef();
@@ -198,10 +199,9 @@ class App extends Component {
     // require different calls to get/display data
     let metOceanInjectionIndex = this.state.orderedMapLayers.indexOf('MetOcean');
     if (metOceanInjectionIndex > -1) {
-      orderedMapLayers[metocDatasetMappingIndx] = metOceanLayers
-      orderedMapLayers = orderedMapLayers.flat() // flatten array
+      orderedMapLayers[metocDatasetMappingIndx] = metOceanLayers;
+      orderedMapLayers = [].concat(...orderedMapLayers)
     }
-
     // Dont mutate data
     // / isLoading should probably be turned off after inital data pull.. keep as is for now
     this.setState({toc: categories, isLoading: false, initializedLayers: true, mapLayers: mapLayers, orderedMapLayers})
@@ -213,13 +213,14 @@ class App extends Component {
    * @param {event} event
    */
   handleLayerToggle(layerID, event) {
+
     // dont mutate state data
     let layerIndx, mapLayers = Object.assign({}, this.state.mapLayers), 
       orderedMapLayers = [...this.state.orderedMapLayers], transparentBasemapID = 'transparent_basemap',
       transparentBasemapIndx;
 
     // get the index of the layer and of the transparent basemap (if necessary)
-    layerIndx = orderedMapLayers.indexOf(layerID)
+    layerIndx = orderedMapLayers.indexOf(layerID);
     if (mapLayers[layerID]['overlayType'] === 'all') {
       transparentBasemapIndx = orderedMapLayers.indexOf(transparentBasemapID);
     }
@@ -235,7 +236,7 @@ class App extends Component {
       }
       this.addLeafletLayer({...mapLayers[layerID], isOn: true});
     } else {
-      this.removeLeafletLayer(layerID);     
+      this.removeLeafletLayer(layerID); 
     }
 
     // logic to update status of transparent basemap if necessary
@@ -396,6 +397,10 @@ class App extends Component {
           this.addLayer(layerObj,imageLayer);
         })
         break;
+      case 'getActiveDrilling':
+        console.log('clicked active drilling');
+        // TODO: fetch in the same way i do in componentDidMount.. clean up the call though (both here and there)
+        // to make use of imported functionality from dataFetchingUtils.js
       default:
         //code block
     }

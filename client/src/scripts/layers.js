@@ -143,7 +143,7 @@ let TOC = [
       {
         id: 'active_drilling',
         niceName: 'Active Drilling',
-        addDataFunc: 'placeholder',
+        addDataFunc: 'getActiveDrilling',
         timeSensitive: false,
         visibleTOC: true,
         defaultOn: false
