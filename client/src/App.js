@@ -12,6 +12,7 @@ import { getData,
         getModelField, 
         gebcoBathyEndpoint
         } from './scripts/dataFetchingUtils';
+import { buildActiveDrillingPopupContent } from './scripts/buildActiveDrillingPopup';
 import priorityMap from './scripts/layerPriority';
 import _ from 'lodash';
 
@@ -72,6 +73,7 @@ class App extends Component {
     this.buildStreamlineLayer = this.buildStreamlineLayer.bind(this);
     this.buildImageLayer = this.buildImageLayer.bind(this);
     this.buildGeneralTileLayer = this.buildGeneralTileLayer.bind(this);
+    this.buildActiveDrillingLayer = this.buildActiveDrillingLayer.bind(this);
     this.addToLeafletLayerGroup = this.addToLeafletLayerGroup.bind(this);
     this.populateAvailableLevels = this.populateAvailableLevels.bind(this);
     this.findObjIndex = this.findObjIndex.bind(this);
@@ -221,15 +223,20 @@ class App extends Component {
 
     // get the index of the layer and of the transparent basemap (if necessary)
     layerIndx = orderedMapLayers.indexOf(layerID);
-    if (mapLayers[layerID]['overlayType'] === 'all') {
-      transparentBasemapIndx = orderedMapLayers.indexOf(transparentBasemapID);
-    }
+    // if (mapLayers[layerID]['overlayType'] === 'all') {
+    //   transparentBasemapIndx = orderedMapLayers.indexOf(transparentBasemapID);
+    // }
 
     // if turning the layer on find out where it was in the list... remove it from there and add to the end of the list
     if (event.target.checked) {
       orderedMapLayers.splice(layerIndx,1);
       orderedMapLayers.push(layerID);
+      
       // need to update position of transparent basemap in certain cases
+      if (mapLayers[layerID]['overlayType'] === 'all') {
+        transparentBasemapIndx = orderedMapLayers.indexOf(transparentBasemapID);
+      }
+
       if (transparentBasemapIndx) {
         orderedMapLayers.splice(transparentBasemapIndx,1);
         orderedMapLayers.push(transparentBasemapID);
@@ -268,6 +275,7 @@ class App extends Component {
    * @param {int} JS datetime in milliseconds
    */
   handleTimeChange(timeValue) {
+    console.log('i heard the time change!');
     this.debouncedUpdateLeafletLayer(); 
     this.setState({mapTime: timeValue});
   }
@@ -294,13 +302,13 @@ class App extends Component {
    */
   debouncedUpdateLeafletLayer() {
     let mapLayers = Object.assign({},this.state.mapLayers), orderedMapLayers = [...this.state.orderedMapLayers];
-    
+
     // loop through orderlayers and update necessary layers depending on timeSensitive param 
     orderedMapLayers.forEach((layer)=> {
       let layerObj = mapLayers[layer];
       if (layerObj['timeSensitive'] && layerObj['isOn']) {
         this.removeLeafletLayer(layerObj['id']).then(()=>{this.addLeafletLayer(layerObj)});
-      };
+      }
     });
   }
 
@@ -398,7 +406,13 @@ class App extends Component {
         })
         break;
       case 'getActiveDrilling':
-        console.log('clicked active drilling');
+        // TODO: do i want to save drilling data in state once its been fetched? maybe not
+        getData(layerObj['endPoint']).then(drillingData => {
+          let drillingLayer = this.buildActiveDrillingLayer(drillingData);
+          this.addLayer(layerObj,drillingLayer);
+        });
+        break;
+
         // TODO: fetch in the same way i do in componentDidMount.. clean up the call though (both here and there)
         // to make use of imported functionality from dataFetchingUtils.js
       default:
@@ -414,7 +428,8 @@ class App extends Component {
    * @param {str} layerID the layer id (as stored in state)
    */
   async removeLeafletLayer(layerID) {
-    let mapLayers = Object.assign({},this.state.mapLayers) 
+    let mapLayers = Object.assign({},this.state.mapLayers)
+
     try {
       // TODO: need to remove transparent basemap in some cases
       if (mapLayers[layerID]['overlayType'] === 'all') {
@@ -531,6 +546,43 @@ class App extends Component {
 
     let imageLayer = await L.imageOverlay(imageUrl, imageBounds, imageOptions);
     return imageLayer;
+  }
+
+    /**
+   * Builds active drilling layer by creating a layer group and inserting a marker for each location
+   * 
+   * @param {array} drilingArray list of active drilling sites stored in s3 bucket in a json file)
+   */
+  buildActiveDrillingLayer(drillingArray) {
+    console.log('build the markers and corresponding html');
+
+    const drillingMarker = {
+      radius: 3,
+      fillColor: '#00ff00',
+      color: '#ffffff',
+      weight: 0.1,
+      opacity: 1,
+      fillOpacity: 1
+    };
+
+    let circleMarker, popupContent, activeDrillingLayer = L.layerGroup([]);
+    drillingArray.forEach(drillSite => {
+      // TODO: build popup content.. put this function somewhere else (need to finish this)
+      try {
+        circleMarker = L.circleMarker(drillSite['coordinates'].reverse(), drillingMarker);
+        popupContent = buildActiveDrillingPopupContent(drillSite);
+
+        // bind popup content and add marker to group
+        circleMarker.bindPopup(popupContent);
+        activeDrillingLayer.addLayer(circleMarker);
+      } catch(err) {
+        console.log(err);
+      }
+    })
+
+    // circleMarker.bindPopup(popupClone[0].outerHTML)
+    // pathGroup.addLayer(circleMarker);
+    return activeDrillingLayer;
   }
 
   onMapClick(e) {

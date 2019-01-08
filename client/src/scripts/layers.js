@@ -142,8 +142,9 @@ let TOC = [
     Layers: [
       {
         id: 'active_drilling',
-        niceName: 'Active Drilling',
+        niceName: 'Current Deepwater Activity',
         addDataFunc: 'getActiveDrilling',
+        endPoint: '/download/current_deepwater_activity.json',
         timeSensitive: false,
         visibleTOC: true,
         defaultOn: false
