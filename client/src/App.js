@@ -9,15 +9,14 @@ import moment from 'moment';
 import '@ansur/leaflet-pulse-icon/dist/L.Icon.Pulse.js';
 import '@ansur/leaflet-pulse-icon/dist/L.Icon.Pulse.css';
 import { getData, 
-        getModelField, 
-        gebcoBathyEndpoint
+        getModelField
         } from './scripts/dataFetchingUtils';
+import { addCustomLeafletHandlers } from './scripts/addCustomLeafletHandlers';
 import { buildActiveDrillingPopupContent } from './scripts/buildActiveDrillingPopup';
 import priorityMap from './scripts/layerPriority';
 import _ from 'lodash';
 
-// leaflet gateway
-const L = window.L;
+const L = addCustomLeafletHandlers();
 
 // store the map configuration properties in an object,
 // we could also move this to a separate file & import it if desired.
@@ -81,6 +80,17 @@ class App extends Component {
     this.handleLevelChange = this.handleLevelChange.bind(this);
     this.handleTimeChange = this.handleTimeChange.bind(this);
     this.updateValidTime = this.updateValidTime.bind(this);
+    this.handlePopupChartClick = this.handlePopupChartClick.bind(this);
+  }
+
+  handlePopupChartClick(e) {
+    debugger
+    // TODO: parse data-chart-type so we know the ajax call to make
+    // Other params can be found in _source.options
+
+    // e.sourceTarget._popup._source.options (coords in here..)
+    // e.sourceTarget._popup._contentNode (TODO need a data attr from it.. JS regex?)
+    console.log('doing Stuff!');
   }
 
   inititializeMap(id) {
@@ -100,6 +110,9 @@ class App extends Component {
 
     // add move event listener (for lease blocks).. seems to handle zoom change too
     map.on('moveend', this.onMapBoundsChange); // moveend, zoomend
+
+    // add click event listener to map (its really on popup but I fire a map event) 
+    map.on('chartClick', e => {this.handlePopupChartClick(e)});
 
     // layer/leaflet layer binding
     this.layerBindings = {};
@@ -319,7 +332,7 @@ class App extends Component {
    * @param {obj} layerObj
    */
   addLeafletLayer(layerObj) {
-    let options, addFuncType = layerObj['addDataFunc'], mapLayers = Object.assign({},this.state.mapLayers);
+    let addFuncType = layerObj['addDataFunc'], mapLayers = Object.assign({},this.state.mapLayers);
     switch(addFuncType) {
       case 'getModelField':
         getModelField(layerObj['dataset'], layerObj['subResource'], layerObj['level'], this.state.mapTime).then(
@@ -521,6 +534,8 @@ class App extends Component {
   }
 
   async buildImageLayer(layerObj, imageEndpoint,layerStr='') {
+    let mapLayers = Object.assign({}, this.state.mapLayers);
+
     let imageOptions = {
       opacity: layerObj['opacity']
     }
@@ -545,6 +560,23 @@ class App extends Component {
     let imageUrl = `https://gis.boem.gov/arcgis/rest/services/BOEM_BSEE/MMC_Layers/MapServer/export?dpi=96&transparent=true&format=png32&layers=${layerStr}&bbox=${sw_corner.x},${sw_corner.y},${ne_corner.x},${ne_corner.y}&bboxSR=102100&imageSR=102100&size=${width},${height}&f=image`;
 
     let imageLayer = await L.imageOverlay(imageUrl, imageBounds, imageOptions);
+
+    // set some image layer events
+    imageLayer.on('add', (function() {
+      mapLayers[layerObj['id']]['isLoading'] = true;
+      this.setState({mapLayers});
+    }).bind(this));
+
+    imageLayer.on('load', (function() {
+      mapLayers[layerObj['id']]['isLoading'] = false;
+      this.setState({mapLayers});
+    }).bind(this));
+
+    imageLayer.on('error', (function() {
+      mapLayers[layerObj['id']]['isLoading'] = false;
+      this.setState({mapLayers});
+    }).bind(this));
+
     return imageLayer;
   }
 
@@ -554,10 +586,10 @@ class App extends Component {
    * @param {array} drilingArray list of active drilling sites stored in s3 bucket in a json file)
    */
   buildActiveDrillingLayer(drillingArray) {
-    console.log('build the markers and corresponding html');
+    // TODO: these markers need to be highest priority
 
     const drillingMarker = {
-      radius: 3,
+      radius: 4,
       fillColor: '#00ff00',
       color: '#ffffff',
       weight: 0.1,
@@ -569,16 +601,17 @@ class App extends Component {
     drillingArray.forEach(drillSite => {
       // TODO: build popup content.. put this function somewhere else (need to finish this)
       try {
-        circleMarker = L.circleMarker(drillSite['coordinates'].reverse(), drillingMarker);
+        circleMarker = L.circleMarker(drillSite['coordinates'].reverse(), 
+          {...drillingMarker, ...drillSite});
+        
+        window.mymap = this.map
         popupContent = buildActiveDrillingPopupContent(drillSite);
-
-        // bind popup content and add marker to group
         circleMarker.bindPopup(popupContent);
         activeDrillingLayer.addLayer(circleMarker);
       } catch(err) {
         console.log(err);
       }
-    })
+    }, this)
 
     // circleMarker.bindPopup(popupClone[0].outerHTML)
     // pathGroup.addLayer(circleMarker);
@@ -680,13 +713,13 @@ class App extends Component {
       } else {
         this.setState({ error, isLoading: false, initializedLayers: true })
       }
-      // add non metoc layers to map 
-      this.state.orderedMapLayers.forEach(nonMetocLayer => {
-          if (nonMetocLayer !== 'MetOcean') {
-            if (this.state.mapLayers[nonMetocLayer]['isOn']) this.addLeafletLayer(this.state.mapLayers[nonMetocLayer])
-          }
+    // add non metoc layers to map 
+    this.state.orderedMapLayers.forEach(nonMetocLayer => {
+        if (nonMetocLayer !== 'MetOcean') {
+          if (this.state.mapLayers[nonMetocLayer]['isOn']) this.addLeafletLayer(this.state.mapLayers[nonMetocLayer])
         }
-      )
+      }
+    )
   }
 
   render() {
