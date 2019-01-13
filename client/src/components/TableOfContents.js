@@ -7,7 +7,9 @@ import FormGroup from '@material-ui/core/FormGroup';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Switch from '@material-ui/core/Switch';
 import LevelSelector from './LevelSelector';
+import LoadingSpinner from './LoadingSpinner';
 
+// label={<LoadingSpinner />subresource['niceName']}
 
 // https://stackoverflow.com/questions/35905988/react-js-how-to-append-a-component-on-click
 
@@ -19,6 +21,14 @@ const styles = theme => ({
 
 function TableOfContents(props) {
   const {toc, classes } = props;
+
+  const constructLabel = (labelText, layerID) => (
+    <React.Fragment>
+      {(props['mapLayers'][layerID] ? 
+        props['mapLayers'][layerID]['isLoading'] : false) && <LoadingSpinner />}
+      {labelText}
+    </React.Fragment>
+  )
 
   const buildContents = categoryObj => {
     return (
@@ -40,7 +50,7 @@ function TableOfContents(props) {
                             value={subresource['id']}
                           />
                         }
-                        label={subresource['niceName']}
+                        label={constructLabel(subresource['niceName'], subresource['id'])}
                       />
                     </FormGroup>
                     {(props['mapLayers'][subresource['id']] ? props['mapLayers'][subresource['id']]['isOn'] : subresource['defaultOn']) && 
@@ -79,7 +89,7 @@ function TableOfContents(props) {
                       value={layer['id']}
                     />
                   }
-                  label={layer['niceName']}
+                  label={constructLabel(layer['niceName'], layer['id'])}
                 />
               </FormGroup>
             )

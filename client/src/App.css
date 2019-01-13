@@ -1,9 +1,6 @@
 /*Loading Spinner*/
 .loader {
-  border: 2px solid lightgray;
   border-radius: 50%;
-  border-top: 3px solid blue;
-  border-bottom: 3px solid blue;
   width: 1.2em;
   height: 1.2em;
   -webkit-animation: spin 2s linear infinite;

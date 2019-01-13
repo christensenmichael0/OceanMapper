@@ -143,6 +143,7 @@ let TOC = [
       {
         id: 'active_drilling',
         niceName: 'Current Deepwater Activity',
+        overlayPriority: 'highest',
         addDataFunc: 'getActiveDrilling',
         endPoint: '/download/current_deepwater_activity.json',
         timeSensitive: false,

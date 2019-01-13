@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { withStyles } from '@material-ui/core/styles';
 // import { withTheme } from '@material-ui/core/styles';
+import './App.css';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import PersistentDrawerLeft from './components/PersistentDrawerLeft';
@@ -64,6 +65,7 @@ class App extends Component {
     this.inititializeMap = this.inititializeMap.bind(this);
     this.onMapClick = this.onMapClick.bind(this);
     this.onMapBoundsChange = this.onMapBoundsChange.bind(this);
+    this.checkLayerStatus = this.checkLayerStatus.bind(this);
     this.addLeafletLayer = this.addLeafletLayer.bind(this);
     this.removeLeafletLayer = this.removeLeafletLayer.bind(this);
     this.addLayer = this.addLayer.bind(this);
@@ -84,7 +86,7 @@ class App extends Component {
   }
 
   handlePopupChartClick(e) {
-    debugger
+    // debugger
     // TODO: parse data-chart-type so we know the ajax call to make
     // Other params can be found in _source.options
 
@@ -256,6 +258,7 @@ class App extends Component {
       }
       this.addLeafletLayer({...mapLayers[layerID], isOn: true});
     } else {
+      mapLayers[layerID]['isLoading'] = false;
       this.removeLeafletLayer(layerID); 
     }
 
@@ -325,6 +328,14 @@ class App extends Component {
     });
   }
 
+  // this is necessary if a user rapidly turn on/off a layer leaflet DOM state and 
+  // react app state may diverge
+  checkLayerStatus(layerID) {
+    if (!this.state.mapLayers[layerID]['isOn']) {
+      this.removeLeafletLayer(layerID)
+    }
+  }
+
   /**
    * Adds various leaflet layers using different logic depending on the addFuncType prop of 
    * a given layer
@@ -333,6 +344,10 @@ class App extends Component {
    */
   addLeafletLayer(layerObj) {
     let addFuncType = layerObj['addDataFunc'], mapLayers = Object.assign({},this.state.mapLayers);
+    // set loading state as soon as possible for smooth workflow
+    mapLayers[layerObj['id']]['isLoading'] = true;
+    this.setState({mapLayers});
+    
     switch(addFuncType) {
       case 'getModelField':
         getModelField(layerObj['dataset'], layerObj['subResource'], layerObj['level'], this.state.mapTime).then(
@@ -419,10 +434,12 @@ class App extends Component {
         })
         break;
       case 'getActiveDrilling':
-        // TODO: do i want to save drilling data in state once its been fetched? maybe not
+        mapLayers[layerObj['id']]['isLoading'] = true;
         getData(layerObj['endPoint']).then(drillingData => {
           let drillingLayer = this.buildActiveDrillingLayer(drillingData);
           this.addLayer(layerObj,drillingLayer);
+          mapLayers[layerObj['id']]['isLoading'] = false;
+          this.setState({mapLayers});
         });
         break;
 
@@ -481,6 +498,9 @@ class App extends Component {
   }
 
   async buildMetocTileLayer(layerObj,res) {
+    // TODO: add layer loading state here.. think about streamlines? how do those play in
+    let mapLayers = Object.assign({}, this.state.mapLayers);
+
     // add tile imagery data
     let tileOptions = {
       opacity: layerObj['opacity'],
@@ -494,6 +514,30 @@ class App extends Component {
     let tilepath = res['tile_paths']['scalar'] ? 'scalar' : 'vector';
     let tileLayer = await L.tileLayer(`https://s3.us-east-2.amazonaws.com/oceanmapper-data-storage/${res['tile_paths'][tilepath]}`,
       tileOptions);
+
+    // set tile layer events
+    tileLayer.on('loading', (function() {
+      // ensure the layer is still on when this is triggered.. a fast on/off toggle might complete
+      // before even getting here.. and I don't want the spinner to blip on/off
+      if (mapLayers[layerObj['id']]['isOn']) {
+        mapLayers[layerObj['id']]['isLoading'] = true;
+        this.setState({mapLayers});
+      }
+    }).bind(this));
+
+    tileLayer.on('load', (function() {
+      mapLayers[layerObj['id']]['isLoading'] = false;
+      // check if the layer is still on when load is complete 
+      // (need to keep DOM and react state in sync)
+      this.checkLayerStatus(layerObj['id']);
+      this.setState({mapLayers});
+    }).bind(this));
+
+    // TODO: implement an error icon 
+    tileLayer.on('tileerror', (function() {
+      mapLayers[layerObj['id']]['isLoading'] = false;
+      this.setState({mapLayers});
+    }).bind(this));
 
     return tileLayer;
   }
@@ -517,6 +561,8 @@ class App extends Component {
   // add another optional argument.. extra options
   // also ability to choose between tilelayer and wms tilelayer... thats prob a required arg
   async buildGeneralTileLayer(layerObj, endpointURL, extraOptions = {}, wmsTileLayer = false) {
+    let mapLayers = Object.assign({}, this.state.mapLayers);
+
     // add tile imagery data
     let tileOptions = {opacity: layerObj['opacity'], ...extraOptions};
 
@@ -529,6 +575,28 @@ class App extends Component {
     } else {
       outputTileLayer = await L.tileLayer(endpointURL,tileOptions);
     }
+
+    // set tile layer events
+    outputTileLayer.on('loading', (function() {
+      // double check layer is still on
+      if (mapLayers[layerObj['id']]['isOn']) {
+        mapLayers[layerObj['id']]['isLoading'] = true;
+        this.setState({mapLayers});
+      }
+    }).bind(this));
+
+    outputTileLayer.on('load', (function() {
+      mapLayers[layerObj['id']]['isLoading'] = false;
+      // check if the layer is still on (need to keep DOM and react state in sync)
+      this.checkLayerStatus(layerObj['id']);
+      this.setState({mapLayers});
+    }).bind(this));
+
+    // TODO: error icon
+    outputTileLayer.on('tileerror', (function() {
+      mapLayers[layerObj['id']]['isLoading'] = false;
+      this.setState({mapLayers});
+    }).bind(this));
 
     return outputTileLayer;
   }
@@ -569,6 +637,8 @@ class App extends Component {
 
     imageLayer.on('load', (function() {
       mapLayers[layerObj['id']]['isLoading'] = false;
+      // check if the layer is still on (need to keep DOM and react state in sync)
+      this.checkLayerStatus(layerObj['id']);
       this.setState({mapLayers});
     }).bind(this));
 
@@ -600,8 +670,9 @@ class App extends Component {
     let circleMarker, popupContent, activeDrillingLayer = L.layerGroup([]);
     drillingArray.forEach(drillSite => {
       // TODO: build popup content.. put this function somewhere else (need to finish this)
+      // circleMarker
       try {
-        circleMarker = L.circleMarker(drillSite['coordinates'].reverse(), 
+        circleMarker = L.marker(drillSite['coordinates'].reverse(), 
           {...drillingMarker, ...drillSite});
         
         window.mymap = this.map
@@ -613,8 +684,6 @@ class App extends Component {
       }
     }, this)
 
-    // circleMarker.bindPopup(popupClone[0].outerHTML)
-    // pathGroup.addLayer(circleMarker);
     return activeDrillingLayer;
   }
 
@@ -628,12 +697,6 @@ class App extends Component {
   }
 
   onMapBoundsChange() {
-    // TODO: check to see if any movement type layers are on (like proctracted lease blocks)... if they are
-    // need to trigger their removal and adding.. started building this code in LEASE_BLOCKS.js
-    // referencing the map node in react.. need its dimensions.. height, width, also map extents in epsg:3857.. see work
-    // i did already to this end
-    // debugger
-
     // TODO this basically repeats some logic i already have... see if we can move this logic into a func..
     // pass the prop I care about.. movementSensitive.. timeSensitive
     let mapLayers = Object.assign({},this.state.mapLayers), orderedMapLayers = [...this.state.orderedMapLayers];
