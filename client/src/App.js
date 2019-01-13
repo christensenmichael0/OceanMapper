@@ -12,6 +12,7 @@ import '@ansur/leaflet-pulse-icon/dist/L.Icon.Pulse.css';
 import { getData, 
         getModelField
         } from './scripts/dataFetchingUtils';
+import { populateImageUrlEndpoint } from './scripts/formattingUtils';
 import { addCustomLeafletHandlers } from './scripts/addCustomLeafletHandlers';
 import { buildActiveDrillingPopupContent } from './scripts/buildActiveDrillingPopup';
 import priorityMap from './scripts/layerPriority';
@@ -63,6 +64,7 @@ class App extends Component {
 
     this._mapNode = React.createRef();
     this.inititializeMap = this.inititializeMap.bind(this);
+    this.getMapDimensionInfo = this.getMapDimensionInfo.bind(this);
     this.onMapClick = this.onMapClick.bind(this);
     this.onMapBoundsChange = this.onMapBoundsChange.bind(this);
     this.checkLayerStatus = this.checkLayerStatus.bind(this);
@@ -129,6 +131,22 @@ class App extends Component {
       map.createPane(pane);
       map.getPane(pane).style.zIndex = priorityMap[pane];
     }
+  }
+
+  getMapDimensionInfo() {
+    let max_lat = this.map.getBounds()._northEast.lat;
+    let min_lat = this.map.getBounds()._southWest.lat;
+    let min_lon = this.map.getBounds()._southWest.lng;
+    let max_lon = this.map.getBounds()._northEast.lng;
+
+    let neCorner = L.CRS.EPSG3857.project(L.latLng(max_lat, max_lon));
+    let swCorner = L.CRS.EPSG3857.project(L.latLng(min_lat, min_lon));
+    let imageBounds = [[min_lat,min_lon],[max_lat,max_lon]]
+        
+    let width = this._mapNode.current.clientWidth;
+    let height = this._mapNode.current.clientHeight;
+
+    return {imageBounds, neCorner, swCorner, width, height}
   }
 
   /**
@@ -343,7 +361,8 @@ class App extends Component {
    * @param {obj} layerObj
    */
   addLeafletLayer(layerObj) {
-    let addFuncType = layerObj['addDataFunc'], mapLayers = Object.assign({},this.state.mapLayers);
+    let addFuncType = layerObj['addDataFunc'], mapLayers = Object.assign({},this.state.mapLayers),
+    mapProps, layerEndpointUrl;
     // set loading state as soon as possible for smooth workflow
     mapLayers[layerObj['id']]['isLoading'] = true;
     this.setState({mapLayers});
@@ -424,17 +443,20 @@ class App extends Component {
         })
         break;
       case 'getLeaseAreas':
-        this.buildImageLayer(layerObj,layerObj['endPoint'],'show:10').then(imageLayer => { 
+        mapProps = this.getMapDimensionInfo();
+        layerEndpointUrl = populateImageUrlEndpoint(layerObj['endPoint'], mapProps);
+        this.buildImageLayer(layerObj,layerEndpointUrl,mapProps['imageBounds']).then(imageLayer => { 
           this.addLayer(layerObj,imageLayer);
         })
         break;
       case 'getLeaseBlocks':
-        this.buildImageLayer(layerObj,layerObj['endPoint'],'show:11').then(imageLayer => { 
+        mapProps = this.getMapDimensionInfo();
+        layerEndpointUrl = populateImageUrlEndpoint(layerObj['endPoint'], mapProps);
+        this.buildImageLayer(layerObj,layerEndpointUrl,mapProps['imageBounds']).then(imageLayer => { 
           this.addLayer(layerObj,imageLayer);
         })
         break;
       case 'getActiveDrilling':
-        mapLayers[layerObj['id']]['isLoading'] = true;
         getData(layerObj['endPoint']).then(drillingData => {
           let drillingLayer = this.buildActiveDrillingLayer(drillingData);
           this.addLayer(layerObj,drillingLayer);
@@ -442,7 +464,18 @@ class App extends Component {
           this.setState({mapLayers});
         });
         break;
+      case 'getTropicalActivity':
+        mapProps = this.getMapDimensionInfo();
+        
+        // TODO: for this layer we also need to fetch legend and
+        // need to fetch valid time.. endpoints are defined in layers.js
+        layerEndpointUrl = populateImageUrlEndpoint(layerObj['endPoint'], mapProps);
+        debugger
 
+        this.buildImageLayer(layerObj,layerEndpointUrl,mapProps['imageBounds']).then(imageLayer => { 
+          this.addLayer(layerObj,imageLayer);
+        })
+        break;
         // TODO: fetch in the same way i do in componentDidMount.. clean up the call though (both here and there)
         // to make use of imported functionality from dataFetchingUtils.js
       default:
@@ -601,7 +634,7 @@ class App extends Component {
     return outputTileLayer;
   }
 
-  async buildImageLayer(layerObj, imageEndpoint,layerStr='') {
+  async buildImageLayer(layerObj, imageEndpoint, imageBounds) {
     let mapLayers = Object.assign({}, this.state.mapLayers);
 
     let imageOptions = {
@@ -610,24 +643,7 @@ class App extends Component {
 
     // add pane as an option if the layer contains overlayPriority key
     imageOptions = layerObj['overlayPriority'] ? {...imageOptions, pane: layerObj['overlayPriority']} : imageOptions;
-   
-    let max_lat = this.map.getBounds()._northEast.lat;
-    let min_lat = this.map.getBounds()._southWest.lat;
-    let min_lon = this.map.getBounds()._southWest.lng;
-    let max_lon = this.map.getBounds()._northEast.lng;
-
-    let ne_corner = L.CRS.EPSG3857.project(L.latLng(max_lat, max_lon));
-    let sw_corner = L.CRS.EPSG3857.project(L.latLng(min_lat, min_lon));
-    let imageBounds = [[min_lat,min_lon],[max_lat,max_lon]]
-        
-    let width = this._mapNode.current.clientWidth;
-    let height = this._mapNode.current.clientHeight;
-
-    // TODO: im not using imageEndpoint here.. also need to pass in dif layer if doing small lease blocks
-    // construct imageUrl
-    let imageUrl = `https://gis.boem.gov/arcgis/rest/services/BOEM_BSEE/MMC_Layers/MapServer/export?dpi=96&transparent=true&format=png32&layers=${layerStr}&bbox=${sw_corner.x},${sw_corner.y},${ne_corner.x},${ne_corner.y}&bboxSR=102100&imageSR=102100&size=${width},${height}&f=image`;
-
-    let imageLayer = await L.imageOverlay(imageUrl, imageBounds, imageOptions);
+    let imageLayer = await L.imageOverlay(imageEndpoint, imageBounds, imageOptions);
 
     // set some image layer events
     imageLayer.on('add', (function() {
