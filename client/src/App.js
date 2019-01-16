@@ -215,6 +215,7 @@ class App extends Component {
             minNativeZoom: layerObj['minNativeZoom'],
             maxVelocity: layerObj['maxVelocity'],
             velocityScale: layerObj['velocityScale'],
+            streamFlowColorScale: layerObj['streamFlowColorScale'],
             streamFlowLayer: layerObj['streamFlowLayer'],
             overlayPriority: layerObj['overlayPriority'],
             opacity: layerObj['defaultOpacity']
@@ -256,9 +257,6 @@ class App extends Component {
 
     // get the index of the layer and of the transparent basemap (if necessary)
     layerIndx = orderedMapLayers.indexOf(layerID);
-    // if (mapLayers[layerID]['overlayType'] === 'all') {
-    //   transparentBasemapIndx = orderedMapLayers.indexOf(transparentBasemapID);
-    // }
 
     // if turning the layer on find out where it was in the list... remove it from there and add to the end of the list
     if (event.target.checked) {
@@ -383,6 +381,7 @@ class App extends Component {
             // add tile and streamflow data
             let maxVelocity = layerObj['maxVelocity'];
             let velocityScale = layerObj['velocityScale'];
+            let streamFlowColorScale = layerObj['streamFlowColorScale'];
             this.buildMetocTileLayer(layerObj,res).then(tileLayer => { 
               if (this.layerBindings.hasOwnProperty(layerObj['id'])) {
                 this.removeLeafletLayer(layerObj['id']).then(() => {
@@ -401,7 +400,7 @@ class App extends Component {
 
                   // add stream layer
                   if (layerObj['streamFlowLayer']) {
-                    this.buildStreamlineLayer(data, maxVelocity, velocityScale).then(streamLayer => {
+                    this.buildStreamlineLayer(data, maxVelocity, velocityScale, streamFlowColorScale).then(streamLayer => {
                       this.addToLeafletLayerGroup(streamLayer, layerObj, true)
                     })
                   }
@@ -428,7 +427,7 @@ class App extends Component {
                 // end new
 
                 if (layerObj['streamFlowLayer']) {
-                  this.buildStreamlineLayer(data, maxVelocity, velocityScale).then(streamLayer => {
+                  this.buildStreamlineLayer(data, maxVelocity, velocityScale, streamFlowColorScale).then(streamLayer => {
                     this.addToLeafletLayerGroup(streamLayer, layerObj, true)
                   })
                 }
@@ -466,14 +465,21 @@ class App extends Component {
         break;
       case 'getTropicalActivity':
         mapProps = this.getMapDimensionInfo();
-        
+        // reset prodTime to null
+        mapLayers[layerObj['id']]['prodTime'] = null;
+        this.setState({mapLayers});
+
         // TODO: for this layer we also need to fetch legend and
         // need to fetch valid time.. endpoints are defined in layers.js
         layerEndpointUrl = populateImageUrlEndpoint(layerObj['endPoint'], mapProps);
-        debugger
-
         this.buildImageLayer(layerObj,layerEndpointUrl,mapProps['imageBounds']).then(imageLayer => { 
-          this.addLayer(layerObj,imageLayer);
+          // do endPointinfo fetch here and use .then to call next line
+          getData(layerObj['endPointInfo']).then(tropicalActivityInfo => {
+            mapLayers[layerObj['id']]['prodTimeLabel'] = tropicalActivityInfo['prodTimeLabel'];
+            mapLayers[layerObj['id']]['prodTime'] = moment.utc(tropicalActivityInfo['prodTime']).format('YYYY-MM-DDTHH:mm[Z]');
+            this.addLayer(layerObj,imageLayer);
+            this.setState({mapLayers});
+          })
         })
         break;
         // TODO: fetch in the same way i do in componentDidMount.. clean up the call though (both here and there)
@@ -575,7 +581,7 @@ class App extends Component {
     return tileLayer;
   }
 
-  async buildStreamlineLayer(data, maxVelocity, scale) {
+  async buildStreamlineLayer(data, maxVelocity, scale, streamFlowColorScale=[]) {
     let velocityLayer = await L.velocityLayer({
       displayValues: false,
       displayOptions: {
@@ -585,7 +591,8 @@ class App extends Component {
       },
       data: data,
       maxVelocity: maxVelocity, //20.0,
-      velocityScale: scale// 0.01 // arbitrary default 0.005
+      velocityScale: scale, // 0.01 // arbitrary default 0.005
+      colorScale: ['#ffffff','#d9d9d9','#969696','#525252','#000000'] // use gray scale for all 
     });
     return velocityLayer;
   }
@@ -736,7 +743,8 @@ class App extends Component {
           let id = layerObj['id'];
           mapLayers[id] = {
             id,
-            isOn: layerObj['defaultOn'], 
+            isOn: layerObj['defaultOn'],
+            nowCoastDataset: layerObj['nowCoastDataset'] || false,
             timeSensitive: layerObj['timeSensitive'] || false,
             movementSensitive: layerObj['movementSensitive'] || false,
             minNativeZoom: layerObj['minNativeZoom'],
@@ -744,7 +752,9 @@ class App extends Component {
             addDataFunc: layerObj['addDataFunc'],
             opacity: layerObj['defaultOpacity'] || 1,
             overlayPriority: layerObj['overlayPriority'],
-            endPoint: layerObj['endPoint']
+            endPoint: layerObj['endPoint'],
+            endPointInfo: layerObj['endPointInfo'],
+            legendUrl: layerObj['legendUrl']
           };
           orderedMapLayers.push(id);  
         })

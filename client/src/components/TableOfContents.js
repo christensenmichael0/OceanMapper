@@ -79,19 +79,30 @@ function TableOfContents(props) {
         } else {
           if (layer['visibleTOC']) {
             return (
-              <FormGroup key={indx} row={false}>
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={props['mapLayers'][layer['id']] ? props['mapLayers'][layer['id']]['isOn'] : layer['defaultOn']}
-                      color='secondary'
-                      onChange={props.handleLayerToggle.bind(this, layer['id'])}
-                      value={layer['id']}
-                    />
-                  }
-                  label={constructLabel(layer['niceName'], layer['id'])}
-                />
-              </FormGroup>
+              <React.Fragment>
+                <FormGroup key={indx} row={false}>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={props['mapLayers'][layer['id']] ? props['mapLayers'][layer['id']]['isOn'] : layer['defaultOn']}
+                        color='secondary'
+                        onChange={props.handleLayerToggle.bind(this, layer['id'])}
+                        value={layer['id']}
+                      />
+                    }
+                    label={constructLabel(layer['niceName'], layer['id'])}
+                  />
+                </FormGroup>
+                {((props['mapLayers'][layer['id']] ? props['mapLayers'][layer['id']]['isOn'] : layer['defaultOn']) && 
+                  props['mapLayers'][layer['id']]['nowCoastDataset']) && 
+                  <React.Fragment>
+                    <Typography variant="overline" gutterBottom>
+                      {props['mapLayers'][layer['id']]['prodTime'] ? 
+                      `${props['mapLayers'][layer['id']]['prodTimeLabel']}: ${props['mapLayers'][layer['id']]['prodTime'] || ''}` : ''}
+                    </Typography>
+                  </React.Fragment>
+                }
+              </React.Fragment>
             )
           } else {
             return null

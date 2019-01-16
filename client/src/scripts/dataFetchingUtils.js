@@ -20,7 +20,7 @@ export const getData = async (endpoint) => {
     }
     throw new Error('Request Failed!');
   } catch (error) {
-    console.log(error);
+    return {error};
   }
 }
 
