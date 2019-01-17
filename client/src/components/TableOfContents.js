@@ -9,6 +9,11 @@ import Switch from '@material-ui/core/Switch';
 import LevelSelector from './LevelSelector';
 import LoadingSpinner from './LoadingSpinner';
 
+import { library } from '@fortawesome/fontawesome-svg-core';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
+library.add(faExclamationTriangle);
+
 // label={<LoadingSpinner />subresource['niceName']}
 
 // https://stackoverflow.com/questions/35905988/react-js-how-to-append-a-component-on-click
@@ -19,6 +24,8 @@ const styles = theme => ({
   },
 });
 
+// TODO add some logic for error loading a layer.. i.e. probably don't show legend or date valid
+
 function TableOfContents(props) {
   const {toc, classes } = props;
 
@@ -27,6 +34,14 @@ function TableOfContents(props) {
       {(props['mapLayers'][layerID] ? 
         props['mapLayers'][layerID]['isLoading'] : false) && <LoadingSpinner />}
       {labelText}
+      {(props['mapLayers'][layerID] && props['mapLayers'][layerID]['loadError'] && !props['mapLayers'][layerID]['isLoading'] && 
+        props['mapLayers'][layerID]['isOn']) && 
+        <FontAwesomeIcon 
+          icon="exclamation-triangle" 
+          title={'Failed to load layer!'} 
+          style={{color: 'red', marginLeft: 5, fontSize: '1.2em'}} 
+        />
+      }
     </React.Fragment>
   )
 
@@ -53,9 +68,10 @@ function TableOfContents(props) {
                         label={constructLabel(subresource['niceName'], subresource['id'])}
                       />
                     </FormGroup>
-                    {(props['mapLayers'][subresource['id']] ? props['mapLayers'][subresource['id']]['isOn'] : subresource['defaultOn']) && 
+                    {((props['mapLayers'][subresource['id']] ? props['mapLayers'][subresource['id']]['isOn'] : subresource['defaultOn']) 
+                      && !props['mapLayers'][subresource['id']]['isLoading'] && !props['mapLayers'][subresource['id']]['loadError']) && 
                     <React.Fragment>
-                      <Typography variant="overline" gutterBottom>
+                       <Typography variant="overline" gutterBottom>
                         Date Valid: {props['mapLayers'][subresource['id']] ? props['mapLayers'][subresource['id']]['validTime'] : ''}
                       </Typography>
                       {subresource['legendUrl'] ? <img src={subresource['legendUrl']} alt='data-legend' className={classNames(classes.img)}/> : ''}
@@ -93,8 +109,8 @@ function TableOfContents(props) {
                     label={constructLabel(layer['niceName'], layer['id'])}
                   />
                 </FormGroup>
-                {((props['mapLayers'][layer['id']] ? props['mapLayers'][layer['id']]['isOn'] : layer['defaultOn']) && 
-                  props['mapLayers'][layer['id']]['nowCoastDataset']) && 
+                {(props['mapLayers'][layer['id']]['isOn'] && props['mapLayers'][layer['id']]['nowCoastDataset']
+                  && !props['mapLayers'][layer['id']]['isLoading'] && !props['mapLayers'][layer['id']]['loadError']) && 
                   <React.Fragment>
                     <Typography variant="overline" gutterBottom>
                       {props['mapLayers'][layer['id']]['prodTime'] ? 

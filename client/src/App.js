@@ -85,6 +85,7 @@ class App extends Component {
     this.handleTimeChange = this.handleTimeChange.bind(this);
     this.updateValidTime = this.updateValidTime.bind(this);
     this.handlePopupChartClick = this.handlePopupChartClick.bind(this);
+    this.layerLoadError = this.layerLoadError.bind(this);
   }
 
   handlePopupChartClick(e) {
@@ -322,6 +323,7 @@ class App extends Component {
   updateValidTime(layerID,validTime) {
     let mapLayers = Object.assign({},this.state.mapLayers);
     mapLayers[layerID]['validTime'] = validTime;
+    mapLayers[layerID]['isLoading'] = false;
     this.setState({mapLayers});
   }
 
@@ -369,6 +371,14 @@ class App extends Component {
       case 'getModelField':
         getModelField(layerObj['dataset'], layerObj['subResource'], layerObj['level'], this.state.mapTime).then(
           res => {
+            // error handling if response returns an error
+            if (res['error']) {
+              mapLayers[layerObj['id']]['loadError'] = true;
+              mapLayers[layerObj['id']]['isLoading'] = false;
+              this.setState({mapLayers});
+              return
+            }
+
             let data = JSON.parse(res['data']);
             // update valid time here.. check if requested date is outside of data range
             if (!res['tile_paths']) {
@@ -457,6 +467,12 @@ class App extends Component {
         break;
       case 'getActiveDrilling':
         getData(layerObj['endPoint']).then(drillingData => {
+          // if unable to get drilling data then update state and halt execution
+          if (drillingData['error']) {
+            this.layerLoadError(layerObj);
+            return
+          }
+
           let drillingLayer = this.buildActiveDrillingLayer(drillingData);
           this.addLayer(layerObj,drillingLayer);
           mapLayers[layerObj['id']]['isLoading'] = false;
@@ -465,16 +481,18 @@ class App extends Component {
         break;
       case 'getTropicalActivity':
         mapProps = this.getMapDimensionInfo();
-        // reset prodTime to null
-        mapLayers[layerObj['id']]['prodTime'] = null;
-        this.setState({mapLayers});
 
         // TODO: for this layer we also need to fetch legend and
-        // need to fetch valid time.. endpoints are defined in layers.js
+        // endpoints are defined in layers.js
         layerEndpointUrl = populateImageUrlEndpoint(layerObj['endPoint'], mapProps);
         this.buildImageLayer(layerObj,layerEndpointUrl,mapProps['imageBounds']).then(imageLayer => { 
-          // do endPointinfo fetch here and use .then to call next line
           getData(layerObj['endPointInfo']).then(tropicalActivityInfo => {
+            // if unable to get last update info then update state and halt execution
+            if (tropicalActivityInfo['error']) {
+              this.layerLoadError(layerObj);
+              return
+            }
+            
             mapLayers[layerObj['id']]['prodTimeLabel'] = tropicalActivityInfo['prodTimeLabel'];
             mapLayers[layerObj['id']]['prodTime'] = moment.utc(tropicalActivityInfo['prodTime']).format('YYYY-MM-DDTHH:mm[Z]');
             this.addLayer(layerObj,imageLayer);
@@ -560,6 +578,7 @@ class App extends Component {
       // before even getting here.. and I don't want the spinner to blip on/off
       if (mapLayers[layerObj['id']]['isOn']) {
         mapLayers[layerObj['id']]['isLoading'] = true;
+        mapLayers[layerObj['id']]['loadError'] = false;
         this.setState({mapLayers});
       }
     }).bind(this));
@@ -572,10 +591,8 @@ class App extends Component {
       this.setState({mapLayers});
     }).bind(this));
 
-    // TODO: implement an error icon 
     tileLayer.on('tileerror', (function() {
-      mapLayers[layerObj['id']]['isLoading'] = false;
-      this.setState({mapLayers});
+      this.layerLoadError(layerObj);
     }).bind(this));
 
     return tileLayer;
@@ -620,7 +637,7 @@ class App extends Component {
     outputTileLayer.on('loading', (function() {
       // double check layer is still on
       if (mapLayers[layerObj['id']]['isOn']) {
-        mapLayers[layerObj['id']]['isLoading'] = true;
+        mapLayers[layerObj['id']]['loadError'] = false;
         this.setState({mapLayers});
       }
     }).bind(this));
@@ -632,10 +649,8 @@ class App extends Component {
       this.setState({mapLayers});
     }).bind(this));
 
-    // TODO: error icon
     outputTileLayer.on('tileerror', (function() {
-      mapLayers[layerObj['id']]['isLoading'] = false;
-      this.setState({mapLayers});
+      this.layerLoadError(layerObj);
     }).bind(this));
 
     return outputTileLayer;
@@ -654,7 +669,9 @@ class App extends Component {
 
     // set some image layer events
     imageLayer.on('add', (function() {
+      // TODO: do i need isLoading here?? its defined in addLeafletLayer
       mapLayers[layerObj['id']]['isLoading'] = true;
+      mapLayers[layerObj['id']]['loadError'] = false;
       this.setState({mapLayers});
     }).bind(this));
 
@@ -666,8 +683,7 @@ class App extends Component {
     }).bind(this));
 
     imageLayer.on('error', (function() {
-      mapLayers[layerObj['id']]['isLoading'] = false;
-      this.setState({mapLayers});
+      this.layerLoadError(layerObj);
     }).bind(this));
 
     return imageLayer;
@@ -708,6 +724,13 @@ class App extends Component {
     }, this)
 
     return activeDrillingLayer;
+  }
+
+  layerLoadError(layerObj) {
+    let mapLayers = Object.assign({}, this.state.mapLayers);
+    mapLayers[layerObj['id']]['isLoading'] = false;
+    mapLayers[layerObj['id']]['loadError'] = true;
+    this.setState({mapLayers});
   }
 
   onMapClick(e) {
