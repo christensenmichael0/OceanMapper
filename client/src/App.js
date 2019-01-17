@@ -297,10 +297,10 @@ class App extends Component {
     let mapLayers = Object.assign({},this.state.mapLayers);
     mapLayers[layerID]['level'] = parseInt(event.target.value);
 
-    this.removeLeafletLayer(layerID);
-    this.addLeafletLayer(mapLayers[layerID]);
-    
-    this.setState({mapLayers});
+    this.setState({mapLayers}, () => {
+      this.removeLeafletLayer(layerID);
+      this.addLeafletLayer(mapLayers[layerID]);
+    });
   }
 
   /**
@@ -308,9 +308,9 @@ class App extends Component {
    * @param {int} JS datetime in milliseconds
    */
   handleTimeChange(timeValue) {
-    console.log('i heard the time change!');
-    this.debouncedUpdateLeafletLayer(); 
-    this.setState({mapTime: timeValue});
+    this.setState({mapTime: timeValue},()=> {
+      this.debouncedUpdateLeafletLayer(); 
+    });
   }
 
   /**
@@ -365,146 +365,146 @@ class App extends Component {
     mapProps, layerEndpointUrl;
     // set loading state as soon as possible for smooth workflow
     mapLayers[layerObj['id']]['isLoading'] = true;
-    this.setState({mapLayers});
-    
-    switch(addFuncType) {
-      case 'getModelField':
-        getModelField(layerObj['dataset'], layerObj['subResource'], layerObj['level'], this.state.mapTime).then(
-          res => {
-            // error handling if response returns an error
-            if (res['error']) {
-              mapLayers[layerObj['id']]['loadError'] = true;
-              mapLayers[layerObj['id']]['isLoading'] = false;
-              this.setState({mapLayers});
-              return
-            }
+    this.setState({mapLayers}, () => {
+      switch(addFuncType) {
+        case 'getModelField':
+          getModelField(layerObj['dataset'], layerObj['subResource'], layerObj['level'], this.state.mapTime).then(
+            res => {
+              // error handling if response returns an error
+              if (res['error']) {
+                mapLayers[layerObj['id']]['loadError'] = true;
+                mapLayers[layerObj['id']]['isLoading'] = false;
+                this.setState({mapLayers});
+                return
+              }
 
-            let data = JSON.parse(res['data']);
-            // update valid time here.. check if requested date is outside of data range
-            if (!res['tile_paths']) {
-              this.updateValidTime(layerObj['id'], 'n/a')
-              return
-            } else {
-              this.updateValidTime(layerObj['id'], res['valid_time'])
-            }
+              let data = JSON.parse(res['data']);
+              // update valid time here.. check if requested date is outside of data range
+              if (!res['tile_paths']) {
+                this.updateValidTime(layerObj['id'], 'n/a')
+                return
+              } else {
+                this.updateValidTime(layerObj['id'], res['valid_time'])
+              }
 
-            // add tile and streamflow data
-            let maxVelocity = layerObj['maxVelocity'];
-            let velocityScale = layerObj['velocityScale'];
-            let streamFlowColorScale = layerObj['streamFlowColorScale'];
-            this.buildMetocTileLayer(layerObj,res).then(tileLayer => { 
-              if (this.layerBindings.hasOwnProperty(layerObj['id'])) {
-                this.removeLeafletLayer(layerObj['id']).then(() => {
+              // add tile and streamflow data
+              let maxVelocity = layerObj['maxVelocity'];
+              let velocityScale = layerObj['velocityScale'];
+              let streamFlowColorScale = layerObj['streamFlowColorScale'];
+              this.buildMetocTileLayer(layerObj,res).then(tileLayer => { 
+                if (this.layerBindings.hasOwnProperty(layerObj['id'])) {
+                  this.removeLeafletLayer(layerObj['id']).then(() => {
 
+                    // add tile layer
+                    this.addToLeafletLayerGroup(tileLayer, layerObj, false)
+
+                    // TODO: this logic is repeated below in else block
+                    // add transparent basemap
+                    if (layerObj['overlayType'] === 'all') {
+                      let transparentBasemap = mapLayers['transparent_basemap'];
+                      this.buildGeneralTileLayer(transparentBasemap,transparentBasemap['endPoint']).then(tileMapLayer => {
+                        this.addLayer(transparentBasemap,tileMapLayer);
+                      });
+                    }
+
+                    // add stream layer
+                    if (layerObj['streamFlowLayer']) {
+                      this.buildStreamlineLayer(data, maxVelocity, velocityScale, streamFlowColorScale).then(streamLayer => {
+                        this.addToLeafletLayerGroup(streamLayer, layerObj, true)
+                      })
+                    }
+                  })
+                } else {
                   // add tile layer
                   this.addToLeafletLayerGroup(tileLayer, layerObj, false)
 
-                  // TODO: this logic is repeated below in else block
+                  // new (TODO: repeated logic.. wrap this logic in a function)
                   // add transparent basemap
                   if (layerObj['overlayType'] === 'all') {
                     let transparentBasemap = mapLayers['transparent_basemap'];
-                    this.buildGeneralTileLayer(transparentBasemap,transparentBasemap['endPoint']).then(tileMapLayer => {
+                    
+                    let extraOptions = {
+                      minNativeZoom: transparentBasemap['minNativeZoom'], 
+                      maxNativeZoom: transparentBasemap['maxNativeZoom']
+                    };
+
+                    this.buildGeneralTileLayer(transparentBasemap,transparentBasemap['endPoint'],extraOptions).then(
+                      tileMapLayer => {
                       this.addLayer(transparentBasemap,tileMapLayer);
                     });
                   }
+                  // end new
 
-                  // add stream layer
                   if (layerObj['streamFlowLayer']) {
                     this.buildStreamlineLayer(data, maxVelocity, velocityScale, streamFlowColorScale).then(streamLayer => {
                       this.addToLeafletLayerGroup(streamLayer, layerObj, true)
                     })
                   }
-                })
-              } else {
-                // add tile layer
-                this.addToLeafletLayerGroup(tileLayer, layerObj, false)
-
-                // new (TODO: repeated logic.. wrap this logic in a function)
-                // add transparent basemap
-                if (layerObj['overlayType'] === 'all') {
-                  let transparentBasemap = mapLayers['transparent_basemap'];
-                  
-                  let extraOptions = {
-                    minNativeZoom: transparentBasemap['minNativeZoom'], 
-                    maxNativeZoom: transparentBasemap['maxNativeZoom']
-                  };
-
-                  this.buildGeneralTileLayer(transparentBasemap,transparentBasemap['endPoint'],extraOptions).then(
-                    tileMapLayer => {
-                    this.addLayer(transparentBasemap,tileMapLayer);
-                  });
                 }
-                // end new
-
-                if (layerObj['streamFlowLayer']) {
-                  this.buildStreamlineLayer(data, maxVelocity, velocityScale, streamFlowColorScale).then(streamLayer => {
-                    this.addToLeafletLayerGroup(streamLayer, layerObj, true)
-                  })
-                }
-              }
-            })
-          }
-        ).catch(alert) // TODO: make a formal modal out of this
-        break;
-      case 'getGebcoBathy':
-        this.buildGeneralTileLayer(layerObj,layerObj['endPoint']).then(tileLayer => { 
-          this.addLayer(layerObj,tileLayer);
-        })
-        break;
-      case 'getLeaseAreas':
-        mapProps = this.getMapDimensionInfo();
-        layerEndpointUrl = populateImageUrlEndpoint(layerObj['endPoint'], mapProps);
-        this.buildImageLayer(layerObj,layerEndpointUrl,mapProps['imageBounds']).then(imageLayer => { 
-          this.addLayer(layerObj,imageLayer);
-        })
-        break;
-      case 'getLeaseBlocks':
-        mapProps = this.getMapDimensionInfo();
-        layerEndpointUrl = populateImageUrlEndpoint(layerObj['endPoint'], mapProps);
-        this.buildImageLayer(layerObj,layerEndpointUrl,mapProps['imageBounds']).then(imageLayer => { 
-          this.addLayer(layerObj,imageLayer);
-        })
-        break;
-      case 'getActiveDrilling':
-        getData(layerObj['endPoint']).then(drillingData => {
-          // if unable to get drilling data then update state and halt execution
-          if (drillingData['error']) {
-            this.layerLoadError(layerObj);
-            return
-          }
-
-          let drillingLayer = this.buildActiveDrillingLayer(drillingData);
-          this.addLayer(layerObj,drillingLayer);
-          mapLayers[layerObj['id']]['isLoading'] = false;
-          this.setState({mapLayers});
-        });
-        break;
-      case 'getTropicalActivity':
-        mapProps = this.getMapDimensionInfo();
-
-        // TODO: for this layer we also need to fetch legend and
-        // endpoints are defined in layers.js
-        layerEndpointUrl = populateImageUrlEndpoint(layerObj['endPoint'], mapProps);
-        this.buildImageLayer(layerObj,layerEndpointUrl,mapProps['imageBounds']).then(imageLayer => { 
-          getData(layerObj['endPointInfo']).then(tropicalActivityInfo => {
-            // if unable to get last update info then update state and halt execution
-            if (tropicalActivityInfo['error']) {
+              })
+            }
+          ).catch(alert) // TODO: make a formal modal out of this
+          break;
+        case 'getGebcoBathy':
+          this.buildGeneralTileLayer(layerObj,layerObj['endPoint']).then(tileLayer => { 
+            this.addLayer(layerObj,tileLayer);
+          })
+          break;
+        case 'getLeaseAreas':
+          mapProps = this.getMapDimensionInfo();
+          layerEndpointUrl = populateImageUrlEndpoint(layerObj['endPoint'], mapProps);
+          this.buildImageLayer(layerObj,layerEndpointUrl,mapProps['imageBounds']).then(imageLayer => { 
+            this.addLayer(layerObj,imageLayer);
+          })
+          break;
+        case 'getLeaseBlocks':
+          mapProps = this.getMapDimensionInfo();
+          layerEndpointUrl = populateImageUrlEndpoint(layerObj['endPoint'], mapProps);
+          this.buildImageLayer(layerObj,layerEndpointUrl,mapProps['imageBounds']).then(imageLayer => { 
+            this.addLayer(layerObj,imageLayer);
+          })
+          break;
+        case 'getActiveDrilling':
+          getData(layerObj['endPoint']).then(drillingData => {
+            // if unable to get drilling data then update state and halt execution
+            if (drillingData['error']) {
               this.layerLoadError(layerObj);
               return
             }
-            
-            mapLayers[layerObj['id']]['prodTimeLabel'] = tropicalActivityInfo['prodTimeLabel'];
-            mapLayers[layerObj['id']]['prodTime'] = moment.utc(tropicalActivityInfo['prodTime']).format('YYYY-MM-DDTHH:mm[Z]');
-            this.addLayer(layerObj,imageLayer);
+
+            let drillingLayer = this.buildActiveDrillingLayer(drillingData);
+            this.addLayer(layerObj,drillingLayer);
+            mapLayers[layerObj['id']]['isLoading'] = false;
             this.setState({mapLayers});
+          });
+          break;
+        case 'getTropicalActivity':
+          mapProps = this.getMapDimensionInfo();
+
+          // TODO: for this layer we also need to fetch legend and
+          // endpoints are defined in layers.js
+          layerEndpointUrl = populateImageUrlEndpoint(layerObj['endPoint'], mapProps);
+          this.buildImageLayer(layerObj,layerEndpointUrl,mapProps['imageBounds']).then(imageLayer => { 
+            getData(layerObj['endPointInfo']).then(tropicalActivityInfo => {
+              // if unable to get last update info then update state and halt execution
+              if (tropicalActivityInfo['error']) {
+                this.layerLoadError(layerObj);
+                return
+              }
+              
+              mapLayers[layerObj['id']]['prodTimeLabel'] = tropicalActivityInfo['prodTimeLabel'];
+              mapLayers[layerObj['id']]['prodTime'] = moment.utc(tropicalActivityInfo['prodTime']).format('YYYY-MM-DDTHH:mm[Z]');
+              this.addLayer(layerObj,imageLayer);
+              this.setState({mapLayers});
+            })
           })
-        })
-        break;
-        // TODO: fetch in the same way i do in componentDidMount.. clean up the call though (both here and there)
-        // to make use of imported functionality from dataFetchingUtils.js
-      default:
-        //code block
-    }
+          break;
+          // TODO: fetch in the same way i do in componentDidMount.. clean up the call though (both here and there)
+          // to make use of imported functionality from dataFetchingUtils.js
+        default:
+          //code block
+      }
+    })
   }
 
   /**
