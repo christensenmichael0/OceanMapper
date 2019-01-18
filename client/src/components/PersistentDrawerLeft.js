@@ -87,8 +87,9 @@ class PersistentDrawerLeft extends React.Component {
   constructor(props) {
     super(props);
     
+    // TODO: set this in config
     this.state = {
-      open: false,
+      open: true,
     };
 
     this.handleDrawerOpen = this.handleDrawerOpen.bind(this);

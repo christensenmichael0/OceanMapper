@@ -56,8 +56,8 @@ class App extends Component {
       initializedLayers: false,
       mapLayers: null,
       orderedMapLayers: [],
-      isLoading: null,
-      error: null,
+      isLoadingMetoc: false,
+      metocLoadError: false,
       toc: layers,
       deepwater_activity: null
     };
@@ -240,8 +240,16 @@ class App extends Component {
       orderedMapLayers = [].concat(...orderedMapLayers)
     }
     // Dont mutate data
-    // / isLoading should probably be turned off after inital data pull.. keep as is for now
-    this.setState({toc: categories, isLoading: false, initializedLayers: true, mapLayers: mapLayers, orderedMapLayers})
+    // TODO: use initializedLayers in TableOfContents.js to begin looking at Metoc layers.. the metocLoadError
+    // and isLoadingMetoc should provide info to display an error or not.. if error disable the expansion menu
+    // and put icon in panel title
+    this.setState({
+      toc: categories, 
+      isLoading: false, 
+      initializedLayers: true, 
+      mapLayers: mapLayers, 
+      orderedMapLayers
+    })
   }
 
   /**
@@ -518,9 +526,7 @@ class App extends Component {
     let mapLayers = Object.assign({},this.state.mapLayers)
 
     try {
-      // TODO: need to remove transparent basemap in some cases
       if (mapLayers[layerID]['overlayType'] === 'all') {
-        console.log('remove the transparent basemap!');
         await this.leafletLayerGroup.removeLayer(this.layerBindings['transparent_basemap']);
         delete this.layerBindings['transparent_basemap'];
       }
@@ -555,7 +561,6 @@ class App extends Component {
   }
 
   async buildMetocTileLayer(layerObj,res) {
-    // TODO: add layer loading state here.. think about streamlines? how do those play in
     let mapLayers = Object.assign({}, this.state.mapLayers);
 
     // add tile imagery data
@@ -609,14 +614,11 @@ class App extends Component {
       data: data,
       maxVelocity: maxVelocity, //20.0,
       velocityScale: scale, // 0.01 // arbitrary default 0.005
-      colorScale: ['#ffffff','#d9d9d9','#969696','#525252','#000000'] // use gray scale for all 
+      colorScale: ['#ffffff'] // ['#ffffff','#d9d9d9','#969696','#525252','#000000'] // use gray scale for all 
     });
     return velocityLayer;
   }
 
-  // TODO: this will replace buildBathyLayer and be used for lease blocks, hurricanes.. more?
-  // add another optional argument.. extra options
-  // also ability to choose between tilelayer and wms tilelayer... thats prob a required arg
   async buildGeneralTileLayer(layerObj, endpointURL, extraOptions = {}, wmsTileLayer = false) {
     let mapLayers = Object.assign({}, this.state.mapLayers);
 
@@ -669,7 +671,7 @@ class App extends Component {
 
     // set some image layer events
     imageLayer.on('add', (function() {
-      // TODO: do i need isLoading here?? its defined in addLeafletLayer
+      // setting isLoading to true might be redundant but leave it 
       mapLayers[layerObj['id']]['isLoading'] = true;
       mapLayers[layerObj['id']]['loadError'] = false;
       this.setState({mapLayers});
@@ -695,8 +697,6 @@ class App extends Component {
    * @param {array} drilingArray list of active drilling sites stored in s3 bucket in a json file)
    */
   buildActiveDrillingLayer(drillingArray) {
-    // TODO: these markers need to be highest priority
-
     const drillingMarker = {
       radius: 4,
       fillColor: '#00ff00',
@@ -709,7 +709,6 @@ class App extends Component {
     let circleMarker, popupContent, activeDrillingLayer = L.layerGroup([]);
     drillingArray.forEach(drillSite => {
       // TODO: build popup content.. put this function somewhere else (need to finish this)
-      // circleMarker
       try {
         circleMarker = L.marker(drillSite['coordinates'].reverse(), 
           {...drillingMarker, ...drillSite});
@@ -802,29 +801,26 @@ class App extends Component {
     // https://www.robinwieruch.de/react-fetching-data/
     // abort if MetOcean category isnt visible in TOC
     if (fetchDataAvailablity) {
-      this.setState({ isLoading: true });
+      getData(process.env.REACT_APP_DATA_AVAILABILITY_PATH).then(data => {
+        if (data['error']) {
+          this.setState({isLoadingMetoc: false, metocLoadError: true});
+          return
+        }
+        // populate levels if no error
+        this.setState({isLoadingMetoc: false, metocLoadError: false}, () => {
+          this.populateAvailableLevels(data)
+        });
+      })
 
-      fetch('/download/data_availability.json')
-        .then(response => {
-          if (response.ok) {
-            return response.json();
-          } 
-          throw new Error('Request failed!');
-        }, networkError => {
-          this.setState({ error: networkError, isLoading: false });
-        })
-        .then(data => {
-          // let error = null;
-          if (!('error' in data)) {
-            this.populateAvailableLevels(data)
-          } else {
-            error = data['error']['message']
-          }
-          this.setState({ error, isLoading: false })
-        })
-      } else {
-        this.setState({ error, isLoading: false, initializedLayers: true })
-      }
+    } else {
+      this.setState({
+        error, 
+        isLoadingMetoc: false, 
+        initializedLayers: true, 
+        metocLoadError: false
+      })
+    }
+     
     // add non metoc layers to map 
     this.state.orderedMapLayers.forEach(nonMetocLayer => {
         if (nonMetocLayer !== 'MetOcean') {
@@ -836,7 +832,6 @@ class App extends Component {
 
   render() {
     const { classes } = this.props;
-    // ref={(node) => this._mapNode = node}
 
     return (
       <div>
