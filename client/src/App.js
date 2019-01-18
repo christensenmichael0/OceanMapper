@@ -801,7 +801,7 @@ class App extends Component {
     // https://www.robinwieruch.de/react-fetching-data/
     // abort if MetOcean category isnt visible in TOC
     if (fetchDataAvailablity) {
-      getData(process.env.REACT_APP_DATA_AVAILABILITY_PATH).then(data => {
+      getData('/download/data_availability.json').then(data => {
         if (data['error']) {
           this.setState({isLoadingMetoc: false, metocLoadError: true});
           return
