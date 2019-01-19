@@ -129,6 +129,12 @@ function TableOfContents(props) {
   }
 
   const categories = toc.map((category, index) => {
+    
+    console.log(props);
+    if (category['Category'] === 'MetOcean' && !props['initializedLayers']) {
+      return null
+    }
+
     // check if visible TOC
     if (category['visibleTOC']) {
       return (
