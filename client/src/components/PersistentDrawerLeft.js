@@ -156,6 +156,20 @@ class PersistentDrawerLeft extends React.Component {
             {...other}
           />
         </main>
+        {this.props.timeseriesChartOpen && <Drawer
+          anchor="bottom"
+          open={this.state.bottom}
+          onClose={this.toggleDrawer('bottom', false)}
+        >
+          <div
+            tabIndex={0}
+            role="button"
+            // onClick={this.toggleDrawer('bottom', false)}
+            // onKeyDown={this.toggleDrawer('bottom', false)}
+          >
+            <p>Insert Legend Content</p>
+          </div>
+        </Drawer>}
       </div>
     );
   }
