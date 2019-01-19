@@ -10,6 +10,7 @@ import moment from 'moment';
 import '@ansur/leaflet-pulse-icon/dist/L.Icon.Pulse.js';
 import '@ansur/leaflet-pulse-icon/dist/L.Icon.Pulse.css';
 import { getData, 
+        getDataHTML,
         getModelField
         } from './scripts/dataFetchingUtils';
 import { populateImageUrlEndpoint } from './scripts/formattingUtils';
@@ -59,7 +60,8 @@ class App extends Component {
       isLoadingMetoc: false,
       metocLoadError: false,
       toc: layers,
-      deepwater_activity: null
+      deepwater_activity: null,
+      timeseriesChartOpen: false
     };
 
     this._mapNode = React.createRef();
@@ -95,7 +97,7 @@ class App extends Component {
 
     // e.sourceTarget._popup._source.options (coords in here..)
     // e.sourceTarget._popup._contentNode (TODO need a data attr from it.. JS regex?)
-    console.log('doing Stuff!');
+    this.setState({timeseriesChartOpen: true});
   }
 
   inititializeMap(id) {
@@ -224,31 +226,28 @@ class App extends Component {
 
           // add layer id to metOceanLayers list (this list maintains the order the layers are in)
           metOceanLayers.push(id);
-
-          // add layer to map if its on by default
-          if (mapLayers[id]['isOn']) this.addLeafletLayer(mapLayers[id]); 
         }
       }
     }
 
-    // TODO: assign update function in layers.js for each layer... so it gets passed to Map.js
-    // can store update functions in Map.js... not really category specific... like bathy and GOM lease blocks
-    // require different calls to get/display data
     let metOceanInjectionIndex = this.state.orderedMapLayers.indexOf('MetOcean');
     if (metOceanInjectionIndex > -1) {
       orderedMapLayers[metocDatasetMappingIndx] = metOceanLayers;
       orderedMapLayers = [].concat(...orderedMapLayers)
     }
-    // Dont mutate data
-    // TODO: use initializedLayers in TableOfContents.js to begin looking at Metoc layers.. the metocLoadError
-    // and isLoadingMetoc should provide info to display an error or not.. if error disable the expansion menu
-    // and put icon in panel title
+
     this.setState({
       toc: categories, 
       isLoading: false, 
       initializedLayers: true, 
       mapLayers: mapLayers, 
       orderedMapLayers
+    }, () => {
+      this.state.orderedMapLayers.forEach(individualLayer => {
+        if (this.state.mapLayers[individualLayer]['isOn']) {
+          this.addLeafletLayer(this.state.mapLayers[individualLayer])
+        }
+      })
     })
   }
 
@@ -493,15 +492,19 @@ class App extends Component {
           // endpoints are defined in layers.js
           layerEndpointUrl = populateImageUrlEndpoint(layerObj['endPoint'], mapProps);
           this.buildImageLayer(layerObj,layerEndpointUrl,mapProps['imageBounds']).then(imageLayer => { 
-            getData(layerObj['endPointInfo']).then(tropicalActivityInfo => {
-              // if unable to get last update info then update state and halt execution
-              if (tropicalActivityInfo['error']) {
+            // get legend here and the info.. wait for both requests to finish
+            let endpointInfo = getData(layerObj['endPointInfo']);
+            let legendContent = getData(layerObj['legendUrl'], 'text');
+            
+            Promise.all([endpointInfo, legendContent]).then(resp => {
+              if (resp[0]['error'] || resp[1]['error']) {
                 this.layerLoadError(layerObj);
                 return
               }
               
-              mapLayers[layerObj['id']]['prodTimeLabel'] = tropicalActivityInfo['prodTimeLabel'];
-              mapLayers[layerObj['id']]['prodTime'] = moment.utc(tropicalActivityInfo['prodTime']).format('YYYY-MM-DDTHH:mm[Z]');
+              mapLayers[layerObj['id']]['prodTimeLabel'] = resp[0]['prodTimeLabel'];
+              mapLayers[layerObj['id']]['prodTime'] = moment.utc(resp[0]['prodTime']).format('YYYY-MM-DDTHH:mm[Z]');
+              mapLayers[layerObj['id']]['legendContent'] = resp[1];
               this.addLayer(layerObj,imageLayer);
               this.setState({mapLayers});
             })
@@ -795,7 +798,7 @@ class App extends Component {
       // create the Leaflet map object
       this.inititializeMap(this._mapNode.current);
     }
-    
+
     let metocDatasetMappingIndx = this.findObjIndex(categories, 'Category', 'MetOcean');
     let fetchDataAvailablity = categories[metocDatasetMappingIndx]['visibleTOC'];
     // https://www.robinwieruch.de/react-fetching-data/
@@ -803,7 +806,15 @@ class App extends Component {
     if (fetchDataAvailablity) {
       getData('/download/data_availability.json').then(data => {
         if (data['error']) {
-          this.setState({isLoadingMetoc: false, metocLoadError: true});
+          this.setState({isLoadingMetoc: false, metocLoadError: true}, () => {
+            // attempt to add non metoc layers to map even if we had an error fetching metoc data
+            this.state.orderedMapLayers.forEach(nonMetocLayer => {
+                if (nonMetocLayer !== 'MetOcean') {
+                  if (this.state.mapLayers[nonMetocLayer]['isOn']) this.addLeafletLayer(this.state.mapLayers[nonMetocLayer])
+                }
+              }
+            )
+          });
           return
         }
         // populate levels if no error
@@ -814,20 +825,19 @@ class App extends Component {
 
     } else {
       this.setState({
-        error, 
         isLoadingMetoc: false, 
         initializedLayers: true, 
         metocLoadError: false
+      }, () => {
+        // add non metoc layers to map 
+        this.state.orderedMapLayers.forEach(nonMetocLayer => {
+            if (nonMetocLayer !== 'MetOcean') {
+              if (this.state.mapLayers[nonMetocLayer]['isOn']) this.addLeafletLayer(this.state.mapLayers[nonMetocLayer])
+            }
+          }
+        )
       })
     }
-     
-    // add non metoc layers to map 
-    this.state.orderedMapLayers.forEach(nonMetocLayer => {
-        if (nonMetocLayer !== 'MetOcean') {
-          if (this.state.mapLayers[nonMetocLayer]['isOn']) this.addLeafletLayer(this.state.mapLayers[nonMetocLayer])
-        }
-      }
-    )
   }
 
   render() {

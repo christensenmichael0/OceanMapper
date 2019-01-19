@@ -7,6 +7,7 @@ import FormGroup from '@material-ui/core/FormGroup';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Switch from '@material-ui/core/Switch';
 import LevelSelector from './LevelSelector';
+import LegendContainer from './LegendContainer';
 import LoadingSpinner from './LoadingSpinner';
 
 import { library } from '@fortawesome/fontawesome-svg-core';
@@ -34,7 +35,7 @@ function TableOfContents(props) {
       {(props['mapLayers'][layerID] ? 
         props['mapLayers'][layerID]['isLoading'] : false) && <LoadingSpinner />}
       {labelText}
-      {(props['mapLayers'][layerID] && props['mapLayers'][layerID]['loadError'] && !props['mapLayers'][layerID]['isLoading'] && 
+      {(props['mapLayers'][layerID]['loadError'] && !props['mapLayers'][layerID]['isLoading'] && 
         props['mapLayers'][layerID]['isOn']) && 
         <FontAwesomeIcon 
           icon="exclamation-triangle" 
@@ -58,8 +59,7 @@ function TableOfContents(props) {
                       <FormControlLabel
                         control={
                           <Switch
-                            checked={props['mapLayers'][subresource['id']] ? 
-                              props['mapLayers'][subresource['id']]['isOn'] : subresource['defaultOn']}
+                            checked={props['mapLayers'][subresource['id']]['isOn']}
                             color='secondary'
                             onChange={props.handleLayerToggle.bind(this, subresource['id'])}
                             value={subresource['id']}
@@ -68,18 +68,18 @@ function TableOfContents(props) {
                         label={constructLabel(subresource['niceName'], subresource['id'])}
                       />
                     </FormGroup>
-                    {((props['mapLayers'][subresource['id']] ? props['mapLayers'][subresource['id']]['isOn'] : subresource['defaultOn']) 
-                      && !props['mapLayers'][subresource['id']]['isLoading'] && !props['mapLayers'][subresource['id']]['loadError']) && 
+                    {(props['mapLayers'][subresource['id']]['isOn'] && !props['mapLayers'][subresource['id']]['isLoading'] &&
+                     !props['mapLayers'][subresource['id']]['loadError']) && 
                     <React.Fragment>
                        <Typography variant="overline" gutterBottom>
-                        Date Valid: {props['mapLayers'][subresource['id']] ? props['mapLayers'][subresource['id']]['validTime'] : ''}
+                        Date Valid: {props['mapLayers'][subresource['id']]['validTime']}
                       </Typography>
                       {subresource['legendUrl'] ? <img src={subresource['legendUrl']} alt='data-legend' className={classNames(classes.img)}/> : ''}
-                      {(props['mapLayers'][subresource['id']] ? !isNaN(props['mapLayers'][subresource['id']]['level']) : false) && 
+                      {!isNaN(props['mapLayers'][subresource['id']]['level']) && 
                       <LevelSelector 
                         availableLevels={subresource['availableLevels']}
                         levelName={subresource['levelName']}
-                        presentLevel={props['mapLayers'][subresource['id']] ? props['mapLayers'][subresource['id']]['level'] : null}
+                        presentLevel={props['mapLayers'][subresource['id']]['level']}
                         handleLevelChange={props.handleLevelChange}
                         id={subresource['id']}
                       />}
@@ -100,7 +100,7 @@ function TableOfContents(props) {
                   <FormControlLabel
                     control={
                       <Switch
-                        checked={props['mapLayers'][layer['id']] ? props['mapLayers'][layer['id']]['isOn'] : layer['defaultOn']}
+                        checked={props['mapLayers'][layer['id']]['isOn']}
                         color='secondary'
                         onChange={props.handleLayerToggle.bind(this, layer['id'])}
                         value={layer['id']}
@@ -116,6 +116,9 @@ function TableOfContents(props) {
                       {props['mapLayers'][layer['id']]['prodTime'] ? 
                       `${props['mapLayers'][layer['id']]['prodTimeLabel']}: ${props['mapLayers'][layer['id']]['prodTime'] || ''}` : ''}
                     </Typography>
+                    <LegendContainer>
+                       <div dangerouslySetInnerHTML={{__html: props['mapLayers'][layer['id']]['legendContent']}} />
+                    </LegendContainer>
                   </React.Fragment>
                 }
               </React.Fragment>
@@ -129,8 +132,6 @@ function TableOfContents(props) {
   }
 
   const categories = toc.map((category, index) => {
-    
-    console.log(props);
     if (category['Category'] === 'MetOcean' && !props['initializedLayers']) {
       return null
     }

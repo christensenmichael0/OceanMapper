@@ -52,7 +52,7 @@ let TOC = [
           timeSensitive: true,
           visibleTOC: true,
           defaultOpacity: 1.0,
-          defaultOn: false
+          defaultOn: true
         }
       ]
     },
@@ -157,7 +157,7 @@ let TOC = [
   {
     Category: 'Tropical Cyclones',
     visibleTOC: true,
-    expanded: false,
+    expanded: true,
     Layers: [
       {
         id: 'tropcial_storms_track_forecast',
@@ -171,7 +171,7 @@ let TOC = [
         timeSensitive: false,
         visibleTOC: true,
         defaultOpacity: 1.0,
-        defaultOn: false
+        defaultOn: true
       }
     ]
   },
