@@ -1,5 +1,13 @@
 import { formatDateTime } from './formatDateTime';
 
+export const getPointData = (dataset, subResource, level, time, coordinates) => {
+  let formattedTime = `${formatDateTime(time, 'YYYY-MM-DDTHH:mm', '')}Z`;
+  let formattedCoords = coordinates.toString();
+  let levelStr = isNaN(level) ? 'level=' : `level=${level}`;
+  let endpoint = `/data/point-data?${levelStr}&dataset=${dataset}&sub_resource=${subResource}&time=${formattedTime}&coordinates=${formattedCoords}`;
+  return getData(endpoint);
+}
+
 export const getModelField = (dataset, subResource, level, time) => {
   let formattedTime = `${formatDateTime(time, 'YYYY-MM-DDTHH:mm', '')}Z`;
   let levelStr = isNaN(level) ? 'level=' : `level=${level}`;

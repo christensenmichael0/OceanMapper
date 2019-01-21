@@ -18,5 +18,17 @@ apiGatewayRouter.get('/individual-field', function(req, res, next) {
   
 });
 
+apiGatewayRouter.get('/point-data', function(req, res, next) {
+  request({
+    uri: `${process.env.POINT_DATA_ENDPOINT}`,
+    headers: {
+      'x-api-key': process.env.AWS_API_GATEWAY_KEY
+    },
+    qs: req.query,
+    
+  }).pipe(res);
+  
+});
+
 export default apiGatewayRouter;
 

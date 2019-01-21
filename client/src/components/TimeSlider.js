@@ -36,7 +36,7 @@ const styles = theme => ({
   },
   sliderDivShift: {
     left: drawerWidth,
-    transition: theme.transitions.create(['left', 'width'], {
+    transition: theme.transitions.create(['left'], {
       easing: theme.transitions.easing.easeOut,
       duration: theme.transitions.duration.enteringScreen,
     }),

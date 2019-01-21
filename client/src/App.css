@@ -7,6 +7,14 @@
   animation: spin 2s linear infinite;
 }
 
+.loader-popup {
+  display: inline-block;
+  margin-left: 5px;
+  border: 2px solid lightgray;
+  border-top: 2px solid purple;
+  border-bottom: 2px solid purple;
+}
+
 @-webkit-keyframes spin {
   0% { -webkit-transform: rotate(0deg); }
   100% { -webkit-transform: rotate(360deg); }

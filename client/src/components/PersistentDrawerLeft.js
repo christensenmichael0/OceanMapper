@@ -12,8 +12,7 @@ import MenuIcon from '@material-ui/icons/Menu';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import TableOfContents from './TableOfContents';
-// import Map from './Map';
-import TimeSlidler from './TimeSlider';
+import TimeSlider from './TimeSlider';
 import externalStyles from '../scripts/styleVariables';
 
 const drawerWidth = externalStyles.drawerWidth;
@@ -150,31 +149,16 @@ class PersistentDrawerLeft extends React.Component {
           <TableOfContents {...other}/>
         </Drawer>
         <main className={classes.content}>
-          {/* <Map {...other}/> */}
-          <TimeSlidler
+          <TimeSlider
             open={open} 
             {...other}
           />
-        </main>
-        {this.props.timeseriesChartOpen && <Drawer
-          anchor="bottom"
-          open={this.state.bottom}
-          onClose={this.toggleDrawer('bottom', false)}
-        >
-          <div
-            tabIndex={0}
-            role="button"
-            // onClick={this.toggleDrawer('bottom', false)}
-            // onKeyDown={this.toggleDrawer('bottom', false)}
-          >
-            <p>Insert Legend Content</p>
-          </div>
-        </Drawer>}
+        </main> 
       </div>
     );
   }
 }
-// a ? blah : nah
+
 
 // classes={{ root: open ?  `${classes.test} ${classes.sliderRootShrink}` : `${classes.test} ${classes.sliderRoot}`, 
 // className={classes.sliderRoot}

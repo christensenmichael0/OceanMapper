@@ -52,7 +52,7 @@ let TOC = [
           timeSensitive: true,
           visibleTOC: true,
           defaultOpacity: 1.0,
-          defaultOn: true
+          defaultOn: false
         }
       ]
     },
@@ -150,7 +150,7 @@ let TOC = [
         endPoint: '/download/current_deepwater_activity.json',
         timeSensitive: false,
         visibleTOC: true,
-        defaultOn: false
+        defaultOn: true
       }
     ]
   },
@@ -171,7 +171,7 @@ let TOC = [
         timeSensitive: false,
         visibleTOC: true,
         defaultOpacity: 1.0,
-        defaultOn: true
+        defaultOn: false
       }
     ]
   },

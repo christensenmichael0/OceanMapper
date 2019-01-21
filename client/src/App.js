@@ -9,13 +9,14 @@ import layers from './scripts/layers';
 import moment from 'moment';
 import '@ansur/leaflet-pulse-icon/dist/L.Icon.Pulse.js';
 import '@ansur/leaflet-pulse-icon/dist/L.Icon.Pulse.css';
-import { getData, 
-        getDataHTML,
+import { getData,
+        getPointData,
         getModelField
         } from './scripts/dataFetchingUtils';
 import { populateImageUrlEndpoint } from './scripts/formattingUtils';
 import { addCustomLeafletHandlers } from './scripts/addCustomLeafletHandlers';
-import { buildActiveDrillingPopupContent } from './scripts/buildActiveDrillingPopup';
+import { buildActiveDrillingPopupStationContent,
+         buildActiveDrillingPopupButtons } from './scripts/buildActiveDrillingPopup';
 import priorityMap from './scripts/layerPriority';
 import _ from 'lodash';
 
@@ -61,7 +62,7 @@ class App extends Component {
       metocLoadError: false,
       toc: layers,
       deepwater_activity: null,
-      timeseriesChartOpen: false
+      chartModalOpen: false
     };
 
     this._mapNode = React.createRef();
@@ -85,6 +86,7 @@ class App extends Component {
     this.handleLayerToggle = this.handleLayerToggle.bind(this);
     this.handleLevelChange = this.handleLevelChange.bind(this);
     this.handleTimeChange = this.handleTimeChange.bind(this);
+    this.handleCloseChartModal = this.handleCloseChartModal.bind(this);
     this.updateValidTime = this.updateValidTime.bind(this);
     this.handlePopupChartClick = this.handlePopupChartClick.bind(this);
     this.layerLoadError = this.layerLoadError.bind(this);
@@ -97,7 +99,7 @@ class App extends Component {
 
     // e.sourceTarget._popup._source.options (coords in here..)
     // e.sourceTarget._popup._contentNode (TODO need a data attr from it.. JS regex?)
-    this.setState({timeseriesChartOpen: true});
+    this.setState({chartModalOpen: true});
   }
 
   inititializeMap(id) {
@@ -700,7 +702,8 @@ class App extends Component {
    * @param {array} drilingArray list of active drilling sites stored in s3 bucket in a json file)
    */
   buildActiveDrillingLayer(drillingArray) {
-    const drillingMarker = {
+
+    const drillingMarkerParams = {
       radius: 4,
       fillColor: '#00ff00',
       color: '#ffffff',
@@ -709,17 +712,71 @@ class App extends Component {
       fillOpacity: 1
     };
 
-    let circleMarker, popupContent, activeDrillingLayer = L.layerGroup([]);
+    let layer, drillingMarker, popupStationContent, activeDrillingLayer = L.layerGroup([]);
+    let buttonContent = buildActiveDrillingPopupButtons();
+
     drillingArray.forEach(drillSite => {
-      // TODO: build popup content.. put this function somewhere else (need to finish this)
+
+      popupStationContent = buildActiveDrillingPopupStationContent(drillSite);
       try {
-        circleMarker = L.marker(drillSite['coordinates'].reverse(), 
-          {...drillingMarker, ...drillSite});
-        
+        drillingMarker = L.marker(drillSite['coordinates'].reverse(), 
+          {...drillingMarkerParams, ...drillSite, popupStationContent});
+
         window.mymap = this.map
-        popupContent = buildActiveDrillingPopupContent(drillSite);
-        circleMarker.bindPopup(popupContent);
-        activeDrillingLayer.addLayer(circleMarker);
+        drillingMarker.bindPopup(`${popupStationContent}${buttonContent}`);
+
+        activeDrillingLayer.addLayer(drillingMarker);
+
+        drillingMarker.on('popupopen', (function(getAppState, markerContext) {
+
+          let mapLayers = getAppState()['mapLayers'];
+          let orderedMapLayers = getAppState()['orderedMapLayers'];
+
+          let activeLayers = [];
+          orderedMapLayers.forEach(layer => {
+            if (mapLayers[layer]['dataset'] && mapLayers[layer]['isOn']) activeLayers.push(mapLayers[layer]);
+          })
+
+          // TODO do i show buttons when no layers are on?
+
+          let origPopupContent = markerContext.popup._source.options.popupStationContent;
+          let modelOutputContent = '';
+
+          if (activeLayers.length) {
+            let dataContent = `<span>Fetching Model Output<div class="loader loader-popup small"></div><span>`;
+            markerContext.popup.setContent(`${origPopupContent}${dataContent}${buttonContent}`)
+            
+            let pointData, pointFetchArray = [];
+            let markerCoords = markerContext.popup._source.options.coordinates.slice().reverse();
+            
+            activeLayers.forEach(activeLayer => {
+              pointData = getPointData(activeLayer['dataset'],activeLayer['subResource'],
+                activeLayer['level'],getAppState()['mapTime'], markerCoords);
+              pointFetchArray.push(pointData);
+            })
+            
+            Promise.all(pointFetchArray).then(responses => {
+              responses.forEach(resp => {
+                // TODO: deal with errors and fix naming of dataset
+                let model = resp['model'];
+                let value = resp['data']['val'].toFixed(2);
+                let units = resp['units'];
+                let dataStr = `<p style='margin: 5px 0px'>${model}: ${value} (${units})</p>`;
+                modelOutputContent += dataStr;
+              });
+              // update popup content
+              markerContext.popup.setContent(
+                `${origPopupContent}${modelOutputContent}${buttonContent}`
+              )
+            })
+            
+          }
+        }).bind(this, () => { return this.state }));
+
+        // reset the contents when closing the popup
+        drillingMarker.on('popupclose', (function(markerContext) {
+          markerContext.popup.setContent(`${markerContext.popup._source.options.popupStationContent}${buttonContent}`);
+        }).bind(this));
       } catch(err) {
         console.log(err);
       }
@@ -758,6 +815,10 @@ class App extends Component {
     });
   }
 
+  handleCloseChartModal() {
+    this.setState({chartModalOpen: false});
+  }
+
   componentWillMount() {
     let categories = [...this.state.toc], mapLayers = Object.assign({},this.state.mapLayers), 
       orderedMapLayers = [...this.state.orderedMapLayers];
@@ -792,7 +853,7 @@ class App extends Component {
 
 
   componentDidMount() {
-    let categories = [...this.state.toc], error = null;
+    let categories = [...this.state.toc];
 
     if (!this.map) {
       // create the Leaflet map object
