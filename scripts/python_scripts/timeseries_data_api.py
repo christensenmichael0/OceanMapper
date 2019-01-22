@@ -152,6 +152,7 @@ def lambda_handler(event, context):
         # construct the response body 
         response_body = {
             'model': dataset,
+            'sub_resource': sub_resource,
             'data': value_array,
             'units': dataset_units
         }
@@ -160,6 +161,7 @@ def lambda_handler(event, context):
     else:
         response_body = {
             'model': dataset,
+            'sub_resource': sub_resource,
             'data': None,
             'units': None,
         }

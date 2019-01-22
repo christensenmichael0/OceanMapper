@@ -201,7 +201,7 @@ class App extends Component {
         let layerObjVisible = layerObj['visibleTOC'];
 
         if (categoryVisible && layerObjVisible) {
-          let id = layerObj['id']
+          let id = layerObj['id'];
           
           levels = Object.keys(data[dataset][subResource]['level']).map(level => parseInt(level)).sort(function(a, b){return a-b});
           categories[metocDatasetMappingIndx]['Layers'][indx]['subResources'][innerIndx]['availableLevels'] = levels;
@@ -210,6 +210,7 @@ class App extends Component {
             id,
             dataset,
             subResource,
+            niceName: layerObj['niceName'],
             isOn: layerObj['defaultOn'], 
             level: levels[0],
             validTime: '',
@@ -703,6 +704,7 @@ class App extends Component {
    */
   buildActiveDrillingLayer(drillingArray) {
 
+    // TODO: move this object to config
     const drillingMarkerParams = {
       radius: 4,
       fillColor: '#00ff00',
@@ -712,7 +714,7 @@ class App extends Component {
       fillOpacity: 1
     };
 
-    let layer, drillingMarker, popupStationContent, activeDrillingLayer = L.layerGroup([]);
+    let drillingMarker, popupStationContent, activeDrillingLayer = L.layerGroup([]);
     let buttonContent = buildActiveDrillingPopupButtons();
 
     drillingArray.forEach(drillSite => {
@@ -723,8 +725,8 @@ class App extends Component {
           {...drillingMarkerParams, ...drillSite, popupStationContent});
 
         window.mymap = this.map
-        drillingMarker.bindPopup(`${popupStationContent}${buttonContent}`);
-
+        // drillingMarker.bindPopup(`${popupStationContent}${buttonContent}`);
+        drillingMarker.bindPopup(`${popupStationContent}`);
         activeDrillingLayer.addLayer(drillingMarker);
 
         drillingMarker.on('popupopen', (function(getAppState, markerContext) {
@@ -737,10 +739,8 @@ class App extends Component {
             if (mapLayers[layer]['dataset'] && mapLayers[layer]['isOn']) activeLayers.push(mapLayers[layer]);
           })
 
-          // TODO do i show buttons when no layers are on?
-
           let origPopupContent = markerContext.popup._source.options.popupStationContent;
-          let modelOutputContent = '';
+          let modelOutputContent = '<hr style="margin: 1px">';
 
           if (activeLayers.length) {
             let dataContent = `<span>Fetching Model Output<div class="loader loader-popup small"></div><span>`;
@@ -749,33 +749,43 @@ class App extends Component {
             let pointData, pointFetchArray = [];
             let markerCoords = markerContext.popup._source.options.coordinates.slice().reverse();
             
+            // fetch data for each active layer
             activeLayers.forEach(activeLayer => {
               pointData = getPointData(activeLayer['dataset'],activeLayer['subResource'],
                 activeLayer['level'],getAppState()['mapTime'], markerCoords);
               pointFetchArray.push(pointData);
             })
             
+            // promises are returned in the same order as the input
             Promise.all(pointFetchArray).then(responses => {
-              responses.forEach(resp => {
+              responses.forEach((resp,indx) => {
                 // TODO: deal with errors and fix naming of dataset
-                let model = resp['model'];
+                // TODO: move some of this building logic to an external func
+                let niceName = activeLayers[indx]['niceName'];
+
                 let value = resp['data']['val'].toFixed(2);
+                let direction = resp['data']['direction'] ? resp['data']['direction'].toFixed(1) : null;
                 let units = resp['units'];
-                let dataStr = `<p style='margin: 5px 0px'>${model}: ${value} (${units})</p>`;
+
+                let dataStr;
+                if (direction) {
+                  dataStr = `<p style='margin: 5px 0px'>${niceName}: ${value} ${units} @ ${direction} deg</p>`;
+                } else {
+                  dataStr = `<p style='margin: 5px 0px'>${niceName}: ${value} ${units}</p>`;
+                }
                 modelOutputContent += dataStr;
               });
               // update popup content
               markerContext.popup.setContent(
                 `${origPopupContent}${modelOutputContent}${buttonContent}`
               )
-            })
-            
+            }) 
           }
         }).bind(this, () => { return this.state }));
 
         // reset the contents when closing the popup
         drillingMarker.on('popupclose', (function(markerContext) {
-          markerContext.popup.setContent(`${markerContext.popup._source.options.popupStationContent}${buttonContent}`);
+          markerContext.popup.setContent(`${markerContext.popup._source.options.popupStationContent}`);
         }).bind(this));
       } catch(err) {
         console.log(err);

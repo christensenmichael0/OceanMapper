@@ -111,15 +111,17 @@ def lambda_handler(event, context):
         # construct the response body 
         response_body = {
             'model': dataset,
+            'sub_resource': sub_resource,
             'valid_time': available_time_str,
             'data': data_value,
             'units': dataset_units
         }
-        print(data_value)
+        import pdb; pdb.set_trace()
         return generate_response(200, headers, response_body)
     else:
         response_body = {
             'model': dataset,
+            'sub_resource': sub_resource,
             'valid_time': None,
             'data': None,
             'units': None,
@@ -132,10 +134,10 @@ if __name__ == '__main__':
     event = {
         "queryStringParameters": {
             "level": "0",
-            "dataset": "HYCOM_DATA",
+            "dataset": "RTOFS_DATA",
             "sub_resource": "ocean_current_speed",
-            "time": "2018-10-20T01:00Z",
-            "coordinates": "-81.58,23.88"
+            "time": "2019-01-21T23:00Z",
+            "coordinates": "-90.52318081291162,26.933536474718093" #"-81.58,23.88"
         }
     }
 
