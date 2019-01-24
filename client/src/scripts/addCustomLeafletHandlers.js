@@ -1,6 +1,6 @@
 // leaflet gateway
-export const addCustomLeafletHandlers = () => {
-  const L = window.L;
+export const addCustomLeafletHandlers = (L) => {
+  // const L = window.L;
   // add custom map event
   L.ChartClickHandler = L.Handler.extend({
     addHooks: function() {
@@ -20,6 +20,6 @@ export const addCustomLeafletHandlers = () => {
 
   L.Map.addInitHook('addHandler', 'chartClick', L.ChartClickHandler);
 
-  return L
+  // return L
 }
 

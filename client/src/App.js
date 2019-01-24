@@ -7,8 +7,6 @@ import classNames from 'classnames';
 import PersistentDrawerLeft from './components/PersistentDrawerLeft';
 import layers from './scripts/layers';
 import moment from 'moment';
-import '@ansur/leaflet-pulse-icon/dist/L.Icon.Pulse.js';
-import '@ansur/leaflet-pulse-icon/dist/L.Icon.Pulse.css';
 import { getData,
         getPointData,
         getModelField
@@ -17,22 +15,28 @@ import { populateImageUrlEndpoint } from './scripts/formattingUtils';
 import { addCustomLeafletHandlers } from './scripts/addCustomLeafletHandlers';
 import { buildActiveDrillingPopupStationContent,
          buildActiveDrillingPopupButtons } from './scripts/buildActiveDrillingPopup';
+import { buildDynamicPopupContent } from './scripts/buildDynamicPopupContent';
 import priorityMap from './scripts/layerPriority';
+import { mapConfig } from './scripts/mapConfig';
 import _ from 'lodash';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+import * as esri from 'esri-leaflet';
+import 'jquery';
+import 'leaflet-velocity/dist/leaflet-velocity';
+import 'leaflet-velocity/dist/leaflet-velocity.css';
+import '@ansur/leaflet-pulse-icon/dist/L.Icon.Pulse.js';
+import '@ansur/leaflet-pulse-icon/dist/L.Icon.Pulse.css';
 
-const L = addCustomLeafletHandlers();
+// leaflet gateway
+// const L = window.L;
+delete L.Icon.Default.prototype._getIconUrl;
 
-// store the map configuration properties in an object,
-// we could also move this to a separate file & import it if desired.
-let mapConfig = {};
-mapConfig.params = {
-  center: [25.8,-89.6],
-  zoom: 6,
-  maxZoom: 14,
-  minZoom: 3,
-  zoomControl: false,
-  attributionControl: false
-};
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: require('leaflet/dist/images/marker-icon-2x.png'),
+  iconUrl: require('leaflet/dist/images/marker-icon.png'),
+  shadowUrl: require('leaflet/dist/images/marker-shadow.png'),
+});
 
 const styles = theme => ({
   map: {
@@ -93,7 +97,7 @@ class App extends Component {
   }
 
   handlePopupChartClick(e) {
-    // debugger
+    debugger
     // TODO: parse data-chart-type so we know the ajax call to make
     // Other params can be found in _source.options
 
@@ -102,12 +106,21 @@ class App extends Component {
     this.setState({chartModalOpen: true});
   }
 
+  /**
+   * Initializes leaflet map and adds draw control. Empty layergroup is also
+   * added to map. Some map events are tied to class functions. Layerbindings object
+   * is initialized.
+   *
+   * @param {object} id map node
+   */
   inititializeMap(id) {
-    // if (this.state.map) return;
     if (this.map) return;
 
     let map = this.map = L.map(id, mapConfig.params);
-    L.esri.basemapLayer("DarkGray").addTo(map); // DarkGray
+    esri.basemapLayer("DarkGray").addTo(map); // DarkGray
+
+    // add custom handlers
+    addCustomLeafletHandlers(L);
 
     // zoom control position
     L.control.zoom({
@@ -138,6 +151,12 @@ class App extends Component {
     }
   }
 
+  /**
+   * Used to determine image bounds (i.e. lower left corner lon/lat and 
+   * upper right corner lon/lat). Also returned is the lower left corner
+   * and upper right corner coordinates transformed into EPSG:3857. Map width
+   * and height determined from the viewport is also returned.
+   */
   getMapDimensionInfo() {
     let max_lat = this.map.getBounds()._northEast.lat;
     let min_lat = this.map.getBounds()._southWest.lat;
@@ -356,8 +375,15 @@ class App extends Component {
     });
   }
 
-  // this is necessary if a user rapidly turn on/off a layer leaflet DOM state and 
-  // react app state may diverge
+  /**
+   * Check the app state for layer status to keep map and app state in sync. This 
+   * is necessary if a user rapidly turns on/off a layer and app state diverges from map state.
+   * Leaflet manipulates the DOM directly and React works by diffing virtual DOM and present DOM.
+   * If the layer is not on (in state) but Leaflet just finished adding it to the map then we need
+   * to remove it. 
+   *
+   * @param {str} layerID the layer id
+   */
   checkLayerStatus(layerID) {
     if (!this.state.mapLayers[layerID]['isOn']) {
       this.removeLeafletLayer(layerID)
@@ -365,10 +391,10 @@ class App extends Component {
   }
 
   /**
-   * Adds various leaflet layers using different logic depending on the addFuncType prop of 
-   * a given layer
-   * 
-   * @param {obj} layerObj
+   * Gateway function for adding a layer to map. Based on the specific 'addDataFunc'
+   * of a layer different workflows are invoked.
+   *
+   * @param {obj} layerObj object that provides layer specific information
    */
   addLeafletLayer(layerObj) {
     let addFuncType = layerObj['addDataFunc'], mapLayers = Object.assign({},this.state.mapLayers),
@@ -549,6 +575,14 @@ class App extends Component {
     }
   }
 
+  /**
+   * Supporting function for addToLeafletLayerGroup which first checks
+   * if the layer exists already in layerBindings class object. If it does
+   * the layer needs to be removed before being added again.
+   *
+   * @param {obj} layerObj layer object that provides layer specific information
+   * @param {obj} leafletLayer leaflet layer
+   */
   addLayer(layerObj, leafletLayer){
     if (this.layerBindings.hasOwnProperty(layerObj['id'])) {
       this.removeLeafletLayer(layerObj['id']).then(() => {
@@ -559,6 +593,15 @@ class App extends Component {
     }
   }
 
+  /**
+   * Add layer to map layer group that contains all pertinent TOC layers.
+   * The layer leaflet id is used to update layerBinding class object for 
+   * future reference.
+   *
+   * @param {obj} layerHandle leaflet layer
+   * @param {obj} layerObj layer object that provides layer specific information
+   * @param {bool} streamline 
+   */
   addToLeafletLayerGroup(layerHandle, layerObj, streamline=false) {
     this.leafletLayerGroup.addLayer(layerHandle);
     let lid_layer = this.leafletLayerGroup.getLayerId(layerHandle);
@@ -697,7 +740,7 @@ class App extends Component {
     return imageLayer;
   }
 
-    /**
+  /**
    * Builds active drilling layer by creating a layer group and inserting a marker for each location
    * 
    * @param {array} drilingArray list of active drilling sites stored in s3 bucket in a json file)
@@ -721,66 +764,66 @@ class App extends Component {
 
       popupStationContent = buildActiveDrillingPopupStationContent(drillSite);
       try {
+
         drillingMarker = L.marker(drillSite['coordinates'].reverse(), 
           {...drillingMarkerParams, ...drillSite, popupStationContent});
-
-        window.mymap = this.map
-        // drillingMarker.bindPopup(`${popupStationContent}${buttonContent}`);
+        
+        window.mymap = this.map;
         drillingMarker.bindPopup(`${popupStationContent}`);
         activeDrillingLayer.addLayer(drillingMarker);
 
         drillingMarker.on('popupopen', (function(getAppState, markerContext) {
+          buildDynamicPopupContent(getAppState,markerContext);
+          // let mapLayers = getAppState()['mapLayers'];
+          // let orderedMapLayers = getAppState()['orderedMapLayers'];
 
-          let mapLayers = getAppState()['mapLayers'];
-          let orderedMapLayers = getAppState()['orderedMapLayers'];
+          // let activeLayers = [];
+          // orderedMapLayers.forEach(layer => {
+          //   if (mapLayers[layer]['dataset'] && mapLayers[layer]['isOn']) activeLayers.push(mapLayers[layer]);
+          // })
 
-          let activeLayers = [];
-          orderedMapLayers.forEach(layer => {
-            if (mapLayers[layer]['dataset'] && mapLayers[layer]['isOn']) activeLayers.push(mapLayers[layer]);
-          })
+          // let origPopupContent = markerContext.popup._source.options.popupStationContent;
+          // let modelOutputContent = '<hr style="margin: 1px">';
 
-          let origPopupContent = markerContext.popup._source.options.popupStationContent;
-          let modelOutputContent = '<hr style="margin: 1px">';
-
-          if (activeLayers.length) {
-            let dataContent = `<span>Fetching Model Output<div class="loader loader-popup small"></div><span>`;
-            markerContext.popup.setContent(`${origPopupContent}${dataContent}${buttonContent}`)
+          // if (activeLayers.length) {
+          //   let dataContent = `<span>Fetching Model Output<div class="loader loader-popup small"></div><span>`;
+          //   markerContext.popup.setContent(`${origPopupContent}${dataContent}${buttonContent}`)
             
-            let pointData, pointFetchArray = [];
-            let markerCoords = markerContext.popup._source.options.coordinates.slice().reverse();
+          //   let pointData, pointFetchArray = [];
+          //   let markerCoords = markerContext.popup._source.options.coordinates.slice().reverse();
             
-            // fetch data for each active layer
-            activeLayers.forEach(activeLayer => {
-              pointData = getPointData(activeLayer['dataset'],activeLayer['subResource'],
-                activeLayer['level'],getAppState()['mapTime'], markerCoords);
-              pointFetchArray.push(pointData);
-            })
+          //   // fetch data for each active layer
+          //   activeLayers.forEach(activeLayer => {
+          //     pointData = getPointData(activeLayer['dataset'],activeLayer['subResource'],
+          //       activeLayer['level'],getAppState()['mapTime'], markerCoords);
+          //     pointFetchArray.push(pointData);
+          //   })
             
-            // promises are returned in the same order as the input
-            Promise.all(pointFetchArray).then(responses => {
-              responses.forEach((resp,indx) => {
-                // TODO: deal with errors and fix naming of dataset
-                // TODO: move some of this building logic to an external func
-                let niceName = activeLayers[indx]['niceName'];
+          //   // promises are returned in the same order as the input
+          //   Promise.all(pointFetchArray).then(responses => {
+          //     responses.forEach((resp,indx) => {
+          //       // TODO: deal with errors and fix naming of dataset
+          //       // TODO: move some of this building logic to an external func
+          //       let niceName = activeLayers[indx]['niceName'];
 
-                let value = resp['data']['val'].toFixed(2);
-                let direction = resp['data']['direction'] ? resp['data']['direction'].toFixed(1) : null;
-                let units = resp['units'];
+          //       let value = resp['data']['val'].toFixed(2);
+          //       let direction = resp['data']['direction'] ? resp['data']['direction'].toFixed(1) : null;
+          //       let units = resp['units'];
 
-                let dataStr;
-                if (direction) {
-                  dataStr = `<p style='margin: 5px 0px'>${niceName}: ${value} ${units} @ ${direction} deg</p>`;
-                } else {
-                  dataStr = `<p style='margin: 5px 0px'>${niceName}: ${value} ${units}</p>`;
-                }
-                modelOutputContent += dataStr;
-              });
-              // update popup content
-              markerContext.popup.setContent(
-                `${origPopupContent}${modelOutputContent}${buttonContent}`
-              )
-            }) 
-          }
+          //       let dataStr;
+          //       if (direction) {
+          //         dataStr = `<p style='margin: 5px 0px'>${niceName}: ${value} ${units} @ ${direction} deg</p>`;
+          //       } else {
+          //         dataStr = `<p style='margin: 5px 0px'>${niceName}: ${value} ${units}</p>`;
+          //       }
+          //       modelOutputContent += dataStr;
+          //     });
+          //     // update popup content
+          //     markerContext.popup.setContent(
+          //       `${origPopupContent}${modelOutputContent}${buttonContent}`
+          //     )
+          //   }) 
+          // }
         }).bind(this, () => { return this.state }));
 
         // reset the contents when closing the popup
@@ -795,6 +838,9 @@ class App extends Component {
     return activeDrillingLayer;
   }
 
+  /**
+   * Update layer loading and error status 
+   */
   layerLoadError(layerObj) {
     let mapLayers = Object.assign({}, this.state.mapLayers);
     mapLayers[layerObj['id']]['isLoading'] = false;
@@ -802,6 +848,9 @@ class App extends Component {
     this.setState({mapLayers});
   }
 
+  /**
+   * Generate a pulsing marker when a user clicks on the map. 
+   */
   onMapClick(e) {
     let popupContent = `<h4>${e.latlng.toString()}</h4>`;
     let pulsingIcon = L.icon.pulse({iconSize:[10,10],color:this.props.theme.palette.secondary.main});
@@ -811,6 +860,10 @@ class App extends Component {
     marker.openPopup();
   }
 
+  /**
+   * Fired when map bounds change. Active layers with a 'movementSensitive'
+   * attribute are refreshed. 
+   */
   onMapBoundsChange() {
     // TODO this basically repeats some logic i already have... see if we can move this logic into a func..
     // pass the prop I care about.. movementSensitive.. timeSensitive
