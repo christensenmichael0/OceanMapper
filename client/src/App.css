@@ -11,8 +11,8 @@
   display: inline-block;
   margin-left: 5px;
   border: 2px solid lightgray;
-  border-top: 2px solid purple;
-  border-bottom: 2px solid purple;
+  border-top: 2px solid #d500f9;
+  border-bottom: 2px solid #d500f9;
 }
 
 @-webkit-keyframes spin {

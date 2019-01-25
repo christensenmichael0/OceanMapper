@@ -1,4 +1,4 @@
-export const buildActiveDrillingPopupStationContent = (drillingInfo) => {
+export const activeDrillingPopupStaticContent = (drillingInfo) => {
 
   let popupContent = `
     <p style="font-size: 1.1em; margin: 3px"><b>${drillingInfo['rig_name']}</b> (${drillingInfo['block']})</p>

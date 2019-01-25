@@ -1,4 +1,4 @@
-import { buildActiveDrillingPopupButtons } from './buildActiveDrillingPopup';
+import { buildActiveDrillingPopupButtons } from './buildStaticPopupContent';
 import { getPointData } from './dataFetchingUtils';
 
 export const buildDynamicPopupContent = (getAppState, markerContext) => {

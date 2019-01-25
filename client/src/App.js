@@ -8,16 +8,15 @@ import PersistentDrawerLeft from './components/PersistentDrawerLeft';
 import layers from './scripts/layers';
 import moment from 'moment';
 import { getData,
-        getPointData,
         getModelField
         } from './scripts/dataFetchingUtils';
 import { populateImageUrlEndpoint } from './scripts/formattingUtils';
 import { addCustomLeafletHandlers } from './scripts/addCustomLeafletHandlers';
-import { buildActiveDrillingPopupStationContent,
-         buildActiveDrillingPopupButtons } from './scripts/buildActiveDrillingPopup';
+import { activeDrillingPopupStaticContent,
+         buildActiveDrillingPopupButtons } from './scripts/buildStaticPopupContent';
 import { buildDynamicPopupContent } from './scripts/buildDynamicPopupContent';
 import priorityMap from './scripts/layerPriority';
-import { mapConfig } from './scripts/mapConfig';
+import { mapConfig, drillingMarkerParams } from './scripts/mapConfig';
 import _ from 'lodash';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -28,8 +27,6 @@ import 'leaflet-velocity/dist/leaflet-velocity.css';
 import '@ansur/leaflet-pulse-icon/dist/L.Icon.Pulse.js';
 import '@ansur/leaflet-pulse-icon/dist/L.Icon.Pulse.css';
 
-// leaflet gateway
-// const L = window.L;
 delete L.Icon.Default.prototype._getIconUrl;
 
 L.Icon.Default.mergeOptions({
@@ -408,9 +405,7 @@ class App extends Component {
             res => {
               // error handling if response returns an error
               if (res['error']) {
-                mapLayers[layerObj['id']]['loadError'] = true;
-                mapLayers[layerObj['id']]['isLoading'] = false;
-                this.setState({mapLayers});
+                this.layerLoadError(layerObj);
                 return
               }
 
@@ -517,8 +512,6 @@ class App extends Component {
         case 'getTropicalActivity':
           mapProps = this.getMapDimensionInfo();
 
-          // TODO: for this layer we also need to fetch legend and
-          // endpoints are defined in layers.js
           layerEndpointUrl = populateImageUrlEndpoint(layerObj['endPoint'], mapProps);
           this.buildImageLayer(layerObj,layerEndpointUrl,mapProps['imageBounds']).then(imageLayer => { 
             // get legend here and the info.. wait for both requests to finish
@@ -539,8 +532,6 @@ class App extends Component {
             })
           })
           break;
-          // TODO: fetch in the same way i do in componentDidMount.. clean up the call though (both here and there)
-          // to make use of imported functionality from dataFetchingUtils.js
         default:
           //code block
       }
@@ -609,6 +600,12 @@ class App extends Component {
     this.layerBindings[layerKeyStr] = lid_layer;
   }
 
+  /**
+   * Build a metoc tile layer (a layer comprised of tiles stored in my s3 bucket)
+   *
+   * @param {obj} layerObj layer object that provides layer specific information
+   * @param {obj} res this is a response object returned from call to aws api gateway
+   */
   async buildMetocTileLayer(layerObj,res) {
     let mapLayers = Object.assign({}, this.state.mapLayers);
 
@@ -631,7 +628,6 @@ class App extends Component {
       // ensure the layer is still on when this is triggered.. a fast on/off toggle might complete
       // before even getting here.. and I don't want the spinner to blip on/off
       if (mapLayers[layerObj['id']]['isOn']) {
-        mapLayers[layerObj['id']]['isLoading'] = true;
         mapLayers[layerObj['id']]['loadError'] = false;
         this.setState({mapLayers});
       }
@@ -747,26 +743,12 @@ class App extends Component {
    */
   buildActiveDrillingLayer(drillingArray) {
 
-    // TODO: move this object to config
-    const drillingMarkerParams = {
-      radius: 4,
-      fillColor: '#00ff00',
-      color: '#ffffff',
-      weight: 0.1,
-      opacity: 1,
-      fillOpacity: 1
-    };
-
     let drillingMarker, popupStationContent, activeDrillingLayer = L.layerGroup([]);
-    let buttonContent = buildActiveDrillingPopupButtons();
-
     drillingArray.forEach(drillSite => {
-
-      popupStationContent = buildActiveDrillingPopupStationContent(drillSite);
+      popupStationContent = activeDrillingPopupStaticContent(drillSite);
       try {
-
         drillingMarker = L.marker(drillSite['coordinates'].reverse(), 
-          {...drillingMarkerParams, ...drillSite, popupStationContent});
+          {...drillSite, popupStationContent});
         
         window.mymap = this.map;
         drillingMarker.bindPopup(`${popupStationContent}`);
@@ -774,62 +756,12 @@ class App extends Component {
 
         drillingMarker.on('popupopen', (function(getAppState, markerContext) {
           buildDynamicPopupContent(getAppState,markerContext);
-          // let mapLayers = getAppState()['mapLayers'];
-          // let orderedMapLayers = getAppState()['orderedMapLayers'];
-
-          // let activeLayers = [];
-          // orderedMapLayers.forEach(layer => {
-          //   if (mapLayers[layer]['dataset'] && mapLayers[layer]['isOn']) activeLayers.push(mapLayers[layer]);
-          // })
-
-          // let origPopupContent = markerContext.popup._source.options.popupStationContent;
-          // let modelOutputContent = '<hr style="margin: 1px">';
-
-          // if (activeLayers.length) {
-          //   let dataContent = `<span>Fetching Model Output<div class="loader loader-popup small"></div><span>`;
-          //   markerContext.popup.setContent(`${origPopupContent}${dataContent}${buttonContent}`)
-            
-          //   let pointData, pointFetchArray = [];
-          //   let markerCoords = markerContext.popup._source.options.coordinates.slice().reverse();
-            
-          //   // fetch data for each active layer
-          //   activeLayers.forEach(activeLayer => {
-          //     pointData = getPointData(activeLayer['dataset'],activeLayer['subResource'],
-          //       activeLayer['level'],getAppState()['mapTime'], markerCoords);
-          //     pointFetchArray.push(pointData);
-          //   })
-            
-          //   // promises are returned in the same order as the input
-          //   Promise.all(pointFetchArray).then(responses => {
-          //     responses.forEach((resp,indx) => {
-          //       // TODO: deal with errors and fix naming of dataset
-          //       // TODO: move some of this building logic to an external func
-          //       let niceName = activeLayers[indx]['niceName'];
-
-          //       let value = resp['data']['val'].toFixed(2);
-          //       let direction = resp['data']['direction'] ? resp['data']['direction'].toFixed(1) : null;
-          //       let units = resp['units'];
-
-          //       let dataStr;
-          //       if (direction) {
-          //         dataStr = `<p style='margin: 5px 0px'>${niceName}: ${value} ${units} @ ${direction} deg</p>`;
-          //       } else {
-          //         dataStr = `<p style='margin: 5px 0px'>${niceName}: ${value} ${units}</p>`;
-          //       }
-          //       modelOutputContent += dataStr;
-          //     });
-          //     // update popup content
-          //     markerContext.popup.setContent(
-          //       `${origPopupContent}${modelOutputContent}${buttonContent}`
-          //     )
-          //   }) 
-          // }
         }).bind(this, () => { return this.state }));
 
         // reset the contents when closing the popup
-        drillingMarker.on('popupclose', (function(markerContext) {
+        drillingMarker.on('popupclose', function(markerContext) {
           markerContext.popup.setContent(`${markerContext.popup._source.options.popupStationContent}`);
-        }).bind(this));
+        });
       } catch(err) {
         console.log(err);
       }
