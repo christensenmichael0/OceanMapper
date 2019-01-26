@@ -4,8 +4,6 @@ import classNames from 'classnames';
 import { withStyles } from '@material-ui/core/styles';
 import Drawer from '@material-ui/core/Drawer';
 import CssBaseline from '@material-ui/core/CssBaseline';
-import AppBar from '@material-ui/core/AppBar';
-import Toolbar from '@material-ui/core/Toolbar';
 import Divider from '@material-ui/core/Divider';
 import IconButton from '@material-ui/core/IconButton';
 import MenuIcon from '@material-ui/icons/Menu';
@@ -30,6 +28,7 @@ const styles = theme => ({
     'zIndex': 999,
     'background': 'transparent',
     'boxShadow': 'none',
+    'display': 'none'
   },
   appBarShift: {
     width: `calc(100% - ${drawerWidth}px)`,
@@ -44,8 +43,9 @@ const styles = theme => ({
     }),
   },
   menuButton: {
-    marginLeft: 12,
-    marginRight: 20,
+    left: 20,
+    top: 20,
+    zIndex: 1000,
     backgroundColor: theme.palette.primary.main,
     '&:hover': {
       backgroundColor: theme.palette.secondary.main,
@@ -103,34 +103,13 @@ class PersistentDrawerLeft extends React.Component {
     this.setState({ open: false });
   };
 
-  componentDidMount() {
-    console.log('drawer component mounted');
-  }
-
   render() {
-    console.log('drawer rendered')
     const { classes, theme, ...other } = this.props;
     const { open } = this.state;
 
     return (
       <div className={classes.root}>
         <CssBaseline />
-        <AppBar
-          position="fixed"
-          className={classNames(classes.appBar, {
-            [classes.appBarShift]: open,
-          })}
-        >
-          <Toolbar disableGutters={!open}>
-            <IconButton
-              aria-label="Open drawer"
-              onClick={this.handleDrawerOpen}
-              className={classNames(classes.menuButton, open && classes.hide)}
-            >
-              <MenuIcon />
-            </IconButton>
-          </Toolbar>
-        </AppBar>
         <Drawer
           className={classes.drawer}
           variant="persistent"
@@ -149,6 +128,13 @@ class PersistentDrawerLeft extends React.Component {
           <TableOfContents {...other}/>
         </Drawer>
         <main className={classes.content}>
+          <IconButton
+            aria-label="Open drawer"
+            onClick={this.handleDrawerOpen}
+            className={classNames(classes.menuButton, open && classes.hide)}
+          >
+            <MenuIcon />
+          </IconButton>
           <TimeSlider
             open={open} 
             {...other}

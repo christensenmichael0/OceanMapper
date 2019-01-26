@@ -784,9 +784,13 @@ class App extends Component {
    * Generate a pulsing marker when a user clicks on the map. 
    */
   onMapClick(e) {
-    let popupContent = `<h4>${e.latlng.toString()}</h4>`;
+    let initialPopupContent = `<h4>${e.latlng.toString()}</h4>`;
     let pulsingIcon = L.icon.pulse({iconSize:[10,10],color:this.props.theme.palette.secondary.main});
-    let marker = L.marker(e.latlng,{icon: pulsingIcon}).bindPopup(popupContent);
+    let marker = L.marker(e.latlng,{icon: pulsingIcon}).bindPopup(initialPopupContent);
+
+    marker.on('popupopen', (function(getAppState, markerContext) {
+      buildDynamicPopupContent(getAppState,markerContext);
+    }).bind(this, () => { return this.state }));
     marker.on('popupclose',() => marker.removeFrom(this.map));
     marker.addTo(this.map);
     marker.openPopup();

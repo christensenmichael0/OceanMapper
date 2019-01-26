@@ -10,16 +10,20 @@ export const buildDynamicPopupContent = (getAppState, markerContext) => {
     if (mapLayers[layer]['dataset'] && mapLayers[layer]['isOn']) activeLayers.push(mapLayers[layer]);
   })
 
-  let origPopupContent = markerContext.popup._source.options.popupStationContent;
+  let origPopupContent = markerContext.popup._source.options.popupStationContent || 
+    `<p style="font-size: 1.3em; margin: 10px"><b>Custom Location</b></p>`;
+
   let modelOutputContent = '<hr style="margin: 1px">';
   let buttonContent = buildActiveDrillingPopupButtons();
 
   if (activeLayers.length) {
-    let dataContent = `<span>Fetching Model Output<div class="loader loader-popup small"></div><span>`;
+    let fetchingHTML = `<span style="font-size: 1.2em">Fetching Model Output<div class="loader loader-popup small"></div><span>`;
+    let dataContent = `${modelOutputContent}${fetchingHTML}`;
     markerContext.popup.setContent(`${origPopupContent}${dataContent}${buttonContent}`)
     
     let pointData, pointFetchArray = [];
-    let markerCoords = markerContext.popup._source.options.coordinates.slice().reverse();
+    
+    let markerCoords = [markerContext.sourceTarget._latlng['lng'], markerContext.sourceTarget._latlng['lat']];
     
     // fetch data for each active layer
     activeLayers.forEach(activeLayer => {
@@ -41,9 +45,9 @@ export const buildDynamicPopupContent = (getAppState, markerContext) => {
 
         let dataStr;
         if (direction) {
-          dataStr = `<p style='margin: 5px 0px'>${niceName}: ${value} ${units} @ ${direction} deg</p>`;
+          dataStr = `<p style='margin: 5px 0px; font-size: 1.2em'>${niceName}: ${value} ${units} @ ${direction} deg</p>`;
         } else {
-          dataStr = `<p style='margin: 5px 0px'>${niceName}: ${value} ${units}</p>`;
+          dataStr = `<p style='margin: 5px 0px; font-size: 1.2em'>${niceName}: ${value} ${units}</p>`;
         }
         modelOutputContent += dataStr;
       });
