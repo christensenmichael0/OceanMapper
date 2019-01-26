@@ -5,6 +5,7 @@ import './App.css';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import PersistentDrawerLeft from './components/PersistentDrawerLeft';
+import ChartModal from './components/ChartModal';
 import layers from './scripts/layers';
 import moment from 'moment';
 import { getData,
@@ -93,13 +94,11 @@ class App extends Component {
     this.layerLoadError = this.layerLoadError.bind(this);
   }
 
-  handlePopupChartClick(e) {
+  handlePopupChartClick(chartType) {
     debugger
-    // TODO: parse data-chart-type so we know the ajax call to make
-    // Other params can be found in _source.options
-
-    // e.sourceTarget._popup._source.options (coords in here..)
-    // e.sourceTarget._popup._contentNode (TODO need a data attr from it.. JS regex?)
+    
+    let activeLocation = this.state.activeLocation;
+    // TODO fetch data and set data in state when complete
     this.setState({chartModalOpen: true});
   }
 
@@ -131,7 +130,7 @@ class App extends Component {
     map.on('moveend', this.onMapBoundsChange); // moveend, zoomend
 
     // add click event listener to map (its really on popup but I fire a map event) 
-    map.on('chartClick', e => {this.handlePopupChartClick(e)});
+    map.on('timeseriesClick', () => {this.handlePopupChartClick('timeseries')});
 
     // layer/leaflet layer binding
     this.layerBindings = {};
@@ -756,6 +755,7 @@ class App extends Component {
 
         drillingMarker.on('popupopen', (function(getAppState, markerContext) {
           buildDynamicPopupContent(getAppState,markerContext);
+          this.setState({activeLocation: markerContext.popup._latlng});
         }).bind(this, () => { return this.state }));
 
         // reset the contents when closing the popup
@@ -814,6 +814,9 @@ class App extends Component {
     });
   }
 
+  /**
+   * Fired when chart modal is closed. State is updated.
+   */
   handleCloseChartModal() {
     this.setState({chartModalOpen: false});
   }
@@ -905,6 +908,7 @@ class App extends Component {
 
     return (
       <div>
+        {this.state.chartModalOpen && <ChartModal closeChartModal={this.handleCloseChartModal}/>}
         <PersistentDrawerLeft 
           handleLayerToggle = {this.handleLayerToggle}
           handleLevelChange = {this.handleLevelChange}

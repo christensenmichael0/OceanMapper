@@ -14,8 +14,8 @@ export const buildActiveDrillingPopupButtons  = () => {
   
   let buttonContent = `
   <hr style="margin: 1px">
-  <p><i class="fas fa-plus-circle" style="margin-right:3px" ></i><a style="font-size: 1.2em" href="#" data-chart-type="timeseries" onclick="mymap.fire('chartClick')">Plot Timeseries</a></p>
-  <p><i class="fas fa-plus-circle" style="margin-right:3px"></i><a style="font-size: 1.2em" href="#" data-chart-type="profile" onclick="mymap.fire('chartClick')">Plot Profile</a></p>
+  <p><i class="fas fa-plus-circle" style="margin-right:3px" ></i><a style="font-size: 1.2em" href="#" data-chart-type="timeseries" onclick="mymap.fire('timeseriesClick')">Plot Timeseries</a></p>
+  <p><i class="fas fa-plus-circle" style="margin-right:3px"></i><a style="font-size: 1.2em" href="#" data-chart-type="profile" onclick="mymap.fire('profileClick')">Plot Profile</a></p>
   `
   return buttonContent
 }
