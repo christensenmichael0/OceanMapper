@@ -8,6 +8,15 @@ export const getPointData = (dataset, subResource, level, time, coordinates) => 
   return getData(endpoint);
 }
 
+export const getTimeSeriesData = (dataset, subResource, level, startTime, endTime, coordinates) => {
+  let formattedStartTime = `${formatDateTime(startTime, 'YYYY-MM-DDTHH:mm', '')}Z`;
+  let formattedEndTime = `${formatDateTime(endTime, 'YYYY-MM-DDTHH:mm', '')}Z`;
+  let formattedCoords = coordinates.toString();
+  let levelStr = isNaN(level) ? 'level=' : `level=${level}`;
+  let endpoint = `/data/timeseries-data?${levelStr}&dataset=${dataset}&sub_resource=${subResource}&start_time=${formattedStartTime}&end_time=${formattedEndTime}&coordinates=${formattedCoords}`
+  return getData(endpoint);
+}
+
 export const getModelField = (dataset, subResource, level, time) => {
   let formattedTime = `${formatDateTime(time, 'YYYY-MM-DDTHH:mm', '')}Z`;
   let levelStr = isNaN(level) ? 'level=' : `level=${level}`;

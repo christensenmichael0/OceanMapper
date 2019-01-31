@@ -9,15 +9,15 @@ import ChartModal from './components/ChartModal';
 import layers from './scripts/layers';
 import moment from 'moment';
 import { getData,
-        getModelField
+        getModelField,
+        getTimeSeriesData
         } from './scripts/dataFetchingUtils';
 import { populateImageUrlEndpoint } from './scripts/formattingUtils';
 import { addCustomLeafletHandlers } from './scripts/addCustomLeafletHandlers';
-import { activeDrillingPopupStaticContent,
-         buildActiveDrillingPopupButtons } from './scripts/buildStaticPopupContent';
+import { activeDrillingPopupStaticContent } from './scripts/buildStaticPopupContent';
 import { buildDynamicPopupContent } from './scripts/buildDynamicPopupContent';
 import priorityMap from './scripts/layerPriority';
-import { mapConfig, drillingMarkerParams } from './scripts/mapConfig';
+import { mapConfig } from './scripts/mapConfig';
 import _ from 'lodash';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -64,7 +64,8 @@ class App extends Component {
       metocLoadError: false,
       toc: layers,
       deepwater_activity: null,
-      chartModalOpen: false
+      chartModalOpen: false,
+      chartLoading: false
     };
 
     this._mapNode = React.createRef();
@@ -95,11 +96,91 @@ class App extends Component {
   }
 
   handlePopupChartClick(chartType) {
-    debugger
-    
-    let activeLocation = this.state.activeLocation;
-    // TODO fetch data and set data in state when complete
-    this.setState({chartModalOpen: true});
+    this.setState({chartModalOpen: true, chartLoading: true}, () => {
+
+      let mapLayers = this.state.mapLayers, orderedMapLayers = this.state.orderedMapLayers,
+      activeLocation = this.state.activeLocation, timeseriesData, timeseriesFetchArray = [],
+      activeLayers = [], arrowLen = 150;
+
+      orderedMapLayers.forEach(layer => {
+        if (mapLayers[layer]['dataset'] && mapLayers[layer]['isOn']) activeLayers.push(mapLayers[layer]);
+      })
+
+      if (activeLayers.length) {
+        // fetch data for each active layer
+        activeLayers.forEach(activeLayer => {
+          timeseriesData = getTimeSeriesData(activeLayer['dataset'],activeLayer['subResource'],
+            activeLayer['level'],this.state.startTime, this.state.endTime, 
+            [activeLocation['lng'], activeLocation['lat']]);
+          timeseriesFetchArray.push(timeseriesData);
+        })
+
+        Promise.all(timeseriesFetchArray).then(responses => {
+          let outputHighChartsArray = [], datasetIDs = [], seriesData, vectorData, layerObj;
+          
+          responses.forEach((resp,indx) => {
+            debugger
+            // build an array of names to determine if a wave data merge is necessary
+            datasetIDs.push(activeLayers[indx]['id']);
+            let directionConvention = activeLayers[indx]['directionConvention'];
+
+            seriesData = {type: 'series', data: [] };
+            vectorData = {type: 'vector', data: [] };
+            layerObj = {
+              niceName: activeLayers[indx]['niceName'],
+              level: activeLayers[indx]['level'] || 'n/a',
+              units: resp['units'],
+              series: []
+            };
+            // based on chart type parse and package data differently
+            let datapointKey, dateTime, value, direction, timeOrigin;
+            resp['data'].forEach(datapoint => {
+              // debugger
+              datapointKey = Object.keys(datapoint)[0];
+              dateTime = moment(datapointKey, 'YYYY-MM-DDTHH:mmZ').utc();
+              value = datapoint[datapointKey]['val'];
+              timeOrigin = datapoint[datapointKey]['time_origin'];
+
+              if (activeLayers[indx]['chartType'] === 'series-vector') {
+                // add 180 degrees if working with certain datasets so arrow displays
+                // correctly in charts
+                direction = directionConvention === 'from' ? datapoint[datapointKey]['direction'] : 
+                  (datapoint[datapointKey]['direction'] + 180) % 360;
+
+                seriesData['data'].push({x: dateTime, y: value, direction, timeOrigin});
+                vectorData['data'].push([dateTime, value, arrowLen, direction])
+
+              } else if (activeLayers[indx]['chartType'] === 'vector') {
+                direction = directionConvention === 'from' ? value : 
+                (value + 180) % 360;
+
+                // vector gets plot at a constant y value of 1
+                vectorData['data'].push([dateTime, 1, arrowLen, direction]);
+              } else {
+                seriesData['data'].push({x: dateTime, y: value, timeOrigin});
+              }
+            })
+            debugger
+            // only push non empty data arrays to output array to be shipped to highcharts component
+            [seriesData,vectorData].forEach(dataObj => {
+              if (dataObj['data'].length > 0) {
+                layerObj['series'].push(dataObj)
+              }
+            })
+            // push object into output array
+            outputHighChartsArray.push(layerObj);
+          })
+          debugger
+          // TODO merge wave height and direction at this point if both exist in outputHighChartsArray
+          // if (datasetIDs.includes('ww3_sig_wave_height') & datasetIDs.includes('ww3_primary_wave_dir')) {
+          //   var waveHeightIndx  = datasetIDs.indexOf('ww3_sig_wave_height');
+          //   var waveDirIndx = datasetIDs.indexOf('ww3_primary_wave_dir');
+          // }
+          // this.setState({chartLoading: false});
+        })
+        
+      }
+    })     
   }
 
   /**
@@ -232,6 +313,8 @@ class App extends Component {
             overlayType: layerObj['overlayType'],
             timeSensitive: layerObj['timeSensitive'], 
             addDataFunc: layerObj['addDataFunc'],
+            chartType: layerObj['chartType'],
+            directionConvention: layerObj['directionConvention'],
             maxNativeZoom: layerObj['maxNativeZoom'],
             minNativeZoom: layerObj['minNativeZoom'],
             maxVelocity: layerObj['maxVelocity'],
@@ -908,7 +991,12 @@ class App extends Component {
 
     return (
       <div>
-        {this.state.chartModalOpen && <ChartModal closeChartModal={this.handleCloseChartModal}/>}
+        {this.state.chartModalOpen && 
+          <ChartModal
+            {...this.state}
+            closeChartModal={this.handleCloseChartModal}
+          />
+        }
         <PersistentDrawerLeft 
           handleLayerToggle = {this.handleLayerToggle}
           handleLevelChange = {this.handleLevelChange}

@@ -10,6 +10,12 @@ const styles = theme => ({
     borderTop: `2px solid ${theme.palette.secondary.main}`,
     borderBottom: `2px solid ${theme.palette.secondary.main}`
   },
+  customSpinnerLarge: {
+    display: 'block',
+    margin: 'auto',
+    width: 50,
+    height: 50
+  }
 });
 
 function LoadingSpinner(props) {
@@ -17,15 +23,14 @@ function LoadingSpinner(props) {
 
   return (
     <React.Fragment>
-      <div className={classNames('loader', 'small', classes.customSpinner)}></div>
+      <div className={classNames('loader', {'small': props.largeStyle}, 
+        classes.customSpinner, {[classes.customSpinnerLarge]: props.largeStyle})}></div>
     </React.Fragment>
   )
 }
 
-export default withStyles(styles, { withTheme: true })(LoadingSpinner);
+LoadingSpinner.defaultProps = {
+  largeStyle: false
+};
 
-/*
-{props['mapLayers'][layer['id']]['isLoading'] && 
-  <div className="loader small" style={{'display': 'inline-block', 'marginRight': 5}}></div>
-}
-*/
+export default withStyles(styles, { withTheme: true })(LoadingSpinner);

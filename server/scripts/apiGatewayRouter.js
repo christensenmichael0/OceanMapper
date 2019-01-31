@@ -4,23 +4,22 @@ import request from 'request';
 
 const apiGatewayRouter = express.Router();
 
+// creating a mapping object to facilitate condensing code below
+const apiGatewayRouteMapping = {
+  '/individual-field': process.env.INDIVIDUAL_FIELD_ENDPOINT,
+  '/point-data': process.env.POINT_DATA_ENDPOINT,
+  '/timeseries-data': process.env.TIMESERIES_DATA_ENDPOINT
+} 
+
 // https://stackoverflow.com/questions/39301227/external-api-calls-with-express-node-js-and-require-module
 
-apiGatewayRouter.get('/individual-field', function(req, res, next) {
-  request({
-    uri: `${process.env.INDIVIDUAL_FIELD_ENDPOINT}`,
-    headers: {
-      'x-api-key': process.env.AWS_API_GATEWAY_KEY
-    },
-    qs: req.query,
-    
-  }).pipe(res);
+apiGatewayRouter.get(['/individual-field', '/point-data', '/timeseries-data'], function(req, res, next) {
   
-});
+  let path = req.path;
+  let uri = apiGatewayRouteMapping[path];
 
-apiGatewayRouter.get('/point-data', function(req, res, next) {
   request({
-    uri: `${process.env.POINT_DATA_ENDPOINT}`,
+    uri: uri,
     headers: {
       'x-api-key': process.env.AWS_API_GATEWAY_KEY
     },
@@ -31,4 +30,3 @@ apiGatewayRouter.get('/point-data', function(req, res, next) {
 });
 
 export default apiGatewayRouter;
-
