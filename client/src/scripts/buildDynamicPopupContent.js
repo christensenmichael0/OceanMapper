@@ -11,13 +11,13 @@ export const buildDynamicPopupContent = (getAppState, markerContext) => {
   })
 
   let origPopupContent = markerContext.popup._source.options.popupStationContent || 
-    `<p style="font-size: 1.3em; margin: 10px"><b>Custom Location</b></p>`;
+    `<p class="rig-name-header"><b>Custom Location</b></p>`;
 
   let modelOutputContent = '<hr style="margin: 1px">';
   let buttonContent = buildActiveDrillingPopupButtons();
 
   if (activeLayers.length) {
-    let fetchingHTML = `<span style="font-size: 1.2em">Fetching Model Output<div class="loader loader-popup small"></div><span>`;
+    let fetchingHTML = `<span class="default-popup-text">Fetching Model Output<div class="loader loader-popup small"></div><span>`;
     let dataContent = `${modelOutputContent}${fetchingHTML}`;
     markerContext.popup.setContent(`${origPopupContent}${dataContent}${buttonContent}`)
     
@@ -36,7 +36,6 @@ export const buildDynamicPopupContent = (getAppState, markerContext) => {
     Promise.all(pointFetchArray).then(responses => {
       responses.forEach((resp,indx) => {
         // TODO: deal with errors and fix naming of dataset
-        // TODO: move some of this building logic to an external func
         let niceName = activeLayers[indx]['niceName'];
 
         let value = resp['data']['val'].toFixed(2);
@@ -45,9 +44,9 @@ export const buildDynamicPopupContent = (getAppState, markerContext) => {
 
         let dataStr;
         if (direction) {
-          dataStr = `<p style='margin: 5px 0px; font-size: 1.2em'>${niceName}: ${value} ${units} @ ${direction} deg</p>`;
+          dataStr = `<p class="popup-metoc-data">${niceName}: ${value} ${units} @ ${direction} deg</p>`;
         } else {
-          dataStr = `<p style='margin: 5px 0px; font-size: 1.2em'>${niceName}: ${value} ${units}</p>`;
+          dataStr = `<p class="popup-metoc-data">${niceName}: ${value} ${units}</p>`;
         }
         modelOutputContent += dataStr;
       });

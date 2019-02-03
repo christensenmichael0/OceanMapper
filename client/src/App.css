@@ -15,6 +15,33 @@
   border-bottom: 2px solid #d500f9;
 }
 
+.rig-name-header {
+  font-size: 16px !important;
+  margin: 10px 0px !important;
+}
+
+.active-drilling-info {
+  margin: 0 0 3px !important; 
+  font-size: 14px !important;
+}
+
+.default-popup-text {
+  font-size: 14px !important;
+}
+
+.popup-metoc-data {
+  margin: 5px 0px !important; 
+  font-size: 14px !important;
+}
+
+.popup-button {
+  margin-right: 3px !important;
+}
+
+.popup-button-text {
+  font-size: 14px !important;
+}
+
 @-webkit-keyframes spin {
   0% { -webkit-transform: rotate(0deg); }
   100% { -webkit-transform: rotate(360deg); }

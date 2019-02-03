@@ -77,7 +77,7 @@ class ChartModal extends React.Component {
                 <Typography className={classes.loadingText} variant="overline" gutterBottom>
                   Fetching Data
                 </Typography>
-              </React.Fragment> :  <MetOceanTimeseries />}
+              </React.Fragment> :  <MetOceanTimeseries chartData={this.props.chartData}/>}
           </DialogContent>
           <DialogActions>
             <Button onClick={this.handleClose} color={theme.palette.secondary.light}>
