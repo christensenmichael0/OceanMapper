@@ -1,17 +1,26 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import ReactHighcharts from 'react-highcharts';
+import moment from 'moment';
 
 const HighchartsVector = require('highcharts/modules/vector.js')
 HighchartsVector(ReactHighcharts.Highcharts)
 
 const config = {
     title: {
-      text: 'Title', // constructTitle(props.chartData)
+      text: 'Title',
     },
-     xAxis: {
+    subtitle: {
+      text: 'Subtitle Text'
+    },
+    xAxis: {
       type: 'datetime',
-      gridLineWidth: 1
+      gridLineWidth: 1,
+       plotLines: [{
+        color: '#FF0000',
+        width: 0.5,
+        value: moment.utc().valueOf()
+      }]
     },
     yAxis: {
       title: {
@@ -53,18 +62,27 @@ const MetOceanTimeseries = (props) => {
     return datasetTitleArr.join(', ');
   }
 
-  const constructYAxis = (chartData) => {
-    let yAxisArr = [], yAxisItem;
-    chartData.forEach((dataSource,indx) => {
-      
-      // check if only 1 series and that series is vector 
-      // if (!(dataSource['series'].length === 1 & dataSource['series'][0]['type'] === 'vector')) {
+  const constructSubTitle = () => {
+    console.log(props);
+    let subTitle = `Coordinates: (${props['activeLocation']['lat'].toFixed(4)}, 
+      ${props['activeLocation']['lng'].toFixed(4)})`;
+    return subTitle;
+  }
 
-      // TODO: no label if direction only
+  const constructYAxis = (chartData) => {
+    let yAxisArr = [], yAxisItem, vectorSeries = false;
+    chartData.forEach((dataSource,indx) => {
+
+      // no label if vector series
+      if (dataSource['series'].length === 1 & dataSource['series'][0]['type'] === 'vector') {
+        vectorSeries = true;
+      }
+      
       let yAxisItem = {
         gridLineWidth: indx > 0 ? 0 : 1,
         labels: {
           format: `{value} ${dataSource['units']}`,
+          enabled: !vectorSeries
         },
         title: {
           text: dataSource['shortName'],
@@ -81,17 +99,18 @@ const MetOceanTimeseries = (props) => {
   const buildConfig = chartData => {
 
     let title = constructTitle(chartData);
-
+    let subTitle = constructSubTitle();
     let yAxis = constructYAxis(chartData);
 
     // lets build the series array first
     let seriesArr = [];
-    chartData.forEach(dataSource => {
+    chartData.forEach((dataSource, indx) => {
       dataSource['series'].forEach(series => {
-        // TODO: do the times need to be in millisecond format?
+        // TODO: format the times how we want.. fix formatting in tooltip
         let seriesObj = { 
           name: dataSource['niceName'],
           type: series['type'],
+          yAxis: indx,
           data: series['data']
         };
         // if vector series then use black
@@ -104,6 +123,7 @@ const MetOceanTimeseries = (props) => {
 
     // populate config
     config['title']['text'] = title;
+    config['subtitle']['text'] = subTitle;
     config['yAxis'] = yAxis;
     config['series'] = seriesArr;
     // debugger
@@ -118,9 +138,9 @@ const MetOceanTimeseries = (props) => {
   //     text: 'Title', // constructTitle(props.chartData)
   //   },
 
-  //   // subtitle: {
-  //   //   text: 'Subtitle Text'
-  //   // },
+    // subtitle: {
+    //   text: 'Subtitle Text'
+    // },
 
   //   yAxis: {
   //     title: {

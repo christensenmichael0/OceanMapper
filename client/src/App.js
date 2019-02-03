@@ -14,7 +14,8 @@ import { getData,
         } from './scripts/dataFetchingUtils';
 import { populateImageUrlEndpoint } from './scripts/formattingUtils';
 import { addCustomLeafletHandlers } from './scripts/addCustomLeafletHandlers';
-import { activeDrillingPopupStaticContent } from './scripts/buildStaticPopupContent';
+import { activeDrillingPopupStaticContent ,
+         customLocationPopupStaticContent } from './scripts/buildStaticPopupContent';
 import { buildDynamicPopupContent } from './scripts/buildDynamicPopupContent';
 import { parseTimeseriesData } from './scripts/parseTimeseriesData';
 import priorityMap from './scripts/layerPriority';
@@ -99,125 +100,8 @@ class App extends Component {
 
   handlePopupChartClick(chartType) {
     this.setState({chartModalOpen: true, chartLoading: true}, () => {
-
-      // let mapLayers = this.state.mapLayers, orderedMapLayers = this.state.orderedMapLayers,
-      // activeLocation = this.state.activeLocation, timeseriesData, timeseriesFetchArray = [],
-      // activeLayers = [], arrowLen = 150;
-
-      // orderedMapLayers.forEach(layer => {
-      //   if (mapLayers[layer]['dataset'] && mapLayers[layer]['isOn']) activeLayers.push(mapLayers[layer]);
-      // })
-
-      // // stop execution if no active layers
-      // if (!activeLayers.length) { 
-      //   this.setState({chartLoading: false});
-      //   return
-      // }
-
-      // // fetch data for each active layer
-      // activeLayers.forEach(activeLayer => {
-      //   timeseriesData = getTimeSeriesData(activeLayer['dataset'],activeLayer['subResource'],
-      //     activeLayer['level'],this.state.startTime, this.state.endTime, 
-      //     [activeLocation['lng'], activeLocation['lat']]);
-      //   timeseriesFetchArray.push(timeseriesData);
-      // })
-
-      // Promise.all(timeseriesFetchArray).then(responses => {
-      //   let outputHighChartsArray = [], datasetIDs = [], seriesData, vectorData, layerObj;
-        
-      //   responses.forEach((resp,indx) => {
-      //     // build an array of names to determine if a wave data merge is necessary
-      //     datasetIDs.push(activeLayers[indx]['id']);
-      //     let directionConvention = activeLayers[indx]['directionConvention'];
-
-      //     seriesData = {type: 'series', data: [] };
-      //     vectorData = {type: 'vector', data: [] };
-      //     layerObj = {
-      //       niceName: activeLayers[indx]['niceName'],
-      //       level: activeLayers[indx]['level'] || 'n/a',
-      //       units: resp['units'],
-      //       series: []
-      //     };
-      //     // based on chart type parse and package data differently
-      //     let datapointKey, dateTime, value, direction, timeOrigin;
-      //     console.log(resp['data']);
-      //     resp['data'].forEach(datapoint => {
-      //       datapointKey = Object.keys(datapoint)[0];
-      //       dateTime = moment(datapointKey, 'YYYY-MM-DDTHH:mmZ').utc();
-      //       value = datapoint[datapointKey]['val'];
-      //       timeOrigin = datapoint[datapointKey]['time_origin'];
-
-      //       if (activeLayers[indx]['chartType'] === 'series-vector') {
-      //         // add 180 degrees if working with certain datasets so arrow displays
-      //         // correctly in charts
-      //         direction = directionConvention === 'from' ? datapoint[datapointKey]['direction'] : 
-      //           (datapoint[datapointKey]['direction'] + 180) % 360;
-
-      //         seriesData['data'].push({x: dateTime, y: value, direction, timeOrigin});
-      //         vectorData['data'].push([dateTime, value, arrowLen, direction])
-
-      //       } else if (activeLayers[indx]['chartType'] === 'vector') {
-      //         direction = directionConvention === 'from' ? value : 
-      //         (value + 180) % 360;
-
-      //         // vector gets plot at a constant y value of 1
-      //         vectorData['data'].push([dateTime, 1, arrowLen, direction]);
-      //       } else {
-      //         seriesData['data'].push({x: dateTime, y: value, timeOrigin});
-      //       }
-      //     })
-
-      //     // only push non empty data arrays to output array to be shipped to highcharts component
-      //     let comboSeries = [seriesData, vectorData];
-      //     comboSeries.forEach(dataObj => {
-      //       console.log(dataObj);
-      //       if (dataObj['data'].length > 0) {
-      //         layerObj['series'].push(dataObj)
-      //       }
-      //     })
-      //     // push object into output array
-      //     outputHighChartsArray.push(layerObj);
-      //   })
-      //   // TODO merge wave height and direction at this point if both exist in outputHighChartsArray
-      //   if (datasetIDs.includes('ww3_sig_wave_height') & datasetIDs.includes('ww3_primary_wave_dir')) {
-      //     var waveHeightIndx  = datasetIDs.indexOf('ww3_sig_wave_height');
-      //     var waveDirIndx = datasetIDs.indexOf('ww3_primary_wave_dir');
-          
-      //     // get all times and values from sig wave height
-      //     let waveHeightArr = outputHighChartsArray[waveHeightIndx].series[0].data.map(el => {
-      //       return {datetime: el.x.format(), val: el.y}
-      //     });
-        
-      //     let waveDirectionDateTimes = {};
-      //     // create an object with forecast times as keys and direction as values
-      //     outputHighChartsArray[waveDirIndx].series[0].data.forEach(el => {
-      //       waveDirectionDateTimes[el[0].format()] = el[3];
-      //     })
-
-      //     // empty vector data before adding new data
-      //     vectorData['data'] = [];
-      //     outputHighChartsArray[waveHeightIndx].series.push(vectorData)
-
-      //     // for each wave height entry see if corresponding data exists for wave direction
-      //     // and add it to the vector series if it does
-      //     waveHeightArr.forEach(waveHeightData => {
-      //       let dt = waveHeightData['datetime'];
-      //       let val = waveHeightData['val'];
-      //       if (waveDirectionDateTimes[dt]) {
-      //         outputHighChartsArray[waveHeightIndx].series[1].data.push(
-      //           [moment(dt).utc(), val, arrowLen, waveDirectionDateTimes[dt]])
-      //       }
-      //     })
-
-      //     // remove wave direction from output array since its now combined with wave height
-      //     outputHighChartsArray.splice(waveDirIndx, 1);
-      //   }
-      //   this.setState({chartLoading: false, chartData: outputHighChartsArray});
-      // })
-
       // trigger fetch and parsing of data 
       parseTimeseriesData(this);
-
     })     
   }
 
@@ -910,7 +794,8 @@ class App extends Component {
    * Generate a pulsing marker when a user clicks on the map. 
    */
   onMapClick(e) {
-    let initialPopupContent = `<h4>${e.latlng.toString()}</h4>`;
+    // let initialPopupContent = `<h4>${e.latlng.toString()}</h4>`;
+    let initialPopupContent = customLocationPopupStaticContent(e.latlng);
     let pulsingIcon = L.icon.pulse({iconSize:[10,10],color:this.props.theme.palette.secondary.main});
     let marker = L.marker(e.latlng,{icon: pulsingIcon}).bindPopup(initialPopupContent);
 
@@ -920,6 +805,9 @@ class App extends Component {
     marker.on('popupclose',() => marker.removeFrom(this.map));
     marker.addTo(this.map);
     marker.openPopup();
+
+    // set active location
+    this.setState({activeLocation: e.latlng}); // marker.popup._latlng
   }
 
   /**
