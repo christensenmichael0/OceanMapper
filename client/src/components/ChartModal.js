@@ -9,21 +9,9 @@ import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
 import LoadingSpinner from './LoadingSpinner';
 import MetOceanTimeseries from './MetOceanTimeseries';
+import withMobileDialog from '@material-ui/core/withMobileDialog';
 
 const styles = theme => ({
-  form: {
-    display: 'flex',
-    flexDirection: 'column',
-    margin: 'auto',
-    width: 'fit-content',
-  },
-  formControl: {
-    marginTop: theme.spacing.unit * 2,
-    minWidth: 120,
-  },
-  formControlLabel: {
-    marginTop: theme.spacing.unit,
-  },
   loadingText: {
     display: 'block',
     fontSize: 16,
@@ -60,10 +48,12 @@ class ChartModal extends React.Component {
 
   render() {
     const { classes, theme } = this.props;
+    const { fullScreen } = this.props;
     // this.props.chartLoading
     return (
       <React.Fragment>
         <Dialog
+          fullScreen={fullScreen}
           fullWidth={this.state.fullWidth}
           maxWidth={this.state.maxWidth}
           open={this.state.open}
@@ -98,4 +88,5 @@ ChartModal.propTypes = {
   classes: PropTypes.object.isRequired,
 };
 
-export default withStyles(styles, { withTheme: true })(ChartModal);
+const StyledModal = withStyles(styles, { withTheme: true })(ChartModal);
+export default withMobileDialog({breakpoint: 'sm'})(StyledModal);

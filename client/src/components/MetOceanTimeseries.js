@@ -7,6 +7,9 @@ const HighchartsVector = require('highcharts/modules/vector.js')
 HighchartsVector(ReactHighcharts.Highcharts)
 
 const config = {
+    chart: {
+      height: 300
+    },
     title: {
       text: 'Title',
     },
@@ -40,6 +43,21 @@ const config = {
     series: [],
     credits: {
       enabled: false
+    },
+    responsive: {
+      rules: [{
+        condition: {
+          maxWidth: 500
+        },
+        chartOptions: {
+          chart: {
+            height: 265
+          },
+          navigator: {
+              enabled: false
+          }
+        }
+      }]
     }
   }
 
@@ -126,75 +144,21 @@ const MetOceanTimeseries = (props) => {
     config['subtitle']['text'] = subTitle;
     config['yAxis'] = yAxis;
     config['series'] = seriesArr;
-    // debugger
     return config
   }
 
-
-
-  // const config = {
-
-  //   title: {
-  //     text: 'Title', // constructTitle(props.chartData)
-  //   },
-
-    // subtitle: {
-    //   text: 'Subtitle Text'
-    // },
-
-  //   yAxis: {
-  //     title: {
-  //       text: 'YAxis Title'
-  //     }
-  //   },
-  //   // legend: {
-  //   //   layout: 'vertical',
-  //   //   align: 'right',
-  //   //   verticalAlign: 'middle'
-  //   // },
-
-  //   plotOptions: {
-  //       series: {
-  //           // general options for all series
-  //       },
-  //       vector: {
-  //         rotationOrigin: 'start',
-  //         showInLegend: false,
-  //         tooltip: {}
-  //       }
-  //   },
-
-  //   series: [{
-  //     name: 'Magnitude',
-  //     data: [[1,1],[2,2],[3,3],[4,4],[5,5],[6,6],[7,7],[8,8]]
-  //   },{
-  //       type: 'vector',
-  //       name: 'Sample vector field',
-  //       color: ReactHighcharts.Highcharts.getOptions().colors[1],
-  //       data: [[0, 1, 150, 18],[1,1,150, 90],[2,1,150, 90],[3,1,150, 90],[4,1,150, 90]]
-  //   }],
-  //   credits: {
-  //     enabled: false
-  //   },
-  // }
-  // debugger
   return (
-    <div className='custom-highchart-container'>
-      {/*<ReactHighcharts config={config}></ReactHighcharts>*/}
-      <ReactHighcharts config={buildConfig(props.chartData)}></ReactHighcharts>
+    <div>
+      <ReactHighcharts 
+        config={buildConfig(props.chartData)}>
+      </ReactHighcharts>
     </div>
   )
 }
 
-// MetOceanTimeseries.propTypes = {
-//   title: PropTypes.string,
-//   // series: PropTypes.array.isRequired
-// };
-
-// MetOceanTimeseries.defaultProps = {
-//   title: 'Distribution of Last Modified Times for Files',
-
-// };
+MetOceanTimeseries.propTypes = {
+  chartData: PropTypes.object.isRequired,
+};
 
 
 export default MetOceanTimeseries;

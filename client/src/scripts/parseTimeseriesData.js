@@ -33,7 +33,7 @@ export const parseTimeseriesData = (app) => {
       datasetIDs.push(activeLayers[indx]['id']);
       let directionConvention = activeLayers[indx]['directionConvention'];
 
-      seriesData = {type: 'spline', data: [] };
+      seriesData = {type: 'line', data: [] };
       vectorData = {type: 'vector', data: [] };
       layerObj = {
         niceName: activeLayers[indx]['niceName'],
