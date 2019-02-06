@@ -75,7 +75,6 @@ export const parseTimeseriesData = (app) => {
       // only push non empty data arrays to output array to be shipped to highcharts component
       let comboSeries = [seriesData, vectorData];
       comboSeries.forEach(dataObj => {
-        console.log(dataObj);
         if (dataObj['data'].length > 0) {
           layerObj['series'].push(dataObj)
         }
@@ -88,7 +87,8 @@ export const parseTimeseriesData = (app) => {
       var waveHeightIndx  = datasetIDs.indexOf('ww3_sig_wave_height');
       var waveDirIndx = datasetIDs.indexOf('ww3_primary_wave_dir');
       
-      let waveHeightArr = outputHighChartsArray[waveHeightIndx].series[0].data;
+      // note that modifying waveHeightArr in forEach loop below modifies outputHighChartsArray
+      let waveHeightArr = outputHighChartsArray[waveHeightIndx].series[0].data.slice();
     
       let waveDirectionDateTimes = {};
       // create an object with forecast times as keys and direction as values
@@ -103,12 +103,16 @@ export const parseTimeseriesData = (app) => {
 
       // for each wave height entry see if corresponding data exists for wave direction
       // and add it to the vector series if it does
-      waveHeightArr.forEach(waveHeightData => {
+      waveHeightArr.forEach((waveHeightData,arrIndx) => {
         let dt = waveHeightData['x'];
         let val = waveHeightData['y'];
+
         if (waveDirectionDateTimes[dt]) {
           outputHighChartsArray[waveHeightIndx].series[1].data.push(
             [dt, val, arrowLen, waveDirectionDateTimes[dt]])
+
+          // updates outputHighChartsArray to include direction property alongside wave height
+          waveHeightData['direction'] = waveDirectionDateTimes[dt];
         }
       })
 

@@ -8,7 +8,8 @@ HighchartsVector(ReactHighcharts.Highcharts)
 
 const config = {
     chart: {
-      height: 300
+      height: 300,
+      zoomType: 'xy'
     },
     title: {
       text: 'Title',
@@ -32,12 +33,33 @@ const config = {
     },
     plotOptions: {
       series: {
-          // general options for all series
+        tooltip: {
+          followTouchMove: false,
+          headerFormat: `<span style="font-size: 10px">{point.key:%Y-%m-%d %H:%M UTC}</span><br/>`,
+          pointFormatter: function() {
+            var tooltipHTML;
+            // TODO: strip out repeat logic and only append degrees if necessary
+            if (this.options.direction) {
+              tooltipHTML = `
+                <span style="color:${this.color}">\u25CF</span>
+                ${this.series.name}: <b>${this.options.y.toFixed(1)} ${this.series.options.units} 
+                @${this.options.direction.toFixed(1)}°</b><br/>
+              `;
+            } else {
+              tooltipHTML = `
+                <span style="color:${this.color}">\u25CF</span>
+                ${this.series.name}: <b>${this.options.y.toFixed(1)} ${this.series.options.units}</b><br/>
+              `;
+            }
+
+            return tooltipHTML;
+          }
+        }
       },
       vector: {
         rotationOrigin: 'start',
         showInLegend: false,
-        tooltip: {}
+        enableMouseTracking: false
       }
     },
     series: [],
@@ -125,15 +147,17 @@ const MetOceanTimeseries = (props) => {
     chartData.forEach((dataSource, indx) => {
       dataSource['series'].forEach(series => {
         // TODO: format the times how we want.. fix formatting in tooltip
+        // wave direction isnt showing up for some reason
         let seriesObj = { 
           name: dataSource['niceName'],
+          color: ReactHighcharts.Highcharts.getOptions().colors[indx],
           type: series['type'],
           yAxis: indx,
           data: series['data']
         };
-        // if vector series then use black
-        if (series['type'] === 'vector') {
-          seriesObj['color'] = ReactHighcharts.Highcharts.getOptions().colors[1]
+
+        if (series['type'] !== 'vector') {
+          seriesObj['units'] = dataSource['units'];
         }
         seriesArr.push(seriesObj);
       })
