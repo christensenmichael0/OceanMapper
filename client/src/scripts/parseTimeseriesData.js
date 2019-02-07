@@ -33,7 +33,7 @@ export const parseTimeseriesData = (app) => {
       // skip the following logic if there was an error (so we could end up with empty outputHighChartsArray)
       // can i build an error object? and display error in subtitle??
       if (resp['error']) {
-        chartLoadingErrors.push(activeLayers[indx]['id']);
+        chartLoadingErrors.push(activeLayers[indx]['niceName']);
         return;
       }
 

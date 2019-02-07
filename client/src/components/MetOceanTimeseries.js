@@ -15,7 +15,8 @@ const config = {
       text: 'Title',
     },
     subtitle: {
-      text: 'Subtitle Text'
+      text: 'Subtitle Text',
+      useHTML: true,
     },
     xAxis: {
       type: 'datetime',
@@ -37,17 +38,14 @@ const config = {
           followTouchMove: false,
           headerFormat: `<span style="font-size: 10px">{point.key:%Y-%m-%d %H:%M UTC}</span><br/>`,
           pointFormatter: function() {
-            var tooltipHTML;
-            // TODO: strip out repeat logic and only append degrees if necessary
+            var tooltipHTML = `<span style="color:${this.color}">\u25CF</span>`;
             if (this.options.direction) {
-              tooltipHTML = `
-                <span style="color:${this.color}">\u25CF</span>
+              tooltipHTML += `
                 ${this.series.name}: <b>${this.options.y.toFixed(1)} ${this.series.options.units} 
                 @${this.options.direction.toFixed(1)}°</b><br/>
               `;
             } else {
-              tooltipHTML = `
-                <span style="color:${this.color}">\u25CF</span>
+              tooltipHTML += `
                 ${this.series.name}: <b>${this.options.y.toFixed(1)} ${this.series.options.units}</b><br/>
               `;
             }
@@ -103,9 +101,15 @@ const MetOceanTimeseries = (props) => {
   }
 
   const constructSubTitle = () => {
-    console.log(props);
-    let subTitle = `Coordinates: (${props['activeLocation']['lat'].toFixed(4)}, 
-      ${props['activeLocation']['lng'].toFixed(4)})`;
+    let subTitle = `<span>Coordinates: (${props['activeLocation']['lat'].toFixed(4)}, 
+      ${props['activeLocation']['lng'].toFixed(4)})</span>`;
+
+    // loop through errors and append them as new lines to subtitle
+    if (props.chartLoadingErrors.length) {
+      let failedFetches = props.chartLoadingErrors.join(', ');
+      let errorText = `<br /><span>*Failed to load: ${failedFetches}</span>`;
+      subTitle += errorText;
+    }
     return subTitle;
   }
 
@@ -118,7 +122,7 @@ const MetOceanTimeseries = (props) => {
         vectorSeries = true;
       }
       
-      let yAxisItem = {
+      yAxisItem = {
         gridLineWidth: indx > 0 ? 0 : 1,
         labels: {
           format: `{value} ${dataSource['units']}`,

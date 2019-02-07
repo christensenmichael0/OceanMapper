@@ -71,6 +71,7 @@ class ChartModal extends React.Component {
               <MetOceanTimeseries 
                 chartData={this.props.chartData}
                 activeLocation={this.props.activeLocation}
+                chartLoadingErrors={this.props.chartLoadingErrors}
               />}
           </DialogContent>
           <DialogActions>

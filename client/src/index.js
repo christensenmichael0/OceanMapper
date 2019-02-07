@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import App from './App';
+// import App from './App';
+import AppRouter from './AppRouter';
 import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles';
 import purple from '@material-ui/core/colors/purple';
 // import 'bootstrap/dist/css/bootstrap.css';
@@ -22,7 +23,7 @@ const theme = createMuiTheme({
 function MuiAppContainer() {
   return (
     <MuiThemeProvider theme={theme}>
-      <App />
+      <AppRouter />
     </MuiThemeProvider>
   );
 }
