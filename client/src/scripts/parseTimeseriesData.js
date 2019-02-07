@@ -25,10 +25,18 @@ export const parseTimeseriesData = (app) => {
     timeseriesFetchArray.push(timeseriesData);
   })
 
+  let chartLoadingErrors = [];
   Promise.all(timeseriesFetchArray).then(responses => {
     let outputHighChartsArray = [], datasetIDs = [], seriesData, vectorData, layerObj;
     
     responses.forEach((resp,indx) => {
+      // skip the following logic if there was an error (so we could end up with empty outputHighChartsArray)
+      // can i build an error object? and display error in subtitle??
+      if (resp['error']) {
+        chartLoadingErrors.push(activeLayers[indx]['id']);
+        return;
+      }
+
       // build an array of names to determine if a wave data merge is necessary
       datasetIDs.push(activeLayers[indx]['id']);
       let directionConvention = activeLayers[indx]['directionConvention'];
@@ -119,6 +127,6 @@ export const parseTimeseriesData = (app) => {
       // remove wave direction from output array since its now combined with wave height
       outputHighChartsArray.splice(waveDirIndx, 1);
     }
-    app.setState({chartLoading: false, chartData: outputHighChartsArray});
+    app.setState({chartLoading: false, chartData: outputHighChartsArray, chartLoadingErrors});
   })
 }

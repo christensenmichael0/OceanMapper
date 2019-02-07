@@ -24,7 +24,7 @@ def get_latest_RTOFS_forecast_time(rtofs_url, grid_dim='2d'):
     {string} grid_dim - the RTOFS grid dimension '2d' or '3d' (i.e. the 2d surface data or 3d full water column data)
 
 
-    ex: 'http://nomads.ncep.noaa.gov:9090/dods/rtofs/rtofs_global20180516/rtofs_glo_2ds_nowcast_daily_prog'
+    ex: 'https://nomads.ncep.noaa.gov:9090/dods/rtofs/rtofs_global20180516/rtofs_glo_2ds_nowcast_daily_prog'
     -----------------------------------------------------------------------
     Output: object with this structure:
 
@@ -81,5 +81,5 @@ def get_latest_RTOFS_forecast_time(rtofs_url, grid_dim='2d'):
     return forecast_info
 
 if __name__ == "__main__":
-    rtofs_url = 'http://nomads.ncep.noaa.gov:9090/dods/rtofs'
+    rtofs_url = 'https://nomads.ncep.noaa.gov:9090/dods/rtofs'
     get_latest_RTOFS_forecast_time(rtofs_url)

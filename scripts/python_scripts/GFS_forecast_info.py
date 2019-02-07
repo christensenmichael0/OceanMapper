@@ -84,7 +84,7 @@ def get_gfs_forecast_info(gfs_url):
     return forecast_info
 
 if __name__ == "__main__":
-    gfs_url = 'http://nomads.ncep.noaa.gov:9090/dods/gfs_0p25'
+    gfs_url = 'https://nomads.ncep.noaa.gov:9090/dods/gfs_0p25'
     get_gfs_forecast_info(gfs_url)
 
 

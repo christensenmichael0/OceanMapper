@@ -48,7 +48,7 @@ def lambda_handler(event, context):
     SUB_RESOURCE_HTSGWSFC = 'sig_wave_height'
     SUB_RESOURCE_DIRPWSFC = 'primary_wave_dir'
     SUB_RESOURCE_PERPWSFC = 'primary_wave_period'
-        
+    
     # unpack event data
     url = event['url']
     model_field_time = datetime.datetime.strptime(event['forecast_time'],'%Y%m%dT%H:%M')

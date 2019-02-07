@@ -8,10 +8,7 @@ import PersistentDrawerLeft from './components/PersistentDrawerLeft';
 import ChartModal from './components/ChartModal';
 import layers from './scripts/layers';
 import moment from 'moment';
-import { getData,
-        getModelField,
-        getTimeseriesData
-        } from './scripts/dataFetchingUtils';
+import { getData, getModelField } from './scripts/dataFetchingUtils';
 import { populateImageUrlEndpoint } from './scripts/formattingUtils';
 import { addCustomLeafletHandlers } from './scripts/addCustomLeafletHandlers';
 import { activeDrillingPopupStaticContent ,

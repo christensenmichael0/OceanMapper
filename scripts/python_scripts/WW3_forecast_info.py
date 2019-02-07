@@ -23,14 +23,14 @@ def get_ww3_forecast_info(ww3_url):
     -----------------------------------------------------------------------
     Input: {string} ww3_url - displays available Wave Watch 3 forecast model runs 
 
-    i.e. http://nomads.ncep.noaa.gov:9090/dods/wave/nww3
+    i.e. https://nomads.ncep.noaa.gov:9090/dods/wave/nww3
     -----------------------------------------------------------------------
     Output: array of tuples with this structure:
 
     forecast_info = [(forecast_indx, forecast_field_datetime), ...]
 	-----------------------------------------------------------------------
     Author: Michael Christensen
-    Date Modified: 07/09/2018
+    Date Modified: 02/06/2019
     """
     
     page = urllib.urlopen(ww3_url).read()
@@ -86,7 +86,7 @@ def get_ww3_forecast_info(ww3_url):
     return forecast_info
 
 if __name__ == '__main__':
-    ww3_url = 'http://nomads.ncep.noaa.gov:9090/dods/wave/nww3'
+    ww3_url = 'https://nomads.ncep.noaa.gov:9090/dods/wave/nww3'
     get_ww3_forecast_info(ww3_url)
 
 

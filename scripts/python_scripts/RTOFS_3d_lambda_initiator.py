@@ -34,10 +34,10 @@ def lambda_handler(event, context):
     Output: No output
     -----------------------------------------------------------------------
     Author: Michael Christensen
-    Date Modified: 06/16/2018
+    Date Modified: 02/06/2019
     """
 
-    rtofs_url = 'http://nomads.ncep.noaa.gov:9090/dods/rtofs'
+    rtofs_url = 'https://nomads.ncep.noaa.gov:9090/dods/rtofs'
     available_data = get_latest_RTOFS_forecast_time(rtofs_url, '3d')
     output_info = assemble_model_timesteps(available_data,'daily')
     

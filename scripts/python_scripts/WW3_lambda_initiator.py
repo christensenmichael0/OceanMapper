@@ -33,10 +33,10 @@ def lambda_handler(event, context):
     Output: No output
     -----------------------------------------------------------------------
     Author: Michael Christensen
-    Date Modified: 07/07/2018
+    Date Modified: 02/06/2019
     """
 
-    ww3_url = 'http://nomads.ncep.noaa.gov:9090/dods/wave/nww3'
+    ww3_url = 'https://nomads.ncep.noaa.gov:9090/dods/wave/nww3'
     forecast_info = get_ww3_forecast_info(ww3_url)
         
     for forecast_indx, forecast_time in forecast_info['data']:

@@ -35,19 +35,23 @@ export const buildDynamicPopupContent = (getAppState, markerContext) => {
     // promises are returned in the same order as the input
     Promise.all(pointFetchArray).then(responses => {
       responses.forEach((resp,indx) => {
-        // TODO: deal with errors and fix naming of dataset
+
         let niceName = activeLayers[indx]['niceName'];
-
-        let value = resp['data']['val'].toFixed(2);
-        let direction = resp['data']['direction'] ? resp['data']['direction'].toFixed(1) : null;
-        let units = resp['units'];
-
-        let dataStr;
-        if (direction) {
-          dataStr = `<p class="popup-metoc-data">${niceName}: ${value} ${units} @ ${direction} deg</p>`;
+        let value, direction, units, dataStr;
+        if (!resp['error']) {
+          value = resp['data']['val'].toFixed(2);
+          direction = resp['data']['direction'] ? resp['data']['direction'].toFixed(1) : null;
+          units = resp['units'];
+          // build dataStr
+          if (direction) {
+            dataStr = `<p class="popup-metoc-data">${niceName}: ${value} ${units} @ ${direction} deg</p>`;
+          } else {
+            dataStr = `<p class="popup-metoc-data">${niceName}: ${value} ${units}</p>`;
+          }
         } else {
-          dataStr = `<p class="popup-metoc-data">${niceName}: ${value} ${units}</p>`;
+          dataStr = `<p class="popup-metoc-data">${niceName}: failed to load data!</p>`;
         }
+
         modelOutputContent += dataStr;
       });
       // update popup content
