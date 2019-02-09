@@ -8,7 +8,7 @@ import PersistentDrawerLeft from './components/PersistentDrawerLeft';
 import ChartModal from './components/ChartModal';
 import layers from './scripts/layers';
 import moment from 'moment';
-import { getData, getModelField } from './scripts/dataFetchingUtils';
+import { getData, getModelField, abortLayerRequest } from './scripts/dataFetchingUtils';
 import { populateImageUrlEndpoint } from './scripts/formattingUtils';
 import { addCustomLeafletHandlers } from './scripts/addCustomLeafletHandlers';
 import { activeDrillingPopupStaticContent ,
@@ -488,16 +488,10 @@ class App extends Component {
           })
           break;
         case 'getLeaseAreas':
-          mapProps = this.getMapDimensionInfo();
-          layerEndpointUrl = populateImageUrlEndpoint(layerObj['endPoint'], mapProps);
-          this.buildImageLayer(layerObj,layerEndpointUrl,mapProps['imageBounds']).then(imageLayer => { 
-            this.addLayer(layerObj,imageLayer);
-          })
-          break;
         case 'getLeaseBlocks':
           mapProps = this.getMapDimensionInfo();
           layerEndpointUrl = populateImageUrlEndpoint(layerObj['endPoint'], mapProps);
-          this.buildImageLayer(layerObj,layerEndpointUrl,mapProps['imageBounds']).then(imageLayer => { 
+          this.buildImageLayer(layerObj,layerEndpointUrl,mapProps['imageBounds']).then(imageLayer => {
             this.addLayer(layerObj,imageLayer);
           })
           break;
@@ -553,6 +547,10 @@ class App extends Component {
    */
   async removeLeafletLayer(layerID) {
     let mapLayers = Object.assign({},this.state.mapLayers)
+
+    // TODO abort image type layers as a start
+    abortLayerRequest(layerID, this, L);
+
 
     try {
       if (mapLayers[layerID]['overlayType'] === 'all') {
