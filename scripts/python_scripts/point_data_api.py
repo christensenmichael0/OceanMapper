@@ -116,7 +116,6 @@ def lambda_handler(event, context):
             'data': data_value,
             'units': dataset_units
         }
-        import pdb; pdb.set_trace()
         return generate_response(200, headers, response_body)
     else:
         response_body = {

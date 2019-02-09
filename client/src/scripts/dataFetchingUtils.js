@@ -71,6 +71,11 @@ export const getData = async (endpoint, respType='json') => {
     }
     throw new Error('Request Failed!');
   } catch (error) {
+    // if (error.name === 'AbortError') {
+    //   console.log('Fetch aborted');
+    // } else {
+    //   console.error('Error occurred!', error);
+    // }
     return {error};
   }
 }

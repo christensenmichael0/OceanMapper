@@ -63,7 +63,7 @@ def get_model_value(coords, data_key, sub_resource, dataset_vars, conn=None):
     Output: 
     -----------------------------------------------------------------------
     Author: Michael Christensen
-    Date Modified: 10/14/2018
+    Date Modified: 02/09/2019
 
     """
 
@@ -112,6 +112,8 @@ def get_model_value(coords, data_key, sub_resource, dataset_vars, conn=None):
         output = {'val': var_abs, 'direction': compass_deg, 'time_origin': time_origin}
     else:
         output = {'val': interp_vals[0], 'time_origin': time_origin}
+        if sub_resource == 'primary_wave_dir' and (output['val'] > 360 or output['val'] < 0):
+            output['val'] = output['val'] % 360
 
     # if this is being used as part of a multiprocessing call need to send data via conn
     if conn:
@@ -123,9 +125,14 @@ def get_model_value(coords, data_key, sub_resource, dataset_vars, conn=None):
 
 if __name__ == '__main__':
     
-    coords=[-81.7, 24.08]
-    dataset_vars = ['u_vel','v_vel']
-    sub_resource = 'ocean_current_speed'
-    data_key='HYCOM_DATA/20181023_00/ocean_current_speed/0m/pickle/hycom_currents_20181023_00.pickle'
+    # coords=[-81.7, 24.08]
+    # dataset_vars = ['u_vel','v_vel']
+    # sub_resource = 'ocean_current_speed'
+    # data_key='HYCOM_DATA/20181023_00/ocean_current_speed/0m/pickle/hycom_currents_20181023_00.pickle'
 
+    coords=[-93.66943359375,23.644524198573688]
+    dataset_vars = ['primary_wave_dir']
+    sub_resource = 'primary_wave_dir'
+    data_key='WW3_DATA/20190209_00/primary_wave_dir/pickle/ww3_dirpwsfc_20190209_00.pickle'
+    
     get_model_value(coords, data_key, sub_resource, dataset_vars, conn='mock_con')

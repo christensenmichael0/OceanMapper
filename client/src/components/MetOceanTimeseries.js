@@ -42,7 +42,7 @@ const config = {
             if (this.options.direction) {
               tooltipHTML += `
                 ${this.series.name}: <b>${this.options.y.toFixed(1)} ${this.series.options.units} 
-                @${this.options.direction.toFixed(1)}°</b><br/>
+                @ ${this.options.direction.toFixed(1)}°</b><br/>
               `;
             } else {
               tooltipHTML += `

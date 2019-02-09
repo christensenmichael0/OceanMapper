@@ -44,7 +44,7 @@ export const buildDynamicPopupContent = (getAppState, markerContext) => {
           units = resp['units'];
           // build dataStr
           if (direction) {
-            dataStr = `<p class="popup-metoc-data">${niceName}: ${value} ${units} @ ${direction} deg</p>`;
+            dataStr = `<p class="popup-metoc-data">${niceName}: ${value} ${units} @ ${direction}°</p>`;
           } else {
             dataStr = `<p class="popup-metoc-data">${niceName}: ${value} ${units}</p>`;
           }

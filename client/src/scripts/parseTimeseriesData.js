@@ -52,7 +52,7 @@ export const parseTimeseriesData = (app) => {
         series: []
       };
       // based on chart type parse and package data differently
-      let datapointKey, dateTime, value, direction, timeOrigin;
+      let datapointKey, dateTime, value, direction, origDirection, timeOrigin;
 
       resp['data'].forEach(datapoint => {
         datapointKey = Object.keys(datapoint)[0];
@@ -61,12 +61,13 @@ export const parseTimeseriesData = (app) => {
         timeOrigin = datapoint[datapointKey]['time_origin'];
 
         if (activeLayers[indx]['chartType'] === 'series-vector') {
-          // add 180 degrees if working with certain datasets so arrow displays
-          // correctly in charts
+          // original direction already accounts for to/from standards for winds/waves/currents
+          origDirection = datapoint[datapointKey]['direction'];
+          // add 180 degrees if working with certain datasets so arrow displays correctly in charts
           direction = directionConvention === 'from' ? datapoint[datapointKey]['direction'] : 
             (datapoint[datapointKey]['direction'] + 180) % 360;
 
-          seriesData['data'].push({x: dateTime, y: value, direction, timeOrigin});
+          seriesData['data'].push({x: dateTime, y: value, direction: origDirection, timeOrigin});
           vectorData['data'].push([dateTime, value, arrowLen, direction])
 
         } else if (activeLayers[indx]['chartType'] === 'vector') {
@@ -101,7 +102,6 @@ export const parseTimeseriesData = (app) => {
       let waveDirectionDateTimes = {};
       // create an object with forecast times as keys and direction as values
       outputHighChartsArray[waveDirIndx].series[0].data.forEach(el => {
-        // waveDirectionDateTimes[el[0].format()] = el[3];
         waveDirectionDateTimes[el[0]] = el[3];
       })
 

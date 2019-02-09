@@ -401,12 +401,22 @@ class App extends Component {
    */
   addLeafletLayer(layerObj) {
     let addFuncType = layerObj['addDataFunc'], mapLayers = Object.assign({},this.state.mapLayers),
-    mapProps, layerEndpointUrl;
+      mapProps, layerEndpointUrl;
+
+    // TODO: assign abort signal to metoc layers
+    if (addFuncType === 'getModelField') {
+      const controller = new AbortController();
+      mapLayers[layerObj['id']]['abortController'] = controller;
+    }
+
+
     // set loading state as soon as possible for smooth workflow
     mapLayers[layerObj['id']]['isLoading'] = true;
     this.setState({mapLayers}, () => {
       switch(addFuncType) {
         case 'getModelField':
+          // TODO: pass abort controller signal to getModelField
+          let abortSignal = this.state.mapLayers[layerObj['id']]['abortController']['signal'];
           getModelField(layerObj['dataset'], layerObj['subResource'], layerObj['level'], this.state.mapTime).then(
             res => {
               // error handling if response returns an error
