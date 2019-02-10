@@ -415,9 +415,10 @@ class App extends Component {
     this.setState({mapLayers}, () => {
       switch(addFuncType) {
         case 'getModelField':
-          // TODO: pass abort controller signal to getModelField
+          // pass abort controller signal to getModelField
           let abortSignal = this.state.mapLayers[layerObj['id']]['abortController']['signal'];
-          getModelField(layerObj['dataset'], layerObj['subResource'], layerObj['level'], this.state.mapTime).then(
+          getModelField(layerObj['dataset'], layerObj['subResource'], layerObj['level'], 
+            this.state.mapTime, abortSignal).then(
             res => {
               // error handling if response returns an error
               if (res['error']) {
@@ -558,7 +559,7 @@ class App extends Component {
   async removeLeafletLayer(layerID) {
     let mapLayers = Object.assign({},this.state.mapLayers)
 
-    // TODO abort image type layers as a start
+    // abort the request to keep workflow smooth and data usage at a minimum
     abortLayerRequest(layerID, this, L);
 
 

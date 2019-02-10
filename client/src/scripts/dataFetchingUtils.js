@@ -32,6 +32,15 @@ export const abortLayerRequest = (layerID, app, L) => {
       console.log('tile layer abort already complete!');
     }
   }
+
+  if (mapLayers[layerID]['addDataFunc'] === 'getModelField') { 
+    try {
+      let abortController = mapLayers[layerID]['abortController'];
+      abortController.abort();
+    } catch (err) {
+      console.log('metoc layer abort already complete!');
+    }
+  }
 }
 
 export const getPointData = (dataset, subResource, level, time, coordinates) => {
@@ -51,19 +60,18 @@ export const getTimeSeriesData = (dataset, subResource, level, startTime, endTim
   return getData(endpoint);
 }
 
-export const getModelField = (dataset, subResource, level, time) => {
+export const getModelField = (dataset, subResource, level, time, abortSignal=null) => {
   let formattedTime = `${formatDateTime(time, 'YYYY-MM-DDTHH:mm', '')}Z`;
   let levelStr = isNaN(level) ? 'level=' : `level=${level}`;
   let endpoint = `/data/individual-field?dataset=${dataset}&sub_resource=${subResource}&${levelStr}&time=${formattedTime}`;
-  return getData(endpoint);
+  return getData(endpoint, 'json', abortSignal);
 }
 
 // https://developers.google.com/web/fundamentals/primers/async-functions
 // use this to simplify other request... pass in enpoint as an argument
-export const getData = async (endpoint, respType='json') => {
-  // let endpoint = '/data/individual-field?level=0&time=2018-12-15T02:00Z&sub_resource=ocean_current_speed&dataset=HYCOM_DATA'
+export const getData = async (endpoint, respType='json', signal=null) => {
   try {
-    const response = await fetch(endpoint); // sends request
+    const response = await fetch(endpoint, { signal }); // sends request
     if (response.ok) {
       const output = respType === 'json' ? await response.json() : await response.text();
       // code to execute with jsonResponse
@@ -71,11 +79,11 @@ export const getData = async (endpoint, respType='json') => {
     }
     throw new Error('Request Failed!');
   } catch (error) {
-    // if (error.name === 'AbortError') {
-    //   console.log('Fetch aborted');
-    // } else {
-    //   console.error('Error occurred!', error);
-    // }
+      if (error.name === 'AbortError') {
+        console.log('Fetch aborted');
+      } else {
+        console.error('Error occurred!', error);
+      }
     return {error};
   }
 }
