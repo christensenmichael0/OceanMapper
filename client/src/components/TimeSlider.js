@@ -10,10 +10,19 @@ import { Ticks } from "react-compound-slider";
 import Tick from './Tick';
 import { formatDateTime } from '../scripts/formatDateTime';
 
+import Icon from '@material-ui/core/Icon';
+import IconButton from '@material-ui/core/IconButton';
+import RestoreIcon from '@material-ui/icons/Restore';
+import AddCircleOutlineIcon from '@material-ui/icons/AddCircleOutline';
+import RemoveCircleOutlineIcon from '@material-ui/icons/RemoveCircleOutline';
+
 const scale = new _LinearScale();
 const drawerWidth = externalStyles.drawerWidth;
 const drawerWidthNarrow = externalStyles.drawerWidthNarrow; // for small viewports (< 600px)
 const timeSliderMargin = externalStyles.timeSliderMargin;
+
+// TODO: move slider percent width to external style sheet and use direct media
+// queries to get sizing correct
 
 const styles = theme => ({
   sliderDiv: {
@@ -46,8 +55,14 @@ const styles = theme => ({
     }, 
   },
   sliderRoot: {
-    width: '90%',
-    margin: 'auto'
+    width: '78%', // working on this
+    margin: 'auto',
+    [`${theme.breakpoints.down('sm')}`]: { 
+      width: '85%',
+    },
+    [`${theme.breakpoints.down('xs')}`]: { 
+      width: '75%',
+    },
   },
   slider: {
     padding: '22px 0',
@@ -71,18 +86,35 @@ const styles = theme => ({
     height: 30,
     marginTop: '-15px',
     position: 'relative',
-    width: '90%',
-    margin: 'auto'
+    width: '78%', // working on this
+    margin: 'auto',
+    [`${theme.breakpoints.down('sm')}`]: { 
+      width: '85%',
+    },
+    [`${theme.breakpoints.down('xs')}`]: { 
+      width: '75%',
+    },
   },
   sliderHide: {
     [`${theme.breakpoints.down('xs')}`]: { 
       display: 'none', 
     }
+  },
+  resetButton: {
+    textDecoration: 'none'
+  },  
+  timeAdjustBututon: {
+    position: 'absolute',
+    top: '50%',
+    transform: 'translateY(-50%)'
   }
 });
 
+// TODO in addition to theme.breakpoints.down('xs') add further subdivision with direct
+// media queries like below
+// @media (max-width:599.95px)
 function TimeSlider(props) {
-  
+
   const handleChange = (event, value) => {
     props.handleTimeChange(value);
   };
@@ -107,10 +139,22 @@ function TimeSlider(props) {
     <div className={classNames(classes.sliderDiv, {
       [classes.sliderDivShift]: open, [classes.sliderHide]: open
       })}>
-        <Typography style={{textAlign: 'center'}} id="label">{formatDateTime(mapTime,'YYYY-MM-DD HH:mm',' UTC')}</Typography>
+        <IconButton className={classes.timeAdjustBututon} aria-label="back" color="secondary" title='-1 hr'>
+          <RemoveCircleOutlineIcon />
+        </IconButton>
+        <IconButton className={classes.timeAdjustBututon} style={{right: 0}} aria-label="back" color="secondary" title='+1 hr'>
+          <AddCircleOutlineIcon />
+        </IconButton>
+        <Typography 
+          style={{textAlign: 'center'}} 
+          id="label">
+            {formatDateTime(mapTime,'YYYY-MM-DD HH:mm',' UTC')}
+            <a href='#' style={{textDecoration: 'none'}}> (reset) </a>
+        </Typography>
         <Slider
           classes={{
-            container: classes.slider, thumb: classes.sliderThumb,
+            container: classes.slider, 
+            thumb: classes.sliderThumb,
             root: classes.sliderRoot,
             trackBefore:  classes.sliderTrackBefore,
             trackAfter: classes.sliderTrackAfter 
