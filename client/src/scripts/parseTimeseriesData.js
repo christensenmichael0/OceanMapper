@@ -2,7 +2,7 @@ import moment from 'moment';
 import { getTimeSeriesData } from './dataFetchingUtils';
 
 
-export const parseTimeseriesData = (app) => {
+export const parseTimeseriesData = (app, abortSignal) => {
   let mapLayers = app.state.mapLayers, orderedMapLayers = app.state.orderedMapLayers,
   activeLocation = app.state.activeLocation, timeseriesData, timeseriesFetchArray = [],
   activeLayers = [], arrowLen = 150;
@@ -21,7 +21,7 @@ export const parseTimeseriesData = (app) => {
   activeLayers.forEach(activeLayer => {
     timeseriesData = getTimeSeriesData(activeLayer['dataset'],activeLayer['subResource'],
       activeLayer['level'],app.state.startTime, app.state.endTime, 
-      [activeLocation['lng'], activeLocation['lat']]);
+      [activeLocation['lng'], activeLocation['lat']], abortSignal);
     timeseriesFetchArray.push(timeseriesData);
   })
 

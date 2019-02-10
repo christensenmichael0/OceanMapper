@@ -47,9 +47,7 @@ class ChartModal extends React.Component {
   };
 
   render() {
-    const { classes, theme } = this.props;
-    const { fullScreen } = this.props;
-    // this.props.chartLoading
+    const { classes, fullScreen } = this.props;
     return (
       <React.Fragment>
         <Dialog
@@ -75,7 +73,7 @@ class ChartModal extends React.Component {
               />}
           </DialogContent>
           <DialogActions>
-            <Button onClick={this.handleClose} color={theme.palette.secondary.light}>
+            <Button onClick={this.handleClose} style={{backgroundColor: 'lightgray'}}>
               Close
             </Button>
           </DialogActions>

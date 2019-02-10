@@ -1,7 +1,5 @@
 import { formatDateTime } from './formatDateTime';
-
-const imageTypeLayers = ['getLeaseAreas', 'getLeaseBlocks', 'getTropicalActivity'];
-const tileTypeLayers = ['getModelField', 'getGebcoBathy'];
+import { imageLayers, tileLayers, dataLayers } from './layers';
 
 /**
  * Function used to cancel a loading layer (in pending state)
@@ -16,16 +14,16 @@ export const abortLayerRequest = (layerID, app, L) => {
   let leafletLayer = app.leafletLayerGroup.getLayer(lid);
   
   // image layer abort
-  if (imageTypeLayers.indexOf(mapLayers[layerID]['addDataFunc']) > -1) {
+  if (imageLayers.indexOf(mapLayers[layerID]['addDataFunc']) > -1) {
     try {
       leafletLayer._image.src = L.Util.emptyImageUrl;
     } catch (err) {
-      console.log('image abort already complete!');
+      console.log('image layer abort already complete!');
     }
   }
 
   // tile layer abort
-  if (tileTypeLayers.indexOf(mapLayers[layerID]['addDataFunc']) > -1) {
+  if (tileLayers.indexOf(mapLayers[layerID]['addDataFunc']) > -1) {
     try {
       leafletLayer._abortLoading();
     } catch (err) {
@@ -33,12 +31,12 @@ export const abortLayerRequest = (layerID, app, L) => {
     }
   }
 
-  if (mapLayers[layerID]['addDataFunc'] === 'getModelField') { 
+  if (dataLayers.indexOf(mapLayers[layerID]['addDataFunc']) > -1) { 
     try {
       let abortController = mapLayers[layerID]['abortController'];
       abortController.abort();
     } catch (err) {
-      console.log('metoc layer abort already complete!');
+      console.log('data layer abort already complete!');
     }
   }
 }
@@ -51,13 +49,13 @@ export const getPointData = (dataset, subResource, level, time, coordinates) => 
   return getData(endpoint);
 }
 
-export const getTimeSeriesData = (dataset, subResource, level, startTime, endTime, coordinates) => {
+export const getTimeSeriesData = (dataset, subResource, level, startTime, endTime, coordinates, abortSignal=null) => {
   let formattedStartTime = `${formatDateTime(startTime, 'YYYY-MM-DDTHH:mm', '')}Z`;
   let formattedEndTime = `${formatDateTime(endTime, 'YYYY-MM-DDTHH:mm', '')}Z`;
   let formattedCoords = coordinates.toString();
   let levelStr = isNaN(level) ? 'level=' : `level=${level}`;
   let endpoint = `/data/timeseries-data?${levelStr}&dataset=${dataset}&sub_resource=${subResource}&start_time=${formattedStartTime}&end_time=${formattedEndTime}&coordinates=${formattedCoords}`
-  return getData(endpoint);
+  return getData(endpoint, 'json', abortSignal);
 }
 
 export const getModelField = (dataset, subResource, level, time, abortSignal=null) => {

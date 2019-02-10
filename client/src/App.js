@@ -6,7 +6,7 @@ import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import PersistentDrawerLeft from './components/PersistentDrawerLeft';
 import ChartModal from './components/ChartModal';
-import layers from './scripts/layers';
+import { layers, dataLayers } from './scripts/layers';
 import moment from 'moment';
 import { getData, getModelField, abortLayerRequest } from './scripts/dataFetchingUtils';
 import { populateImageUrlEndpoint } from './scripts/formattingUtils';
@@ -96,10 +96,18 @@ class App extends Component {
   }
 
   handlePopupChartClick(chartType) {
-    this.setState({chartModalOpen: true, chartLoading: true}, () => {
+    // add single abortController for all chart data fetch requests
+    const abortController = new AbortController();
+    const abortSignal = abortController.signal;
+
+    this.setState({
+      chartModalOpen: true, 
+      chartLoading: true, 
+      chartAbortController: abortController
+    }, () => {
       // trigger fetch and parsing of data 
-      parseTimeseriesData(this);
-    })     
+      parseTimeseriesData(this, abortSignal);
+    });
   }
 
   /**
@@ -401,14 +409,13 @@ class App extends Component {
    */
   addLeafletLayer(layerObj) {
     let addFuncType = layerObj['addDataFunc'], mapLayers = Object.assign({},this.state.mapLayers),
-      mapProps, layerEndpointUrl;
+      abortSignal, mapProps, layerEndpointUrl;
 
-    // TODO: assign abort signal to metoc layers
-    if (addFuncType === 'getModelField') {
+    // assign abort signal to layers which fetch external data which is returned in json format
+    if (dataLayers.indexOf(mapLayers[layerObj['id']]['addDataFunc']) > -1) {
       const controller = new AbortController();
       mapLayers[layerObj['id']]['abortController'] = controller;
     }
-
 
     // set loading state as soon as possible for smooth workflow
     mapLayers[layerObj['id']]['isLoading'] = true;
@@ -416,7 +423,7 @@ class App extends Component {
       switch(addFuncType) {
         case 'getModelField':
           // pass abort controller signal to getModelField
-          let abortSignal = this.state.mapLayers[layerObj['id']]['abortController']['signal'];
+          abortSignal = this.state.mapLayers[layerObj['id']]['abortController']['signal'];
           getModelField(layerObj['dataset'], layerObj['subResource'], layerObj['level'], 
             this.state.mapTime, abortSignal).then(
             res => {
@@ -507,7 +514,9 @@ class App extends Component {
           })
           break;
         case 'getActiveDrilling':
-          getData(layerObj['endPoint']).then(drillingData => {
+          // pass abort controller signal to getModelField
+          abortSignal = this.state.mapLayers[layerObj['id']]['abortController']['signal'];
+          getData(layerObj['endPoint'],'json',abortSignal).then(drillingData => {
             // if unable to get drilling data then update state and halt execution
             if (drillingData['error']) {
               this.layerLoadError(layerObj);
@@ -561,7 +570,6 @@ class App extends Component {
 
     // abort the request to keep workflow smooth and data usage at a minimum
     abortLayerRequest(layerID, this, L);
-
 
     try {
       if (mapLayers[layerID]['overlayType'] === 'all') {
@@ -838,6 +846,8 @@ class App extends Component {
    * Fired when chart modal is closed. State is updated.
    */
   handleCloseChartModal() {
+    // abort any pending data fetching for chart
+    this.state.chartAbortController.abort();
     this.setState({chartModalOpen: false});
   }
 

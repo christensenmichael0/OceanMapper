@@ -185,7 +185,7 @@ const MetOceanTimeseries = (props) => {
 }
 
 MetOceanTimeseries.propTypes = {
-  chartData: PropTypes.object.isRequired,
+  chartData: PropTypes.arrayOf(PropTypes.object).isRequired
 };
 
 

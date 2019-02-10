@@ -11,8 +11,6 @@ class Ticks extends Component {
   render() {
     const { children, values, scale, count, emitMouse, emitTouch } = this.props
     const ls = _LinearScale;
-    //const blah = tickFinder(start,stop,count);
-    debugger
     const ticks = (values ? values : scale.getTicks(count)).map(value => {
       return {
         id: `$$-${value}`,

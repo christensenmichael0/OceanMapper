@@ -95,7 +95,7 @@ function TableOfContents(props) {
         } else {
           if (layer['visibleTOC']) {
             return (
-              <React.Fragment>
+              <React.Fragment key={indx}>
                 <FormGroup key={indx} row={false}>
                   <FormControlLabel
                     control={

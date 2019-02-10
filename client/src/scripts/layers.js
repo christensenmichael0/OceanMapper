@@ -1,4 +1,8 @@
-let TOC = [
+export const imageLayers = ['getLeaseAreas', 'getLeaseBlocks', 'getTropicalActivity'];
+export const tileLayers = ['getModelField', 'getGebcoBathy'];
+export const dataLayers = ['getModelField','getActiveDrilling'];
+
+export const layers = [
   {
     Category: 'MetOcean',
     visibleTOC: true,
@@ -246,4 +250,4 @@ let TOC = [
   },
 ];
 
-export default TOC;
+// export default TOC;
