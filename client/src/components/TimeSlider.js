@@ -134,15 +134,15 @@ function TimeSlider(props) {
   scale.domain = [startTime, endTime]
 
   let tickVals = constructTickValueArray(startTime, endTime, 3600000*24*3);
-
+  // color="secondary"
   return (     
     <div className={classNames(classes.sliderDiv, {
       [classes.sliderDivShift]: open, [classes.sliderHide]: open
       })}>
-        <IconButton className={classes.timeAdjustBututon} aria-label="back" color="secondary" title='-1 hr'>
+        <IconButton className={classes.timeAdjustBututon} aria-label="back" title='-1 hr'>
           <RemoveCircleOutlineIcon />
         </IconButton>
-        <IconButton className={classes.timeAdjustBututon} style={{right: 0}} aria-label="back" color="secondary" title='+1 hr'>
+        <IconButton className={classes.timeAdjustBututon} style={{right: 0}} aria-label="back" title='+1 hr'>
           <AddCircleOutlineIcon />
         </IconButton>
         <Typography 
