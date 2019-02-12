@@ -4,15 +4,14 @@ import classNames from 'classnames';
 import { withStyles } from '@material-ui/core/styles';
 import Slider from '@material-ui/lab/Slider';
 import Typography from '@material-ui/core/Typography';
+import moment from 'moment';
 import externalStyles from '../scripts/styleVariables';
 import _LinearScale from 'react-compound-slider/Slider/LinearScale';
 import { Ticks } from "react-compound-slider";
 import Tick from './Tick';
 import { formatDateTime } from '../scripts/formatDateTime';
 
-import Icon from '@material-ui/core/Icon';
 import IconButton from '@material-ui/core/IconButton';
-import RestoreIcon from '@material-ui/icons/Restore';
 import AddCircleOutlineIcon from '@material-ui/icons/AddCircleOutline';
 import RemoveCircleOutlineIcon from '@material-ui/icons/RemoveCircleOutline';
 
@@ -54,16 +53,6 @@ const styles = theme => ({
       width: `calc(100% - ${drawerWidthNarrow}px - ${timeSliderMargin*2}px)`,
     }, 
   },
-  sliderRoot: {
-    width: '78%', // working on this
-    margin: 'auto',
-    [`${theme.breakpoints.down('sm')}`]: { 
-      width: '85%',
-    },
-    [`${theme.breakpoints.down('xs')}`]: { 
-      width: '75%',
-    },
-  },
   slider: {
     padding: '22px 0',
     backgroundColor: theme.palette.primary.main
@@ -85,15 +74,7 @@ const styles = theme => ({
     zIndex: 500,
     height: 30,
     marginTop: '-15px',
-    position: 'relative',
-    width: '78%', // working on this
-    margin: 'auto',
-    [`${theme.breakpoints.down('sm')}`]: { 
-      width: '85%',
-    },
-    [`${theme.breakpoints.down('xs')}`]: { 
-      width: '75%',
-    },
+    position: 'relative'
   },
   sliderHide: {
     [`${theme.breakpoints.down('xs')}`]: { 
@@ -101,23 +82,40 @@ const styles = theme => ({
     }
   },
   resetButton: {
-    textDecoration: 'none'
-  },  
-  timeAdjustBututon: {
     position: 'absolute',
-    top: '50%',
-    transform: 'translateY(-50%)'
+    color: 'gray',
+    right: 0,
+    padding: '3px 12px',
+    '&:hover': {
+      cursor: 'pointer',
+      fontWeight: 'bold'
+    }
+  },  
+  timeAdjustButton: {
+    alignSelf: 'flex-start'
   }
 });
 
-// TODO in addition to theme.breakpoints.down('xs') add further subdivision with direct
-// media queries like below
-// @media (max-width:599.95px)
 function TimeSlider(props) {
 
   const handleChange = (event, value) => {
     props.handleTimeChange(value);
   };
+
+  const handleReset = () => {
+    // present UTC time
+    props.handleTimeChange(moment.utc().startOf('hour').valueOf());
+  }
+
+  const incrementTime = () => {
+    // add 1 hour
+    props.handleTimeChange(moment(props.mapTime).add(1,'h').startOf('hour').valueOf());
+  }
+
+  const decrementTime = () => {
+    // add 1 hour
+    props.handleTimeChange(moment(props.mapTime).subtract(1,'h').startOf('hour').valueOf());
+  }
   
   const constructTickValueArray = (startTime, endTime, timeInterval) => {
     let currentTime = startTime, tickValueArray = [startTime];
@@ -134,46 +132,53 @@ function TimeSlider(props) {
   scale.domain = [startTime, endTime]
 
   let tickVals = constructTickValueArray(startTime, endTime, 3600000*24*3);
-  // color="secondary"
   return (     
     <div className={classNames(classes.sliderDiv, {
       [classes.sliderDivShift]: open, [classes.sliderHide]: open
       })}>
-        <IconButton className={classes.timeAdjustBututon} aria-label="back" title='-1 hr'>
-          <RemoveCircleOutlineIcon />
-        </IconButton>
-        <IconButton className={classes.timeAdjustBututon} style={{right: 0}} aria-label="back" title='+1 hr'>
-          <AddCircleOutlineIcon />
-        </IconButton>
+        <span 
+          onClick={handleReset} 
+          className={classes.resetButton}> 
+          reset 
+        </span>
         <Typography 
           style={{textAlign: 'center'}} 
           id="label">
             {formatDateTime(mapTime,'YYYY-MM-DD HH:mm',' UTC')}
-            <a href='#' style={{textDecoration: 'none'}}> (reset) </a>
         </Typography>
-        <Slider
-          classes={{
-            container: classes.slider, 
-            thumb: classes.sliderThumb,
-            root: classes.sliderRoot,
-            trackBefore:  classes.sliderTrackBefore,
-            trackAfter: classes.sliderTrackAfter 
-          }}
-          value={mapTime}
-          min={startTime}
-          max={endTime}
-          step={3600000}
-          onChange={handleChange}
-        />
-        <Ticks scale={scale} count={4} values={tickVals}>
-          {({ ticks }) => (
-            <div className={classes.sliderTicks}>
-            {ticks.map((tick, index) => (
-              <Tick key={index} tick={tick} count={ticks.length} />
-            ))}
-            </div>
-          )}
-        </Ticks>
+        <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start'}}>
+          <IconButton aria-label="back" title='-1 hr'>
+            <RemoveCircleOutlineIcon onClick={decrementTime}/>
+          </IconButton>
+          <div style={{flexGrow: 1}}>
+            <Slider
+              classes={{
+                container: classes.slider, 
+                thumb: classes.sliderThumb,
+                trackBefore:  classes.sliderTrackBefore,
+                trackAfter: classes.sliderTrackAfter 
+              }}
+              value={mapTime}
+              min={startTime}
+              max={endTime}
+              step={3600000}
+              onChange={handleChange}
+            />
+
+            <Ticks scale={scale} count={4} values={tickVals}>
+              {({ ticks }) => (
+                <div className={classes.sliderTicks}>
+                {ticks.map((tick, index) => (
+                  <Tick key={index} tick={tick} count={ticks.length} />
+                ))}
+                </div>
+              )}
+            </Ticks>
+          </div>
+          <IconButton aria-label="back" title='+1 hr'>
+            <AddCircleOutlineIcon onClick={incrementTime}/>
+          </IconButton>
+      </div>
     </div> 
   );
 }
