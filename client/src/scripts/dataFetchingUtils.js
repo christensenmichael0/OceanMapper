@@ -58,6 +58,13 @@ export const getTimeSeriesData = (dataset, subResource, level, startTime, endTim
   return getData(endpoint, 'json', abortSignal);
 }
 
+export const getProfileData = (dataset, subResource, time, coordinates, abortSignal=null) => {
+  let formattedTime = `${formatDateTime(time, 'YYYY-MM-DDTHH:mm', '')}Z`;
+  let formattedCoords = coordinates.toString();
+  let endpoint = `/data/profile-data?dataset=${dataset}&sub_resource=${subResource}&time=${formattedTime}&coordinates=${formattedCoords}`
+  return getData(endpoint, 'json', abortSignal);
+}
+
 export const getModelField = (dataset, subResource, level, time, abortSignal=null) => {
   let formattedTime = `${formatDateTime(time, 'YYYY-MM-DDTHH:mm', '')}Z`;
   let levelStr = isNaN(level) ? 'level=' : `level=${level}`;

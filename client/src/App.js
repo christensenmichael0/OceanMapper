@@ -14,7 +14,7 @@ import { addCustomLeafletHandlers } from './scripts/addCustomLeafletHandlers';
 import { activeDrillingPopupStaticContent ,
          customLocationPopupStaticContent } from './scripts/buildStaticPopupContent';
 import { buildDynamicPopupContent } from './scripts/buildDynamicPopupContent';
-import { parseTimeseriesData } from './scripts/parseTimeseriesData';
+import { parseData } from './scripts/parseData';
 import priorityMap from './scripts/layerPriority';
 import { mapConfig } from './scripts/mapConfig';
 import _ from 'lodash';
@@ -26,6 +26,8 @@ import 'leaflet-velocity/dist/leaflet-velocity';
 import 'leaflet-velocity/dist/leaflet-velocity.css';
 import '@ansur/leaflet-pulse-icon/dist/L.Icon.Pulse.js';
 import '@ansur/leaflet-pulse-icon/dist/L.Icon.Pulse.css';
+// import { parseTimeseriesData } from './scripts/parseTimeseriesData';
+// import { parseProfileData } from './scripts/parseProfileData';
 
 delete L.Icon.Default.prototype._getIconUrl;
 
@@ -101,12 +103,13 @@ class App extends Component {
     const abortSignal = abortController.signal;
 
     this.setState({
-      chartModalOpen: true, 
+      chartModalOpen: true,
+      chartType, 
       chartLoading: true, 
       chartAbortController: abortController
     }, () => {
-      // trigger fetch and parsing of data 
-      parseTimeseriesData(this, abortSignal);
+      // trigger fetch and parsing of data
+      parseData(this, chartType, abortSignal);
     });
   }
 
@@ -134,11 +137,14 @@ class App extends Component {
     // add click event listener
     map.on('click', this.onMapClick);
 
-    // add move event listener (for lease blocks).. seems to handle zoom change too
+    // add move event listener (for lease blocks)
     map.on('moveend', this.onMapBoundsChange); // moveend, zoomend
 
-    // add click event listener to map (its really on popup but I fire a map event) 
+    // add click event listener to map (fired when clicking on specific popup element) 
     map.on('timeseriesClick', () => {this.handlePopupChartClick('timeseries')});
+
+    // add click event listener to map (ired when clicking on specific popup element) 
+    map.on('profileClick', () => {this.handlePopupChartClick('profile')});
 
     // layer/leaflet layer binding
     this.layerBindings = {};

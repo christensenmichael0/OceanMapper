@@ -8,12 +8,14 @@ const apiGatewayRouter = express.Router();
 const apiGatewayRouteMapping = {
   '/individual-field': process.env.INDIVIDUAL_FIELD_ENDPOINT,
   '/point-data': process.env.POINT_DATA_ENDPOINT,
-  '/timeseries-data': process.env.TIMESERIES_DATA_ENDPOINT
+  '/timeseries-data': process.env.TIMESERIES_DATA_ENDPOINT,
+  '/profile-data': process.env.PROFILE_DATA_ENDPOINT
 } 
 
 // https://stackoverflow.com/questions/39301227/external-api-calls-with-express-node-js-and-require-module
 
-apiGatewayRouter.get(['/individual-field', '/point-data', '/timeseries-data'], function(req, res, next) {
+apiGatewayRouter.get(['/individual-field', '/point-data', '/timeseries-data','/profile-data'], 
+  function(req, res, next) {
   
   let path = req.path;
   let uri = apiGatewayRouteMapping[path];

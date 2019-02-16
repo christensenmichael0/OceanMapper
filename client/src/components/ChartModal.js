@@ -9,6 +9,7 @@ import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
 import LoadingSpinner from './LoadingSpinner';
 import MetOceanTimeseries from './MetOceanTimeseries';
+import MetOceanProfile from './MetOceanProfile';
 import withMobileDialog from '@material-ui/core/withMobileDialog';
 
 const styles = theme => ({
@@ -24,12 +25,6 @@ const styles = theme => ({
 class ChartModal extends React.Component {
   state = {
     open: true,
-    fullWidth: true,
-    maxWidth: 'lg',
-  };
-
-  handleClickOpen = () => {
-    this.setState({ open: true });
   };
 
   handleClose = () => {
@@ -38,22 +33,35 @@ class ChartModal extends React.Component {
     });
   };
 
-  handleMaxWidthChange = event => {
-    this.setState({ maxWidth: event.target.value });
-  };
-
-  handleFullWidthChange = event => {
-    this.setState({ fullWidth: event.target.checked });
-  };
+  buildChartObj = () => {
+    if (this.props.chartType === 'timeseries') {
+      return (
+        <MetOceanTimeseries 
+          chartData={this.props.chartData}
+          activeLocation={this.props.activeLocation}
+          chartLoadingErrors={this.props.chartLoadingErrors}
+        />
+      )
+    } else {
+      return (
+        <MetOceanProfile 
+          chartData={this.props.chartData}
+          activeLocation={this.props.activeLocation}
+          chartLoadingErrors={this.props.chartLoadingErrors}
+        />
+      )
+    }
+  }
 
   render() {
     const { classes, fullScreen } = this.props;
+    let isTimeseries = this.props.chartType === 'timeseries';
     return (
       <React.Fragment>
         <Dialog
           fullScreen={fullScreen}
-          fullWidth={this.state.fullWidth}
-          maxWidth={this.state.maxWidth}
+          fullWidth={isTimeseries ? true : true}
+          maxWidth={isTimeseries ? 'lg' : 'lg'}
           open={this.state.open}
           onClose={this.handleClose}
           aria-labelledby="max-width-dialog-title"
@@ -66,11 +74,8 @@ class ChartModal extends React.Component {
                   Fetching Data
                 </Typography>
               </React.Fragment> :  
-              <MetOceanTimeseries 
-                chartData={this.props.chartData}
-                activeLocation={this.props.activeLocation}
-                chartLoadingErrors={this.props.chartLoadingErrors}
-              />}
+              this.buildChartObj()
+            }
           </DialogContent>
           <DialogActions>
             <Button onClick={this.handleClose} style={{backgroundColor: 'lightgray'}}>
