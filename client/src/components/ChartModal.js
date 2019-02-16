@@ -60,8 +60,8 @@ class ChartModal extends React.Component {
       <React.Fragment>
         <Dialog
           fullScreen={fullScreen}
-          fullWidth={isTimeseries ? true : true}
-          maxWidth={isTimeseries ? 'lg' : 'lg'}
+          fullWidth={true}
+          maxWidth={'lg'}
           open={this.state.open}
           onClose={this.handleClose}
           aria-labelledby="max-width-dialog-title"

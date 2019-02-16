@@ -80,7 +80,6 @@ export const parseData = (app, chartType, abortSignal) => {
         if (chartType === 'timeseries') {
           dateTime = moment(datapointKey, 'YYYY-MM-DDTHH:mmZ').utc().valueOf();
         } else {
-          // depth = parseInt(datapointKey);
           depth = layerObj['dataType'] === 'ocean' ? -1 * parseInt(datapointKey) : 
             parseInt(datapointKey);
           // TODO: need to update backend to return datetime
