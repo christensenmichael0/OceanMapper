@@ -40,7 +40,7 @@ def lambda_handler(event, context):
     Output: response object
     -----------------------------------------------------------------------
     Author: Michael Christensen
-    Date Modified: 10/24/2018
+    Date Modified: 02/17/2019
     """
     # default headers for request
     headers = {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'}
@@ -108,7 +108,7 @@ def lambda_handler(event, context):
 
     # loop through the available times using multiprocessing
     if available_time:
-
+        available_time_str = datetime.datetime.strftime(available_time,'%Y-%m-%dT%H:%MZ')
         # create a list to keep all processes
         processes = []
 
@@ -149,6 +149,7 @@ def lambda_handler(event, context):
         response_body = {
             'model': dataset,
             'sub_resource': sub_resource,
+            'valid_time': available_time_str,
             'data': value_array,
             'units': dataset_units
         }
@@ -158,6 +159,7 @@ def lambda_handler(event, context):
         response_body = {
             'model': dataset,
             'sub_resource': sub_resource,
+            'valid_time': None,
             'data': None,
             'units': None,
         }
@@ -168,9 +170,9 @@ if __name__ == '__main__':
 
     event = {
         "queryStringParameters": {
-            "dataset": "HYCOM_DATA",
+            "dataset": "RTOFS_DATA",
             "sub_resource": "ocean_current_speed",
-            "time": "2018-10-25T01:00Z",
+            "time": "2019-02-17T01:00Z",
             "coordinates": "-75.19,37.57"
         }
     }

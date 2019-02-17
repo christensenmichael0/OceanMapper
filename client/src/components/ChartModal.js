@@ -55,7 +55,7 @@ class ChartModal extends React.Component {
 
   render() {
     const { classes, fullScreen } = this.props;
-    let isTimeseries = this.props.chartType === 'timeseries';
+    // let isTimeseries = this.props.chartType === 'timeseries';
     return (
       <React.Fragment>
         <Dialog

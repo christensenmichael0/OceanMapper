@@ -2,6 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import ReactHighcharts from 'react-highcharts';
 import moment from 'moment';
+import { constructTitle, constructSubTitle } from '../scripts/chartUtils';
 
 const HighchartsVector = require('highcharts/modules/vector.js')
 HighchartsVector(ReactHighcharts.Highcharts)
@@ -67,11 +68,11 @@ const config = {
     responsive: {
       rules: [{
         condition: {
-          maxWidth: 500
+          maxWidth: 650 //500
         },
         chartOptions: {
           chart: {
-            height: 265
+            height: 300 // 265
           },
           navigator: {
               enabled: false
@@ -82,36 +83,6 @@ const config = {
   }
 
 const MetOceanTimeseries = (props) => {
-  // const { series, title } = props;
-
-  // TODO: build all parts of config and then inject them and return config
-
-  const constructTitle = (chartData) => {
-    let datasetTitleArr = [], datasetName, datasetLevel;
-    chartData.forEach(dataSource => {
-
-      datasetName = dataSource['niceName'];
-      datasetLevel = dataSource['level'] === 'n/a' ? '' : 
-        ` (${dataSource['level']}${dataSource['levelUnit']})`;
-      
-      // append title fragment to array
-      datasetTitleArr.push(`${datasetName}${datasetLevel}`)
-    })
-    return datasetTitleArr.join(', ');
-  }
-
-  const constructSubTitle = () => {
-    let subTitle = `<span>Coordinates: (${props['activeLocation']['lat'].toFixed(4)}, 
-      ${props['activeLocation']['lng'].toFixed(4)})</span>`;
-
-    // loop through errors and append them as new lines to subtitle
-    if (props.chartLoadingErrors.length) {
-      let failedFetches = props.chartLoadingErrors.join(', ');
-      let errorText = `<br /><span>*Failed to load: ${failedFetches}</span>`;
-      subTitle += errorText;
-    }
-    return subTitle;
-  }
 
   const constructYAxis = (chartData) => {
     let yAxisArr = [], yAxisItem, vectorSeries = false;
@@ -139,19 +110,17 @@ const MetOceanTimeseries = (props) => {
     return yAxisArr;
   }
 
+  const buildConfig = () => {
 
-  const buildConfig = chartData => {
-
+    const { chartData, activeLocation, chartLoadingErrors } = props;
     let title = constructTitle(chartData);
-    let subTitle = constructSubTitle();
+    let subTitle = constructSubTitle(activeLocation, chartLoadingErrors);
     let yAxis = constructYAxis(chartData);
 
     // lets build the series array first
     let seriesArr = [];
     chartData.forEach((dataSource, indx) => {
       dataSource['series'].forEach(series => {
-        // TODO: format the times how we want.. fix formatting in tooltip
-        // wave direction isnt showing up for some reason
         let seriesObj = { 
           name: dataSource['niceName'],
           color: ReactHighcharts.Highcharts.getOptions().colors[indx],
@@ -178,7 +147,7 @@ const MetOceanTimeseries = (props) => {
   return (
     <div>
       <ReactHighcharts 
-        config={buildConfig(props.chartData)}>
+        config={buildConfig()}>
       </ReactHighcharts>
     </div>
   )
@@ -188,7 +157,4 @@ MetOceanTimeseries.propTypes = {
   chartData: PropTypes.arrayOf(PropTypes.object).isRequired
 };
 
-
 export default MetOceanTimeseries;
-
-

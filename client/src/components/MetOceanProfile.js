@@ -1,6 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import ReactHighcharts from 'react-highcharts';
+import { constructTitle, constructSubTitle } from '../scripts/chartUtils';
 
 const HighchartsVector = require('highcharts/modules/vector.js')
 HighchartsVector(ReactHighcharts.Highcharts)
@@ -21,7 +22,7 @@ const config = {
     },
     xAxis: {
       title: {
-        text: 'Depth'
+        text: 'Level'
       },
       gridLineWidth: 1,
       reversed: false,
@@ -30,8 +31,7 @@ const config = {
     yAxis: {
       title: {
         text: 'YAxis Title'
-      },
-      floor: 0
+      }
     },
     plotOptions: {
       series: {
@@ -68,7 +68,7 @@ const config = {
     responsive: {
       rules: [{
         condition: {
-          maxWidth: 500
+          maxWidth: 650
         },
         chartOptions: {
           chart: {
@@ -83,36 +83,6 @@ const config = {
   }
 
 const MetOceanProfile = (props) => {
-  // const { series, title } = props;
-
-  // TODO: move this to a seperate file and import in both charting files
-  const constructTitle = (chartData) => {
-    let datasetTitleArr = [], datasetName, datasetLevel;
-    chartData.forEach(dataSource => {
-
-      datasetName = dataSource['niceName'];
-      datasetLevel = dataSource['level'] === 'n/a' ? '' : 
-        ` (${dataSource['level']}${dataSource['levelUnit']})`;
-      
-      // append title fragment to array
-      datasetTitleArr.push(`${datasetName}${datasetLevel}`)
-    })
-    return datasetTitleArr.join(', ');
-  }
-
-  // TODO: include date valid in subtitle
-  const constructSubTitle = () => {
-    let subTitle = `<span>Coordinates: (${props['activeLocation']['lat'].toFixed(4)}, 
-      ${props['activeLocation']['lng'].toFixed(4)})</span>`;
-
-    // loop through errors and append them as new lines to subtitle
-    if (props.chartLoadingErrors.length) {
-      let failedFetches = props.chartLoadingErrors.join(', ');
-      let errorText = `<br /><span>*Failed to load: ${failedFetches}</span>`;
-      subTitle += errorText;
-    }
-    return subTitle;
-  }
 
   const constructYAxis = (chartData) => {
     let yAxisArr = [], yAxisItem, vectorSeries = false;
@@ -132,7 +102,8 @@ const MetOceanProfile = (props) => {
         title: {
           text: dataSource['shortName'],
         },
-        opposite: false
+        opposite: false,
+        min: 0
       }
 
       yAxisArr.push(yAxisItem);
@@ -140,11 +111,11 @@ const MetOceanProfile = (props) => {
     return yAxisArr;
   }
 
+  const buildConfig = () => {
 
-  const buildConfig = chartData => {
-
+    const { chartData, activeLocation, chartLoadingErrors } = props;
     let title = constructTitle(chartData);
-    let subTitle = constructSubTitle();
+    let subTitle = constructSubTitle(activeLocation, chartLoadingErrors, chartData);
     let yAxis = constructYAxis(chartData);
 
     // lets build the series array first
@@ -179,7 +150,7 @@ const MetOceanProfile = (props) => {
   return (
     <div>
       <ReactHighcharts 
-        config={buildConfig(props.chartData)}>
+        config={buildConfig()}>
       </ReactHighcharts>
     </div>
   )
@@ -189,7 +160,4 @@ MetOceanProfile.propTypes = {
   chartData: PropTypes.arrayOf(PropTypes.object).isRequired
 };
 
-
 export default MetOceanProfile;
-
-

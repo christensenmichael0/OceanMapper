@@ -69,6 +69,7 @@ export const parseData = (app, chartType, abortSignal) => {
         level: activeLayers[indx]['level'] || 'n/a',
         levelUnit: activeLayers[indx]['levelUnit'],
         dataType: activeLayers[indx]['overlayType'],
+        validTime: resp['valid_time'] || null,
         units: resp['units'],
         series: []
       };

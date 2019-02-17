@@ -97,6 +97,10 @@ class App extends Component {
     this.layerLoadError = this.layerLoadError.bind(this);
   }
 
+  /**
+   * Handles click on timeseries or profile plot text in map popup
+   * @param {str} chartType (one of 'timeseries', 'profile')
+   */
   handlePopupChartClick(chartType) {
     // add single abortController for all chart data fetch requests
     const abortController = new AbortController();
