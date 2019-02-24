@@ -1,4 +1,5 @@
 import boto3
+import base64
 import pickle
 import datetime
 import numpy as np
@@ -12,7 +13,6 @@ import cmocean
 import copy
 import io
 import os
-import PIL
 
 s3 = boto3.client('s3')
 
@@ -280,6 +280,27 @@ def make_tile_figure(height=256, width=256, dpi=256):
     figax.set_axis_off()
     
     return fig, figax
+
+def blank_tile(height=256, width=256, dpi=256):
+    """
+    blank_tile(height=256, width=256, dpi=256)
+
+    create and return a transparent image as a bytes-like object
+
+    Ouput: image represented as a string
+    """
+    fig, ax = make_tile_figure(height, width, dpi)
+
+    ax.set_frame_on(False)
+    ax.set_clip_on(False)
+    ax.set_position([0, 0, 1, 1])
+
+    with io.BytesIO() as out_img:
+        fig.savefig(out_img, format='png', dpi=dpi, pad_inches=0.0, transparent=True)
+        out_img.seek(0)
+        encoded_img = base64.b64encode(out_img.read()).decode('utf-8')
+
+    return encoded_img
 
 
 if __name__ == "__main__":

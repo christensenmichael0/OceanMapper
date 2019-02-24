@@ -187,4 +187,12 @@ def lambda_handler(event, context):
     file_v.close()
 
 if __name__ == "__main__":
-	lambda_handler('','')
+	
+    event = {
+        'url': 'https://nomads.ncep.noaa.gov:9090/dods/rtofs/rtofs_global20190224/rtofs_glo_3dz_nowcast_daily_uvel',
+        'forecast_time': '20190224T00:00',
+        'forecast_indx': 2,
+        'level': {'level_depth': 0, 'level_indx': 0}
+    }
+
+    lambda_handler(event,'')

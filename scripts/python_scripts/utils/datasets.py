@@ -10,7 +10,7 @@ datasets = {
                 'data_type': 'json', 
                 'scalar_tiles': True, 
                 'vector_tiles': False,
-                'data_tiles_zoom_level': 3,
+                'data_tiles_zoom_level': [1,2,3],
                 'units': 'm/s'
             }
         }
@@ -24,7 +24,7 @@ datasets = {
                 'data_type': 'json', 
                 'scalar_tiles': True, 
                 'vector_tiles': False,
-                'data_tiles_zoom_level': 3,
+                'data_tiles_zoom_level': [1,2,3],
                 'units': 'm/s'
             }
         }
@@ -38,7 +38,7 @@ datasets = {
                 'data_type': 'json', 
                 'scalar_tiles': True, 
                 'vector_tiles': False,
-                'data_tiles_zoom_level': 2,
+                'data_tiles_zoom_level': [1,2,3],
                 'units': 'm/s'
             }
         }
@@ -52,7 +52,7 @@ datasets = {
                 'data_type': 'pickle', 
                 'scalar_tiles': True, 
                 'vector_tiles': False,
-                'data_tiles_zoom_level': 1,
+                'data_tiles_zoom_level': [1,2,3],
                 'units': 'm'
             },
             'primary_wave_dir': {
@@ -62,7 +62,7 @@ datasets = {
                 'data_type': 'pickle', 
                 'scalar_tiles': False, 
                 'vector_tiles': True,
-                'data_tiles_zoom_level': 1,
+                'data_tiles_zoom_level': [1,2,3],
                 'units': 'deg'
             },
             'primary_wave_period': {
@@ -72,7 +72,7 @@ datasets = {
                 'data_type': 'pickle',
                 'scalar_tiles': True, 
                 'vector_tiles': False,
-                'data_tiles_zoom_level': 1,
+                'data_tiles_zoom_level': [1,2,3],
                 'units': 's'
             }
         }

@@ -16,11 +16,12 @@ def retry(ExceptionToCheck, tries=5, delay=.1):
 
     Retry calling the decorated function a certain number of times with some 
     sleep interval between.
-
+    -----------------------------------------------------------------------
     http://www.saltycrane.com/blog/2009/11/trying-out-retry-decorator-python/
     original from: http://wiki.python.org/moin/PythonDecoratorLibrary#Retry
-
+    -----------------------------------------------------------------------
     Inputs:
+    
     ExceptionToCheck (Exception or tuple): the exception to check. may be a tuple of exceptions to check
     tries (int): number of times to try (not retry) before giving up
     delay (float): delay between retries in seconds

@@ -27,8 +27,9 @@ export const parseData = (app, chartType, abortSignal) => {
   })
 
   // stop execution if no active layers
-  if (!activeLayers.length) { 
-    app.setState({chartLoading: false});
+  if (!activeLayers.length) {
+    // TODO: return something so a modal can be displayed
+    app.setState({chartLoading: false, chartModalOpen: false});
     return
   }
 

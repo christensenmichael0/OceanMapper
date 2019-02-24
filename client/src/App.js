@@ -150,6 +150,14 @@ class App extends Component {
     // add click event listener to map (ired when clicking on specific popup element) 
     map.on('profileClick', () => {this.handlePopupChartClick('profile')});
 
+    // TODO: create a map control to display this info.. do we want dif formats?
+    // a way to specify a custom location
+    map.on('mousemove', function(ev) {
+      // debugger
+     // lat = ev.latlng.lat;
+     // lng = ev.latlng.lng;
+    });
+
     // layer/leaflet layer binding
     this.layerBindings = {};
 
