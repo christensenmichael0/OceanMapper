@@ -19,6 +19,7 @@ const scale = new _LinearScale();
 const drawerWidth = externalStyles.drawerWidth;
 const drawerWidthNarrow = externalStyles.drawerWidthNarrow; // for small viewports (< 600px)
 const timeSliderMargin = externalStyles.timeSliderMargin;
+const timeSliderOpacity = externalStyles.timeSliderOpacity;
 
 // TODO: move slider percent width to external style sheet and use direct media
 // queries to get sizing correct
@@ -30,6 +31,7 @@ const styles = theme => ({
     left: 0, 
     width: '400px',
     margin: timeSliderMargin,
+    opacity: timeSliderOpacity,
     zIndex: 500,
     overflow: 'hidden',
     borderRadius: '2px',

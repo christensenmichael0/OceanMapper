@@ -66,8 +66,8 @@ def lambda_handler(event, context):
     else:
         lon = data['lon']
 
-    lat_diff = np.diff(lat)[0]
-    lon_diff = np.diff(lon)[0]
+    lat_diff = np.abs(np.diff(lat)[0])
+    lon_diff = np.abs(np.diff(lon)[0])
     
     time_origin = data['time_origin']
 
@@ -92,10 +92,10 @@ def lambda_handler(event, context):
         _wgs84_lon_max, _wgs84_lat_max = ll[2:]
 
         # extend bounds slightly to avoid issue with data being cut off at tile boundaries
-        _wgs84_lon_min_padded = _wgs84_lon_min - (2 * lon_diff)
-        _wgs84_lon_max_padded = _wgs84_lon_max + (2 * lon_diff)
-        _wgs84_lat_min_padded = _wgs84_lat_min - (2 * lat_diff)
-        _wgs84_lat_max_padded = _wgs84_lat_max + (2 * lat_diff)
+        _wgs84_lon_min_padded = _wgs84_lon_min - (10 * lon_diff)
+        _wgs84_lon_max_padded = _wgs84_lon_max + (10 * lon_diff)
+        _wgs84_lat_min_padded = _wgs84_lat_min - (10 * lat_diff)
+        _wgs84_lat_max_padded = _wgs84_lat_max + (10 * lat_diff)
         
         # trimming here based on the extents of the tile
         keep_lat_bool = np.logical_and(lat<=_wgs84_lat_max_padded, lat>=_wgs84_lat_min_padded)
@@ -122,7 +122,7 @@ def lambda_handler(event, context):
 if __name__ == "__main__":
  
     event = {
-        'pickle_filepath': 'RTOFS_DATA/20190224_00/ocean_current_speed/0m/pickle/rtofs_currents_20190224_00.pickle',
+        'pickle_filepath': 'RTOFS_DATA/20190301_00/ocean_current_speed/0m/pickle/rtofs_currents_20190301_00.pickle',
         'bucket_name': 'oceanmapper-data-storage', 
         'output_picklepath': 'test_data/',
         'xyz_info': {'start_indx': 0, 'end_indx': 50},

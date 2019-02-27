@@ -10,6 +10,7 @@ import matplotlib.colors as colors
 import copy
 import io
 import base64
+from future.utils import string_types
 
 from process_tiles import make_tile_figure, md2uv
 from utils.tile_config import cmap_config
@@ -39,7 +40,7 @@ def build_tile_image(incoming_tile, data_key, data_type, additional_params={}):
 
     # deconstruct incoming tile
     i,j,zoom=[*incoming_tile]
-
+    
     # additional params take precedence over tile config settings
     tile_settings = cmap_config[data_type]
     for prop, val in tile_settings.items():
@@ -85,7 +86,12 @@ def build_tile_image(incoming_tile, data_key, data_type, additional_params={}):
     proj_lat_array = la[sa,:][:,so]
 
     data_cmap = tile_settings['color_map'] # cmap_config[data_type]['color_map']
-    cmin, cmax = tile_settings['data_range'] # cmap_config[data_type]['data_range']
+    
+    #if data_range is a string then convert to an array
+    if isinstance(tile_settings['data_range'],string_types):
+        tile_settings['data_range'] = [float(val) for val in tile_settings['data_range'].split(',')]
+    
+    cmin, cmax = tile_settings['data_range']
 
     # plot entire image on 256 by 256 image then crop to tile extents
     fig, ax = make_tile_figure()
@@ -186,7 +192,8 @@ def build_tile_image(incoming_tile, data_key, data_type, additional_params={}):
     # convert image into base64 encoded string
     dpi = 256
     with io.BytesIO() as out_img:
-        fig.savefig(out_img, format='png', dpi=dpi, pad_inches=0.0, transparent=True)
+        # fig.savefig(out_img, format='png', dpi=dpi, pad_inches=0.0, transparent=True)
+        fig.savefig(out_img, format='png', transparent=True)
         out_img.seek(0)
         encoded_img = base64.b64encode(out_img.read()).decode('utf-8')
 

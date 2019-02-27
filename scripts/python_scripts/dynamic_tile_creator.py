@@ -74,7 +74,7 @@ def lambda_handler(event, context):
     available_time = get_available_model_times(dataset,sub_resource, model_time_datetime,
         level_formatted, dataset_type, availability_struct)
 
-    target_zoom = datasets[dataset]['sub_resource'][sub_resource]['data_tiles_zoom_level']
+    target_zoom = datasets[dataset]['sub_resource'][sub_resource]['data_tiles_zoom_level'][-1]
     zoom, i, j = tuple([int(val) for val in event['pathParameters']['proxy'].split('/')])
 
     # need to find the smallest available data from s3 to load and construct a tile
@@ -84,10 +84,8 @@ def lambda_handler(event, context):
     lon_average = np.average(np.array([west, east]))
     lat_average = np.average(np.array([south, north]))
 
-    if zoom > target_zoom:
-        parent_tile = mercantile.tile(lon_average, lat_average, target_zoom, truncate=False)
-    else:
-        parent_tile = mercantile.tile(lon_average, lat_average, zoom-1, truncate=False)
+    if zoom < target_zoom:
+        target_zoom = zoom
 
     if available_time:
         available_time_str = datetime.datetime.strftime(available_time,'%Y-%m-%dT%H:%MZ')
@@ -117,21 +115,18 @@ if __name__ == '__main__':
             "level": "10",
             "dataset": "GFS_DATA",
             "sub_resource": "wind_speed",
-            "time": "2019-02-24T23:00Z",
+            "time": "2019-03-01T23:00Z",
+
         },
         "pathParameters": {
-            "proxy": "6/16/27"
+            "proxy": "5/9/12"# "6/16/27"
         }
     }
 
     lambda_handler(event,'')
 
-# funny stitches in RTOFS.. dig deeper
-# wind speed isnt working..
-
 # https://a7vap1k0cl.execute-api.us-east-2.amazonaws.com/staging/dynamic-tile/5/8/13?dataset=RTOFS_DATA&sub_resource=ocean_current_speed&level=0&time=2019-02-21T23:00Z
-
-
+# https://a7vap1k0cl.execute-api.us-east-2.amazonaws.com/staging/dynamic-tile/2/1/2?dataset=GFS_DATA&sub_resource=wind_speed&level=10&time=2019-02-26T23:00Z&n_levels=100&color_map=magma&data_range=0,100
 
 
 

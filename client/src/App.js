@@ -6,6 +6,7 @@ import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import PersistentDrawerLeft from './components/PersistentDrawerLeft';
 import ChartModal from './components/ChartModal';
+import CoordinateDisplay from './components/CoordinateDisplay';
 import { layers, dataLayers } from './scripts/layers';
 import moment from 'moment';
 import { getData, getModelField, abortLayerRequest } from './scripts/dataFetchingUtils';
@@ -75,6 +76,7 @@ class App extends Component {
     this.getMapDimensionInfo = this.getMapDimensionInfo.bind(this);
     this.onMapClick = this.onMapClick.bind(this);
     this.onMapBoundsChange = this.onMapBoundsChange.bind(this);
+    this.onMapCursorChange = this.onMapCursorChange.bind(this);
     this.checkLayerStatus = this.checkLayerStatus.bind(this);
     this.addLeafletLayer = this.addLeafletLayer.bind(this);
     this.removeLeafletLayer = this.removeLeafletLayer.bind(this);
@@ -150,13 +152,8 @@ class App extends Component {
     // add click event listener to map (ired when clicking on specific popup element) 
     map.on('profileClick', () => {this.handlePopupChartClick('profile')});
 
-    // TODO: create a map control to display this info.. do we want dif formats?
-    // a way to specify a custom location
-    map.on('mousemove', function(ev) {
-      // debugger
-     // lat = ev.latlng.lat;
-     // lng = ev.latlng.lng;
-    });
+    // add a mousemove event listener to map to track lat/lng coordinates
+    map.on('mousemove', ev => {this.onMapCursorChange(ev.latlng.lat, ev.latlng.lng)});
 
     // layer/leaflet layer binding
     this.layerBindings = {};
@@ -861,6 +858,16 @@ class App extends Component {
   }
 
   /**
+   * Track the location of the cursor when hovering over the map
+   * 
+   * @param {lat} the present latitude of the cursor
+   * @param {lng} the present longitude of the cursor
+   */
+  onMapCursorChange(lat, lng) {
+    this.setState({cursorLat: lat, cursorLng: lng});
+  }
+
+  /**
    * Fired when chart modal is closed. State is updated.
    */
   handleCloseChartModal() {
@@ -969,6 +976,7 @@ class App extends Component {
           {...this.state}
         />
         <div ref={this._mapNode} id="map" className={classNames(classes.map)} />
+        <CoordinateDisplay lat={this.state.cursorLat} lng={this.state.cursorLng} />
       </div>
     );
   }

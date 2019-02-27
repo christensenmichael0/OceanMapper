@@ -52,7 +52,7 @@ mkdir lambda_package_dynamic_tiles
 cd lambda_package_dynamic_tiles
 pip3 install numpy matplotlib mercantile pyproj cmocean -t ./
 zip -r lambda_package_dynamic_tiles.zip *
-docker cp 62f0320eafbc:/lambda_package_api/llambda_package_dynamic_tiles.zip ~
+docker cp 62f0320eafbc:/lambda_package_api/lambda_package_dynamic_tiles.zip ~
 cd ~/globalMapper/scripts/python_scripts
 zip -ur ~/lambda_package_dynamic_tiles.zip utils api_utils process_tiles.py dynamic_tile_creator.py build_tile_image.py
 
