@@ -112,14 +112,14 @@ if __name__ == '__main__':
 
     event = {
         "queryStringParameters": {
-            "level": "10",
-            "dataset": "GFS_DATA",
-            "sub_resource": "wind_speed",
-            "time": "2019-03-01T23:00Z",
+            "level": "",
+            "dataset": "WW3_DATA",
+            "sub_resource": "primary_wave_dir",
+            "time": "2019-03-03T23:00Z",
 
         },
         "pathParameters": {
-            "proxy": "5/9/12"# "6/16/27"
+            "proxy": "6/19/23"# "6/16/27"
         }
     }
 

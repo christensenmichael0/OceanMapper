@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 import { withStyles } from '@material-ui/core/styles';
-// import { withTheme } from '@material-ui/core/styles';
 import './App.css';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
@@ -18,6 +17,7 @@ import { buildDynamicPopupContent } from './scripts/buildDynamicPopupContent';
 import { parseData } from './scripts/parseData';
 import priorityMap from './scripts/layerPriority';
 import { mapConfig } from './scripts/mapConfig';
+import { formatDateTime } from './scripts/formatDateTime';
 import _ from 'lodash';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -135,11 +135,13 @@ class App extends Component {
     // add custom handlers
     addCustomLeafletHandlers(L);
 
-    // zoom control position
-    L.control.zoom({
+    // zoom control position (dont add if using mobile)
+    if (!L.Browser.mobile) {
+      L.control.zoom({
          position:'topright'
-    }).addTo(map);
-
+      }).addTo(map);
+    }
+    
     // add click event listener
     map.on('click', this.onMapClick);
 
@@ -646,20 +648,42 @@ class App extends Component {
    */
   async buildMetocTileLayer(layerObj,res) {
     let mapLayers = Object.assign({}, this.state.mapLayers);
+    
+    // build query paramater object and then prune those keys which have no value
+    let queryParams = {
+      time: `${formatDateTime(this.state.mapTime, 'YYYY-MM-DDTHH:mm', '')}Z`,
+      dataset: layerObj['dataset'],
+      sub_resource: layerObj['subResource'],
+      level: !isNaN(layerObj['level']) ? layerObj['level'].toString() : 'blank',
+      color_map: layerObj['colorMap'],
+      data_range: layerObj['dataRange'],
+      n_levels: layerObj['numLevels']
+    }
 
+    let param, paramArr = [];
+    for (param in queryParams) {
+      if (!queryParams[param]) {
+        delete queryParams[param]; 
+      } else {
+        queryParams[param] === 'blank' ? paramArr.push(`${param}=`) :
+          paramArr.push(`${param}=${queryParams[param]}`)
+      }
+    }
+    let queryStr = paramArr.join('&');
+    
     // add tile imagery data
     let tileOptions = {
       opacity: layerObj['opacity'],
-      maxNativeZoom: layerObj['maxNativeZoom'],
-      minNativeZoom: layerObj['minNativeZoom'],
+      // maxNativeZoom: layerObj['maxNativeZoom'],
+      // minNativeZoom: layerObj['minNativeZoom']
     }
 
     // add pane as an option is the layer contains overlayPriority key
     tileOptions = layerObj['overlayPriority'] ? {...tileOptions, pane: layerObj['overlayPriority']} : tileOptions;
-
-    let tilepath = res['tile_paths']['scalar'] ? 'scalar' : 'vector';
-    let tileLayer = await L.tileLayer(`https://s3.us-east-2.amazonaws.com/oceanmapper-data-storage/${res['tile_paths'][tilepath]}`,
-      tileOptions);
+    
+    let apiGatewayEndpoint = 'https://a7vap1k0cl.execute-api.us-east-2.amazonaws.com';
+    
+    let tileLayer = await L.tileLayer(`${apiGatewayEndpoint}/staging/dynamic-tile/{z}/{x}/{y}?${queryStr}`, tileOptions);
 
     // set tile layer events
     tileLayer.on('loading', (function() {

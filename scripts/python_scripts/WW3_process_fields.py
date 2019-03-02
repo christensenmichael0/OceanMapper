@@ -142,14 +142,14 @@ def lambda_handler(event, context):
     client.put_object(Body=raw_data_pickle_perpwsfc, Bucket=AWS_BUCKET_NAME, Key=output_pickle_path_perpwsfc)
 
     # call an intermediate function to distribute tiling workload
-    tile_task_distributor(output_pickle_path_htsgwsfc, 'wave_amp', AWS_BUCKET_NAME,
-        output_tile_scalar_path_htsgwsfc, range(3,4))
+    # tile_task_distributor(output_pickle_path_htsgwsfc, 'wave_amp', AWS_BUCKET_NAME,
+    #     output_tile_scalar_path_htsgwsfc, range(3,4))
     
-    tile_task_distributor(output_pickle_path_dirpwsfc, 'wave_dir', AWS_BUCKET_NAME,
-        output_tile_vector_path_dirpwsfc, range(3,5))
+    # tile_task_distributor(output_pickle_path_dirpwsfc, 'wave_dir', AWS_BUCKET_NAME,
+    #     output_tile_vector_path_dirpwsfc, range(3,5))
 
-    tile_task_distributor(output_pickle_path_perpwsfc, 'wave_period', AWS_BUCKET_NAME,
-        output_tile_scalar_path_perpwsfc, range(3,4))
+    # tile_task_distributor(output_pickle_path_perpwsfc, 'wave_period', AWS_BUCKET_NAME,
+    #     output_tile_scalar_path_perpwsfc, range(3,4))
 
     # call an intermediate function to distribute pickling workload (subsetting data by tile)
     data_zoom_level_htsgwsfc = datasets[TOP_LEVEL_FOLDER]['sub_resource'][SUB_RESOURCE_HTSGWSFC]['data_tiles_zoom_level']

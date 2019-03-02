@@ -140,6 +140,7 @@ def build_tile_image(incoming_tile, data_key, data_type, additional_params={}):
         # TODO: if interpolation is needed in the future see this resource:
         # http://christopherbull.com.au/python/scipy-interpolate-griddata/
 
+        scale = 17.0
         if zoom <= 3:
             row_int = 4
             col_int = 4
@@ -150,10 +151,11 @@ def build_tile_image(incoming_tile, data_key, data_type, additional_params={}):
             # show all data
             col_int = 1
             row_int = 1
+            scale = 14.0
 
         quiver = ax.quiver(proj_lon_array[::row_int,::col_int], proj_lat_array[::row_int,::col_int], 
         u_comp[::row_int,::col_int], v_comp[::row_int,::col_int], headwidth=9.0,headlength=8.5, headaxislength=8.0,
-        scale_units='width', scale=17.0)
+        scale_units='width', scale=scale)
 
     elif data_type == 'primary_wave_period':
 
