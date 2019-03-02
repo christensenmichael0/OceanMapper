@@ -41,7 +41,7 @@ def lambda_handler(event, context):
         
     for forecast_indx, forecast_time in forecast_info['data']:
         # only utilize 2 forecast/day (00:00 UTC) for cost savings
-        if forecast_time.hour == 0:
+        if forecast_time.hour % 6 == 0:
             # build payload for initiation of lambda function
             payload = {}
             payload['url'] = forecast_info['url']

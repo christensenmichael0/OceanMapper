@@ -170,8 +170,8 @@ def lambda_handler(event, context):
     client.put_object(Body=raw_data_pickle, Bucket=AWS_BUCKET_NAME, Key=output_pickle_path)
 
     # call an intermediate function to distribute tiling workload
-    tile_task_distributor(output_pickle_path, 'current_speed', AWS_BUCKET_NAME, 
-        output_tile_scalar_path, range(3,4))
+    # tile_task_distributor(output_pickle_path, 'current_speed', AWS_BUCKET_NAME, 
+    #     output_tile_scalar_path, range(3,4))
 
     # call an intermediate function to distribute pickling workload (subsetting data by tile)
     data_zoom_level = datasets[TOP_LEVEL_FOLDER]['sub_resource'][SUB_RESOURCE]['data_tiles_zoom_level']

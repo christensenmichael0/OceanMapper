@@ -87,7 +87,7 @@ def build_tiledata_path(model_top_level_folder, sub_resource, level, field_datet
     if override_zoom:
         available_zoom = override_zoom
     else:
-        available_zoom = datasets[model_top_level_folder]['sub_resource'][sub_resource]['data_tiles_zoom_level']
+        available_zoom = datasets[model_top_level_folder]['sub_resource'][sub_resource]['data_tiles_zoom_level'][-1]
     
     parent_tile = mercantile.tile(coords[0], coords[1], available_zoom, truncate=False)
     i,j,zoom=[*parent_tile]

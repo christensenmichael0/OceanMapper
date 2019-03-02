@@ -123,7 +123,6 @@ def lambda_handler(event, context):
 
             # this is the subsetted .pickle data
             data_key = build_tiledata_path(dataset, sub_resource, level_formatted, mtime, coords)
-            data_value = get_model_value(coords, data_key, sub_resource, dataset_vars)
 
             # create a pipe for communication
             parent_conn, child_conn = Pipe()
@@ -173,10 +172,10 @@ if __name__ == '__main__':
     event = {
         "queryStringParameters": {
             "level": "0",
-            "dataset": "HYCOM_DATA",
+            "dataset": "RTOFS_DATA",
             "sub_resource": "ocean_current_speed",
-            "start_time": "2018-10-16T01:00Z",
-            "end_time": "2018-10-24T19:00Z",
+            "start_time": "2019-02-28T01:00Z",
+            "end_time": "2019-03-03T19:00Z",
             "coordinates": "-81.58,23.88"
         }
     }
