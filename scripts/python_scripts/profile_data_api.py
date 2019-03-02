@@ -9,7 +9,6 @@ from multiprocessing import Process, Pipe
 
 from utils.s3_filepath_utils import build_tiledata_path
 from utils.datasets import datasets
-from utils.point_locator import in_ocean
 from api_utils.response_constructor import generate_response
 from api_utils.check_query_params import check_query_params, filter_failed_params
 from api_utils.fetch_data_availability import grab_data_availability
@@ -17,6 +16,7 @@ from api_utils.nearest_model_time import get_available_model_times
 from api_utils.get_model_value import get_model_value
 
 s3 = boto3.client('s3')
+lam = boto3.client('lambda')
 bucket = 'oceanmapper-data-storage'
 
 def lambda_handler(event, context):
@@ -90,7 +90,9 @@ def lambda_handler(event, context):
     check_ocean = os.getenv('check_ocean', False) # environment variable (easy adjument in lambda env)
     coord_in_ocean = False # default is not in ocean
     if overlay_type == 'ocean' and check_ocean:
-        coord_in_ocean = in_ocean(coords[0],coords[1]) # this function is slow maybe use coarser ocean polygons
+        payload = {'lat': coords[1], 'lon': coords[0]}
+        coord_in_ocean = lam.invoke(FunctionName='in_ocean', 
+                InvocationType='RequestResponse', Payload=json.dumps(payload)) # this function is slow
     
     # if model is (ocean only) then check the coords to make sure they are in the ocean
     if not coord_in_ocean and overlay_type == 'ocean' and check_ocean:
