@@ -130,7 +130,8 @@ class App extends Component {
     if (this.map) return;
 
     let map = this.map = L.map(id, mapConfig.params);
-    esri.basemapLayer("DarkGray").addTo(map); // DarkGray
+    esri.basemapLayer("Oceans").addTo(map); // DarkGray
+    esri.basemapLayer("OceansLabels").addTo(map); // DarkGray
 
     // add custom handlers
     addCustomLeafletHandlers(L);

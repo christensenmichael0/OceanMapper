@@ -46,6 +46,7 @@ const styles = theme => ({
     left: 20,
     top: 20,
     zIndex: 1000,
+    border: `2px solid ${theme.palette.secondary.main}`,
     backgroundColor: theme.palette.primary.main,
     '&:hover': {
       backgroundColor: theme.palette.secondary.main,

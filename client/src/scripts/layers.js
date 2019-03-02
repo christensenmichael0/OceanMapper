@@ -160,7 +160,7 @@ export const layers = [
   {
     Category: 'Oil & Gas',
     visibleTOC: true,
-    expanded: false,
+    expanded: true,
     Layers: [
       {
         id: 'active_drilling',
@@ -191,7 +191,7 @@ export const layers = [
         timeSensitive: false,
         visibleTOC: true,
         defaultOpacity: 1.0,
-        defaultOn: false
+        defaultOn: true
       }
     ]
   },
@@ -209,7 +209,7 @@ export const layers = [
         timeSensitive: false,
         movementSensitive: true,
         visibleTOC: true,
-        defaultOn: false
+        defaultOn: true
       },
       {
         id: 'ocs_lease_blocks',
