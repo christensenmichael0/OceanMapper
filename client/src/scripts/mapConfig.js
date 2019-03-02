@@ -1,7 +1,7 @@
 export const mapConfig = {
   params: {
-    center: [25.8,-89.6],
-    zoom: 6,
+    center: [22.8,-89.6],
+    zoom: 5,
     maxZoom: 14,
     minZoom: 3,
     zoomControl: false,
