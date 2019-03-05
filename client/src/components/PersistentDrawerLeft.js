@@ -127,6 +127,9 @@ class PersistentDrawerLeft extends React.Component {
           </div>
           <Divider />
           <TableOfContents {...other}/>
+          <p style={{fontSize: '0.8em', padding: 10, color: '#595959', fontFamily: 'Roboto, arial'}}>
+            &copy; {(new Date).getFullYear()} Michael Christensen. All rights reserved.
+          </p>
         </Drawer>
         <main className={classes.content}>
           <IconButton
