@@ -9,7 +9,7 @@ import Switch from '@material-ui/core/Switch';
 import LevelSelector from './LevelSelector';
 import LegendContainer from './LegendContainer';
 import LoadingSpinner from './LoadingSpinner';
-
+import SettingsCog from './SettingsCog';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
@@ -30,7 +30,7 @@ const styles = theme => ({
 function TableOfContents(props) {
   const {toc, classes } = props;
 
-  const constructLabel = (labelText, layerID) => (
+  const constructLabel = (labelText, layerID, includeSettings) => (
     <React.Fragment>
       {(props['mapLayers'][layerID] ? 
         props['mapLayers'][layerID]['isLoading'] : false) && <LoadingSpinner />}
@@ -41,6 +41,12 @@ function TableOfContents(props) {
           icon="exclamation-triangle" 
           title={'Failed to load layer!'} 
           style={{color: 'red', marginLeft: 5, fontSize: '1.2em'}} 
+        />
+      }
+      {(includeSettings && !props['mapLayers'][layerID]['isLoading'] &&  props['mapLayers'][layerID]['isOn']) && 
+        <SettingsCog
+          layerID = {layerID} 
+          handleSettingsPanelVisibility = {props.handleSettingsPanelVisibility}
         />
       }
     </React.Fragment>
@@ -65,7 +71,7 @@ function TableOfContents(props) {
                             value={subresource['id']}
                           />
                         }
-                        label={constructLabel(subresource['niceName'], subresource['id'])}
+                        label={constructLabel(subresource['niceName'], subresource['id'], true)}
                       />
                     </FormGroup>
                     {(props['mapLayers'][subresource['id']]['isOn'] && !props['mapLayers'][subresource['id']]['isLoading'] &&
@@ -106,7 +112,7 @@ function TableOfContents(props) {
                         value={layer['id']}
                       />
                     }
-                    label={constructLabel(layer['niceName'], layer['id'])}
+                    label={constructLabel(layer['niceName'], layer['id'], false)}
                   />
                 </FormGroup>
                 {(props['mapLayers'][layer['id']]['isOn'] && props['mapLayers'][layer['id']]['nowCoastDataset']

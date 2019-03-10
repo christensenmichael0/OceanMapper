@@ -5,6 +5,7 @@ import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import PersistentDrawerLeft from './components/PersistentDrawerLeft';
 import ChartModal from './components/ChartModal';
+import SettingsPanel from './components/SettingsPanel';
 import CoordinateDisplay from './components/CoordinateDisplay';
 import { layers, dataLayers } from './scripts/layers';
 import moment from 'moment';
@@ -68,7 +69,8 @@ class App extends Component {
       deepwater_activity: null,
       chartModalOpen: false,
       chartLoading: false,
-      chartData: null
+      chartData: null,
+      settingsPanelOpen: false
     };
 
     this._mapNode = React.createRef();
@@ -94,6 +96,8 @@ class App extends Component {
     this.handleLevelChange = this.handleLevelChange.bind(this);
     this.handleTimeChange = this.handleTimeChange.bind(this);
     this.handleCloseChartModal = this.handleCloseChartModal.bind(this);
+    this.handleSettingsPanelVisibility = this.handleSettingsPanelVisibility.bind(this);
+    this.handleSettingsPanelHide = this.handleSettingsPanelHide.bind(this);
     this.updateValidTime = this.updateValidTime.bind(this);
     this.handlePopupChartClick = this.handlePopupChartClick.bind(this);
     this.layerLoadError = this.layerLoadError.bind(this);
@@ -901,6 +905,20 @@ class App extends Component {
     this.setState({chartModalOpen: false});
   }
 
+  handleSettingsPanelVisibility(layerID) {
+    // debugger
+
+    // update items in settings panel and open if it isnt
+    // TODO: add settings panel next to drawer.. put it inside clickawaylistener?.. also include 'x' to close
+    this.setState({activeSettingsLayer: layerID}, () => {
+      this.setState({settingsPanelOpen: true})
+    })
+  }
+
+  handleSettingsPanelHide() {
+    this.setState({settingsPanelOpen: false})
+  }
+
   componentWillMount() {
     let categories = [...this.state.toc], mapLayers = Object.assign({},this.state.mapLayers), 
       orderedMapLayers = [...this.state.orderedMapLayers];
@@ -998,10 +1016,15 @@ class App extends Component {
           handleLayerToggle = {this.handleLayerToggle}
           handleLevelChange = {this.handleLevelChange}
           handleTimeChange = {this.handleTimeChange}
+          handleSettingsPanelVisibility = {this.handleSettingsPanelVisibility}
           {...this.state}
         />
         <div ref={this._mapNode} id="map" className={classNames(classes.map)} />
         <CoordinateDisplay lat={this.state.cursorLat} lng={this.state.cursorLng} />
+        <SettingsPanel 
+          {...this.state}
+          handleSettingsPanelHide = {this.handleSettingsPanelHide}
+        />
       </div>
     );
   }
