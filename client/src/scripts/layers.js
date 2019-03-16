@@ -1,6 +1,9 @@
 export const imageLayers = ['getLeaseAreas', 'getLeaseBlocks', 'getTropicalActivity'];
 export const tileLayers = ['getModelField', 'getGebcoBathy'];
 export const dataLayers = ['getModelField','getActiveDrilling'];
+export const staticLegendEndpoint = 'https://s3.us-east-2.amazonaws.com/oceanmapper-data-storage/dynamic_legend_cache/';
+
+const dynamicLegendEndpoint = 'https://5qkqvek867.execute-api.us-east-2.amazonaws.com/staging/legend';
 
 export const layers = [
   {
@@ -18,7 +21,7 @@ export const layers = [
           niceName: 'HYCOM Currents',
           shortName: 'Current Speed',
           overlayType: 'ocean',
-          legendUrl: 'https://s3.us-east-2.amazonaws.com/oceanmapper-data-storage/map_legends/current_speed_colorbar.png',
+          legendUrl: dynamicLegendEndpoint,
           availableLevels: [],
           levelName: 'Depth (m)',
           addDataFunc: 'getModelField',
@@ -30,8 +33,19 @@ export const layers = [
           maxVelocity: 1.0,
           velocityScale: 0.1,
           timeSensitive: true,
+          rasterProps: {
+            opacity: 1.0,
+            absoluteMin: 0,
+            absoluteMax: 4,
+            currentMin: 0,
+            currentMax: 2,
+            interval: 0.125,
+            colormap: 'magma',
+            label: 'Current Speed (m/s)',
+            dataRangeIntervals: [0.125, .25, .5, 1],
+            colorramps: ['viridis', 'magma', 'jet', 'rainbow', 'cool']
+          },
           visibleTOC: false,
-          defaultOpacity: 1.0,
           defaultOn: false
         }
       ]
@@ -47,7 +61,7 @@ export const layers = [
           niceName: 'RTOFS Currents',
           shortName: 'Current Speed',
           overlayType: 'ocean',
-          legendUrl: 'https://s3.us-east-2.amazonaws.com/oceanmapper-data-storage/map_legends/current_speed_colorbar.png',
+          legendUrl: dynamicLegendEndpoint,
           availableLevels: [],
           levelName: 'Depth (m)',
           addDataFunc: 'getModelField',
@@ -60,8 +74,19 @@ export const layers = [
           velocityScale: 0.15,
           streamFlowColorScale: ['#000004', '#51127c', '#b73779', '#fc8961', '#fcfdbf'],
           timeSensitive: true,
+          rasterProps: {
+            opacity: 1.0,
+            absoluteMin: 0,
+            absoluteMax: 4,
+            currentMin: 0,
+            currentMax: 2,
+            interval: 0.125,
+            colormap: 'magma',
+            label: 'Current Speed (m/s)',
+            dataRangeIntervals: [0.125, .25, .5, 1],
+            colorramps: ['viridis', 'magma', 'jet', 'rainbow', 'cool']
+          },
           visibleTOC: true,
-          defaultOpacity: 1.0,
           defaultOn: false
         }
       ]
@@ -77,7 +102,7 @@ export const layers = [
           niceName: 'GFS Winds',
           shortName: 'Wind Speed',
           overlayType: 'all',
-          legendUrl: 'https://s3.us-east-2.amazonaws.com/oceanmapper-data-storage/map_legends/wind_speed_colorbar.png',
+          legendUrl: dynamicLegendEndpoint,
           availableLevels: [],
           levelName: 'Height (m)',
           addDataFunc: 'getModelField',
@@ -90,8 +115,19 @@ export const layers = [
           velocityScale: 0.01,
           streamFlowColorScale: ['#440154', '#3b528b', '#21918c', '#5ec962', '#fde725'],
           timeSensitive: true,
+          rasterProps: {
+            opacity: 1.0,
+            absoluteMin: 0,
+            absoluteMax: 80,
+            currentMin: 0,
+            currentMax: 25,
+            interval: 1,
+            colormap: 'viridis',
+            label: 'Wind Speed (m/s)',
+            dataRangeIntervals: [1, 5, 10],
+            colorramps: ['viridis', 'magma', 'jet', 'rainbow', 'cool']
+          },
           visibleTOC: true,
-          defaultOpacity: 1.0,
           defaultOn: false
         }
       ]
@@ -107,15 +143,26 @@ export const layers = [
           niceName: 'WW3 Signficant Wave Height',
           shortName: 'Significant Wave Height',
           overlayType: 'ocean',
-          legendUrl: 'https://s3.us-east-2.amazonaws.com/oceanmapper-data-storage/map_legends/wave_amp_colorbar.png',
+          legendUrl: dynamicLegendEndpoint,
           availableLevels: [],
           addDataFunc: 'getModelField',
           chartType: 'series',
           maxNativeZoom: 3,
           minNativeZoom: 3,
           timeSensitive: true,
+          rasterProps: {
+            opacity: 1.0,
+            absoluteMin: 0,
+            absoluteMax: 20,
+            currentMin: 0,
+            currentMax: 10,
+            interval: 1,
+            colormap: 'jet',
+            label: 'Significant Wave Height (m)',
+            dataRangeIntervals: [0.5, 1, 2],
+            colorramps: ['viridis', 'magma', 'jet', 'rainbow', 'cool']
+          },
           visibleTOC: true,
-          defaultOpacity: 1.0,
           defaultOn: false
         },
         {
@@ -133,8 +180,10 @@ export const layers = [
           maxNativeZoom: 4,
           minNativeZoom: 3,
           timeSensitive: true,
+          rasterProps: {
+            opacity: 1.0
+          },
           visibleTOC: true,
-          defaultOpacity: 1.0,
           defaultOn: false
         },
         {
@@ -143,15 +192,26 @@ export const layers = [
           niceName: 'WW3 Primary Wave Period',
           shortName: 'Primary Wave Period',
           overlayType: 'ocean',
-          legendUrl: 'https://s3.us-east-2.amazonaws.com/oceanmapper-data-storage/map_legends/wave_period_colorbar.png',
+          legendUrl: dynamicLegendEndpoint,
           availableLevels: [],
           addDataFunc: 'getModelField',
           chartType: 'series',
           maxNativeZoom: 3,
           minNativeZoom: 3,
           timeSensitive: true,
+          rasterProps: {
+            opacity: 1.0,
+            absoluteMin: 0,
+            absoluteMax: 25,
+            currentMin: 0,
+            currentMax: 20,
+            interval: 1,
+            colormap: 'cool',
+            label: 'Primary Wave Period (s)',
+            dataRangeIntervals: [1],
+            colorramps: ['viridis', 'magma', 'jet', 'rainbow', 'cool']
+          },
           visibleTOC: true,
-          defaultOpacity: 1.0,
           defaultOn: false
         }
       ]
@@ -189,8 +249,10 @@ export const layers = [
         legendUrl: 'https://nowcoast.noaa.gov/layerinfo?request=legend&format=html&service=wwa_meteocean_tropicalcyclones_trackintensityfcsts_time&layers=3,4,5,6,2,8,9',
         nowCoastDataset: true,
         timeSensitive: false,
+        rasterProps: {
+          opacity: 1.0
+        },
         visibleTOC: true,
-        defaultOpacity: 1.0,
         defaultOn: true
       }
     ]
@@ -208,6 +270,9 @@ export const layers = [
         addDataFunc: 'getLeaseAreas',
         timeSensitive: false,
         movementSensitive: true,
+        rasterProps: {
+          opacity: 1.0
+        },
         visibleTOC: true,
         defaultOn: true
       },
@@ -219,6 +284,9 @@ export const layers = [
         addDataFunc: 'getLeaseBlocks',
         timeSensitive: false,
         movementSensitive: true,
+        rasterProps: {
+          opacity: 1.0
+        },
         visibleTOC: true,
         defaultOn: false
       },
@@ -229,8 +297,10 @@ export const layers = [
         endPoint: 'https://gis.ngdc.noaa.gov/arcgis/rest/services/web_mercator/gebco_2014_contours/MapServer/tile/{z}/{y}/{x}',
         addDataFunc: 'getGebcoBathy',
         timeSensitive: false,
+        rasterProps: {
+          opacity: 1.0
+        },
         visibleTOC: true,
-        defaultOpacity: 1.0,
         defaultOn: false
       },
       {
@@ -242,8 +312,10 @@ export const layers = [
         maxNativeZoom: 8, // change to 8 when ready
         minNativeZoom: 3,
         timeSensitive: false,
+        rasterProps: {
+          opacity: 1.0
+        },
         visibleTOC: false,
-        defaultOpacity: 1.0,
         defaultOn: false
       },
     ]

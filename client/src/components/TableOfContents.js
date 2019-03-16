@@ -7,6 +7,7 @@ import FormGroup from '@material-ui/core/FormGroup';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Switch from '@material-ui/core/Switch';
 import LevelSelector from './LevelSelector';
+import DynamicLegend from './DynamicLegend';
 import LegendContainer from './LegendContainer';
 import LoadingSpinner from './LoadingSpinner';
 import SettingsCog from './SettingsCog';
@@ -80,7 +81,12 @@ function TableOfContents(props) {
                        <Typography variant="overline" gutterBottom>
                         Date Valid: {props['mapLayers'][subresource['id']]['validTime']}
                       </Typography>
-                      {subresource['legendUrl'] ? <img src={subresource['legendUrl']} alt='data-legend' className={classNames(classes.img)}/> : ''}
+                      {/*{subresource['legendUrl'] ? <img src={subresource['legendUrl']} alt='data-legend' className={classNames(classes.img)}/> : ''}*/}
+                      {subresource['legendUrl'] && 
+                        <DynamicLegend 
+                          layer={props['mapLayers'][subresource['id']]}
+                          legendUrl={subresource['legendUrl']}
+                      />}
                       {!isNaN(props['mapLayers'][subresource['id']]['level']) && 
                       <LevelSelector 
                         availableLevels={subresource['availableLevels']}

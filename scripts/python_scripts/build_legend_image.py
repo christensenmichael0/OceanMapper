@@ -2,9 +2,10 @@ import boto3
 import numpy as np
 # import matplotlib
 # matplotlib.use('agg')
-from matplotlib import pyplot as plt, cm
+from matplotlib import pyplot as plt, cm, ticker
 import io
 import base64
+s3 = boto3.client('s3')
 
 def build_legend_image(params):
     """
@@ -20,52 +21,49 @@ def build_legend_image(params):
     Ouput: base64 encoded image converted to a utf-8 string
     -----------------------------------------------------------------------
     Author: Michael Christensen
-    Date Modified: 03/09/2019
+    Date Modified: 03/14/2019
     """
 
+    bucket_name = 'oceanmapper-data-storage'
+
     color_map = params['color_map']
-    data_range = params['data_range']
-    interval = params['interval']
+    data_range = [float(val) for val in params['data_range'].split(',')]
+    interval = float(params['interval'])
     label = params['label']
 
-    nlvls = 100
-    range_val = np.ptp(data_range,axis=0)
-    if interval != 'None':
-        nlvls = range_val/interval
-    else:
-        interval = range_val/nlvls 
+    range_val = np.ptp(data_range, axis=0)
+    nlvls = range_val/interval
+    levelsArr = np.arange(np.min(data_range), np.max(data_range) + interval, interval)
 
-    # determine number of ticks to use
-    num_ticks = range_val/interval
-    tick_interval = interval
-    while (num_ticks > 5) or (range_val % num_ticks != 0):
-        tick_interval += interval
-        num_ticks = range_val/tick_interval
-    
+    # create a filename 
+    legend_filename = 'dynamic_legend_cache/{}_{:{prec}}_{:{prec}}_{:{prec}}_legend.png'.format(
+        color_map, data_range[0], data_range[1], interval, prec='.3f')
+
     # create some fake data
-    sampl = np.random.uniform(low=np.min(data_range), high=np.max(data_range), size=(100,100))
+    extraExtension = range_val/20.0
+    sampl = np.random.uniform(low=np.min(data_range) - extraExtension, 
+        high=np.max(data_range) + extraExtension, size=(100,100))
 
     FIGSIZE = (3.5,3.5)
-
     fig, ax = plt.subplots(figsize=FIGSIZE)
-    contourf = ax.contourf(sampl, levels=int(nlvls), cmap=cm.get_cmap(color_map))
+    contourf = ax.contourf(sampl, levels=levelsArr, cmap=cm.get_cmap(color_map), extend='both')
 
-    cb_ticks = np.linspace(data_range[0],data_range[1], num_ticks + 1)
-    cb_ticks_labels = [str(tick) for tick in cb_ticks]
-    # cb_ticks_labels[-1] = cb_ticks_labels[-1] + '+'
-
-    cbar = plt.colorbar(contourf, ticks=cb_ticks, orientation='horizontal', ax=ax)
-    cbar.ax.set_xlabel(label)
-
-    # update the tick labels
-    cbar.ax.set_xticklabels(cb_ticks_labels)
-    
+    cbar = plt.colorbar(contourf, orientation='horizontal', extend='both', ax=ax)
+    cbar.ax.tick_params(labelsize=7) 
+    cbar.ax.set_xlabel(label, size=8)
+   
     # remove axes
     ax.remove()
 
     # convert image into base64 encoded string
     with io.BytesIO() as out_img:
-        fig.savefig(out_img, format='png', transparent=True, bbox_inches='tight', pad_inches=0)
+        fig.savefig(out_img, format='png', transparent=True, bbox_inches='tight', pad_inches=0, dpi='figure')
+        out_img.seek(0)
+
+        # save in s3 bucket as well for caching
+        s3.put_object(Body=out_img, Bucket=bucket_name, Key=legend_filename,
+            ACL='public-read')
+
         out_img.seek(0)
         encoded_img = base64.b64encode(out_img.read()).decode('utf-8')
 

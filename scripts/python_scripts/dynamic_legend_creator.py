@@ -20,10 +20,14 @@ def lambda_handler(event, context):
     context: AWS Lambda uses this parameter to provide runtime information to your handler. 
     This parameter is of the LambdaContext type.
     -----------------------------------------------------------------------
+    Notes:
+
+    https://stackoverflow.com/questions/35804042/aws-api-gateway-and-lambda-to-return-image
+    -----------------------------------------------------------------------
     Output: response object
     -----------------------------------------------------------------------
     Author: Michael Christensen
-    Date Modified: 03/09/2019
+    Date Modified: 03/11/2019
     """
     response_obj = {
         "isBase64Encoded": True,
@@ -45,25 +49,14 @@ if __name__ == '__main__':
 
     event = {
         "queryStringParameters": {
-            "color_map": "jet",
-            "data_range": [0,50],
-            "interval": 'None',
+            "color_map": "magma",
+            "data_range": "0,2",
+            "interval": "0.25",
             "label": "Current Speed (m/s)"
-
         }
     }
 
     lambda_handler(event,'')
-
+# https://5qkqvek867.execute-api.us-east-2.amazonaws.com/staging/legend?color_map=jet&data_range=0,2&interval=0.25&label=Current Speed (m/s)
 # https://a7vap1k0cl.execute-api.us-east-2.amazonaws.com/staging/dynamic-tile/5/8/13?dataset=RTOFS_DATA&sub_resource=ocean_current_speed&level=0&time=2019-02-21T23:00Z
 # https://a7vap1k0cl.execute-api.us-east-2.amazonaws.com/staging/dynamic-tile/2/1/2?dataset=GFS_DATA&sub_resource=wind_speed&level=10&time=2019-02-26T23:00Z&n_levels=100&color_map=magma&data_range=0,100
-
-
-
-
-
-
-
-
-    
-    

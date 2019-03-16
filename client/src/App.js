@@ -28,8 +28,6 @@ import 'leaflet-velocity/dist/leaflet-velocity';
 import 'leaflet-velocity/dist/leaflet-velocity.css';
 import '@ansur/leaflet-pulse-icon/dist/L.Icon.Pulse.js';
 import '@ansur/leaflet-pulse-icon/dist/L.Icon.Pulse.css';
-// import { parseTimeseriesData } from './scripts/parseTimeseriesData';
-// import { parseProfileData } from './scripts/parseProfileData';
 
 delete L.Icon.Default.prototype._getIconUrl;
 
@@ -98,6 +96,7 @@ class App extends Component {
     this.handleCloseChartModal = this.handleCloseChartModal.bind(this);
     this.handleSettingsPanelVisibility = this.handleSettingsPanelVisibility.bind(this);
     this.handleSettingsPanelHide = this.handleSettingsPanelHide.bind(this);
+    this.handleLayerOpacityUpdate = this.handleLayerOpacityUpdate.bind(this);
     this.updateValidTime = this.updateValidTime.bind(this);
     this.handlePopupChartClick = this.handlePopupChartClick.bind(this);
     this.layerLoadError = this.layerLoadError.bind(this);
@@ -276,7 +275,7 @@ class App extends Component {
             streamFlowColorScale: layerObj['streamFlowColorScale'],
             streamFlowLayer: layerObj['streamFlowLayer'],
             overlayPriority: layerObj['overlayPriority'],
-            opacity: layerObj['defaultOpacity']
+            rasterProps: {...layerObj['rasterProps']}
           };
 
           // add layer id to metOceanLayers list (this list maintains the order the layers are in)
@@ -653,6 +652,7 @@ class App extends Component {
    */
   async buildMetocTileLayer(layerObj,res) {
     let mapLayers = Object.assign({}, this.state.mapLayers);
+    let dataRangeDefined = layerObj['rasterProps']['currentMin'] ? true : false;
     
     // build query paramater object and then prune those keys which have no value
     let queryParams = {
@@ -660,9 +660,10 @@ class App extends Component {
       dataset: layerObj['dataset'],
       sub_resource: layerObj['subResource'],
       level: !isNaN(layerObj['level']) ? layerObj['level'].toString() : 'blank',
-      color_map: layerObj['colorMap'],
-      data_range: layerObj['dataRange'],
-      n_levels: layerObj['numLevels']
+      color_map: layerObj['rasterProps']['colormap'],
+      data_range: dataRangeDefined ? 
+        `${layerObj['rasterProps']['currentMin']},${layerObj['rasterProps']['currentMax']}` : undefined,
+      interval: layerObj['rasterProps']['interval']
     }
 
     let param, paramArr = [];
@@ -678,7 +679,7 @@ class App extends Component {
     
     // add tile imagery data
     let tileOptions = {
-      opacity: layerObj['opacity'],
+      opacity: layerObj['rasterProps']['opacity'],
       // maxNativeZoom: layerObj['maxNativeZoom'],
       // minNativeZoom: layerObj['minNativeZoom']
     }
@@ -686,8 +687,8 @@ class App extends Component {
     // add pane as an option is the layer contains overlayPriority key
     tileOptions = layerObj['overlayPriority'] ? {...tileOptions, pane: layerObj['overlayPriority']} : tileOptions;
     
+    // TODO: move this to a more easily editable location
     let apiGatewayEndpoint = 'https://a7vap1k0cl.execute-api.us-east-2.amazonaws.com';
-    
     let tileLayer = await L.tileLayer(`${apiGatewayEndpoint}/staging/dynamic-tile/{z}/{x}/{y}?${queryStr}`, tileOptions);
 
     // set tile layer events
@@ -735,7 +736,7 @@ class App extends Component {
     let mapLayers = Object.assign({}, this.state.mapLayers);
 
     // add tile imagery data
-    let tileOptions = {opacity: layerObj['opacity'], ...extraOptions};
+    let tileOptions = {opacity: layerObj['rasterProps']['opacity'], ...extraOptions};
 
     // add pane as an option if the layer contains overlayPriority key
     tileOptions = layerObj['overlayPriority'] ? {...tileOptions, pane: layerObj['overlayPriority']} : tileOptions;
@@ -774,7 +775,7 @@ class App extends Component {
     let mapLayers = Object.assign({}, this.state.mapLayers);
 
     let imageOptions = {
-      opacity: layerObj['opacity']
+      opacity: layerObj['rasterProps']['opacity']
     }
 
     // add pane as an option if the layer contains overlayPriority key
@@ -906,10 +907,6 @@ class App extends Component {
   }
 
   handleSettingsPanelVisibility(layerID) {
-    // debugger
-
-    // update items in settings panel and open if it isnt
-    // TODO: add settings panel next to drawer.. put it inside clickawaylistener?.. also include 'x' to close
     this.setState({activeSettingsLayer: layerID}, () => {
       this.setState({settingsPanelOpen: true})
     })
@@ -917,6 +914,19 @@ class App extends Component {
 
   handleSettingsPanelHide() {
     this.setState({settingsPanelOpen: false})
+  }
+
+  handleLayerOpacityUpdate(layerID, opacityValue) {
+    // TODO update the opacity of the layer in state and then update layer
+    // TODO if default isnt set then need to set it
+    let decimalOpacity = opacityValue/100;
+    let mapLayers = Object.assign({},this.state.mapLayers)
+    mapLayers[layerID]['rasterProps']['opacity'] = decimalOpacity
+
+    let id = this.layerBindings[layerID];
+    this.setState({mapLayers},() => {
+      this.leafletLayerGroup.getLayer(id).setOpacity(decimalOpacity);
+    });    
   }
 
   componentWillMount() {
@@ -936,11 +946,11 @@ class App extends Component {
             minNativeZoom: layerObj['minNativeZoom'],
             maxNativeZoom: layerObj['maxNativeZoom'],
             addDataFunc: layerObj['addDataFunc'],
-            opacity: layerObj['defaultOpacity'] || 1,
             overlayPriority: layerObj['overlayPriority'],
             endPoint: layerObj['endPoint'],
             endPointInfo: layerObj['endPointInfo'],
-            legendUrl: layerObj['legendUrl']
+            legendUrl: layerObj['legendUrl'],
+            rasterProps: layerObj['rasterProps'] ? {...layerObj['rasterProps']} : null
           };
           orderedMapLayers.push(id);  
         })
@@ -1024,6 +1034,7 @@ class App extends Component {
         <SettingsPanel 
           {...this.state}
           handleSettingsPanelHide = {this.handleSettingsPanelHide}
+          handleLayerOpacityUpdate = {this.handleLayerOpacityUpdate}
         />
       </div>
     );
