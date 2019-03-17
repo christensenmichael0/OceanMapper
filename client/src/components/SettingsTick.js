@@ -18,7 +18,7 @@ function SettingsTick({ tick, count }) {  // your own tick component
         style={{
           position: 'absolute',
           marginTop: 40,
-          fontSize: 10,
+          fontSize: 12, // 10,
           textAlign: 'center',
           marginLeft: `${-(100 / count) / 2}%`,
           width: `${100 / count}%`,

@@ -1,5 +1,4 @@
 import React from "react";
-import classNames from 'classnames';
 import { withStyles } from '@material-ui/core/styles';
 import { Slider, Rail, Handles, Tracks, Ticks } from 'react-compound-slider'
 import Handle from './Handle';

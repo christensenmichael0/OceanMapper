@@ -4,11 +4,11 @@ import { withStyles } from '@material-ui/core/styles';
 const styles = theme => ({
   handleDiv: {
     position: 'absolute',
-    marginLeft: -6, // -10,
-    marginTop: 20, // 30 
+    marginLeft: -6,
+    marginTop: 20, 
     zIndex: 2,
-    width: 12, // 20
-    height: 12, // 20
+    width: 12,
+    height: 12,
     border: 0,
     textAlign: 'center',
     cursor: 'pointer',
@@ -18,8 +18,8 @@ const styles = theme => ({
   },
   handleLabel: {
     fontFamily: 'Roboto', 
-    fontSize: 11, 
-    marginTop: -15
+    fontSize: 13, 
+    marginTop: -17
   }
 })
 

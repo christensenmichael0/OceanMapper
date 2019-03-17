@@ -1,5 +1,4 @@
 import React from "react";
-import classNames from 'classnames';
 import { withStyles } from '@material-ui/core/styles';
 import { Slider, Rail, Handles, Tracks, Ticks } from 'react-compound-slider'
 import Handle from './Handle';
@@ -24,7 +23,7 @@ const styles = theme => ({
   }
 });
 
-/** Component used to build a dynamic legend */
+/** Component used to build settings panel datarange slider */
 const DataRangeSlider = (props) => {
 
   return (
@@ -68,7 +67,7 @@ const DataRangeSlider = (props) => {
         </div>
       )}
     </Tracks>
-    <Ticks count={15}> 
+    <Ticks count={10}> 
       {({ ticks }) => (
         <div className="slider-ticks">
           {ticks.map(tick => (

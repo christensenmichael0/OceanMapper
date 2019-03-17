@@ -3,6 +3,14 @@ export const tileLayers = ['getModelField', 'getGebcoBathy'];
 export const dataLayers = ['getModelField','getActiveDrilling'];
 export const staticLegendEndpoint = 'https://s3.us-east-2.amazonaws.com/oceanmapper-data-storage/dynamic_legend_cache/';
 
+export const colorPaletteMapping = [
+  {viridis: 'https://s3.us-east-2.amazonaws.com/oceanmapper-data-storage/colorramps/viridis_colorbar.png'},
+  {magma: 'https://s3.us-east-2.amazonaws.com/oceanmapper-data-storage/colorramps/magma_colorbar.png'},
+  {jet: 'https://s3.us-east-2.amazonaws.com/oceanmapper-data-storage/colorramps/jet_colorbar.png'},
+  {rainbow: 'https://s3.us-east-2.amazonaws.com/oceanmapper-data-storage/colorramps/rainbow_colorbar.png'},
+  {cool: 'https://s3.us-east-2.amazonaws.com/oceanmapper-data-storage/colorramps/cool_colorbar.png'}
+];
+
 const dynamicLegendEndpoint = 'https://5qkqvek867.execute-api.us-east-2.amazonaws.com/staging/legend';
 
 export const layers = [
@@ -45,6 +53,7 @@ export const layers = [
             dataRangeIntervals: [0.125, .25, .5, 1],
             colorramps: ['viridis', 'magma', 'jet', 'rainbow', 'cool']
           },
+          settingsTools: ['opacity', 'datarange', 'interval', 'colormap'],
           visibleTOC: false,
           defaultOn: false
         }
@@ -86,6 +95,7 @@ export const layers = [
             dataRangeIntervals: [0.125, .25, .5, 1],
             colorramps: ['viridis', 'magma', 'jet', 'rainbow', 'cool']
           },
+          settingsTools: ['opacity', 'datarange', 'interval', 'colormap'],
           visibleTOC: true,
           defaultOn: false
         }
@@ -127,6 +137,7 @@ export const layers = [
             dataRangeIntervals: [1, 5, 10],
             colorramps: ['viridis', 'magma', 'jet', 'rainbow', 'cool']
           },
+          settingsTools: ['opacity', 'datarange', 'interval', 'colormap'],
           visibleTOC: true,
           defaultOn: false
         }
@@ -162,6 +173,7 @@ export const layers = [
             dataRangeIntervals: [0.5, 1, 2],
             colorramps: ['viridis', 'magma', 'jet', 'rainbow', 'cool']
           },
+          settingsTools: ['opacity', 'datarange', 'interval', 'colormap'],
           visibleTOC: true,
           defaultOn: false
         },
@@ -183,6 +195,7 @@ export const layers = [
           rasterProps: {
             opacity: 1.0
           },
+          settingsTools: ['opacity'],
           visibleTOC: true,
           defaultOn: false
         },
@@ -211,6 +224,7 @@ export const layers = [
             dataRangeIntervals: [1],
             colorramps: ['viridis', 'magma', 'jet', 'rainbow', 'cool']
           },
+          settingsTools: ['opacity', 'datarange', 'interval', 'colormap'],
           visibleTOC: true,
           defaultOn: false
         }

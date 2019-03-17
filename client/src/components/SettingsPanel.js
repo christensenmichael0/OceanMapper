@@ -1,17 +1,16 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-// import classNames from 'classnames';
 import Paper from '@material-ui/core/Paper';
 import Draggable from 'react-draggable';
 import Typography from '@material-ui/core/Typography';
 import IconButton from '@material-ui/core/IconButton';
-import Button from '@material-ui/core/Button';
 import CancelIcon from '@material-ui/icons/Cancel';
 import Divider from '@material-ui/core/Divider';
 import { withStyles } from '@material-ui/core/styles';
 import OpacitySlider from './OpacitySlider';
 import DataRangeSlider from './DataRangeSlider';
 import ColorMapDropdown from './ColorMapDropdown';
+import IntervalDropdown from './IntervalDropdown';
 import externalStyles from '../scripts/styleVariables';
 
 const drawerZIndex = externalStyles.drawerZIndex;
@@ -32,25 +31,29 @@ const styles = theme => ({
     ...theme.mixins.gutters(),
     position: 'absolute',
     top: 100,
-    zIndex: drawerZIndex,
+    zIndex: drawerZIndex+1,
     paddingTop: theme.spacing.unit * 2,
     paddingBottom: theme.spacing.unit * 2,
     width: settingsPanelWidth,
     marginLeft: drawerWidth + 5,
+    overflow: 'auto',
     [`${theme.breakpoints.down('sm')}`]: { 
       width: settingsPanelWidth,
       marginLeft: drawerWidthNarrow  + 5, 
-    }, 
+    },
+    [`${theme.breakpoints.down('xs')}`]: {
+      position: 'absolute',
+      margin: 'auto',
+      left: 0,
+      top: 0,
+      maxWidth: '95vw',
+      maxHeight: '95vh'
+    },
   },
   closeButton: {
     position: 'absolute',
     top: 1,
     right: 1,
-  },
-  settingTitle: {
-    fontFamily: 'Roboto, arial',
-    fontSize: '1em',
-    'margin': 0
   }
 });
 
@@ -78,28 +81,52 @@ const SettingsPanel = (props) => {
             {props.mapLayers[props.activeSettingsLayer]['niceName']}
           </Typography>
           <Divider style={{ margin: 5 }}/>
-          <p className={props.classes.settingTitle}>Opacity</p>
-          <OpacitySlider 
-            layerID={props.activeSettingsLayer}
-            opacity={props.mapLayers[props.activeSettingsLayer]['rasterProps']['opacity']}
-            handleLayerSettingsUpdate={props.handleLayerSettingsUpdate}
-          />
-          <p className={props.classes.settingTitle}>Data Range</p>
-          <DataRangeSlider 
-            layerID={props.activeSettingsLayer}
-            absoluteMin={props.mapLayers[props.activeSettingsLayer]['rasterProps']['absoluteMin']}
-            absoluteMax={props.mapLayers[props.activeSettingsLayer]['rasterProps']['absoluteMax']}
-            currentMin={props.mapLayers[props.activeSettingsLayer]['rasterProps']['currentMin']}
-            currentMax={props.mapLayers[props.activeSettingsLayer]['rasterProps']['currentMax']}
-            interval={props.mapLayers[props.activeSettingsLayer]['rasterProps']['interval']}
-            handleLayerSettingsUpdate={props.handleLayerSettingsUpdate}
-          />
-          <p className={props.classes.settingTitle}>Colormap</p>
-          <ColorMapDropdown 
-            colormap={props.mapLayers[props.activeSettingsLayer]['rasterProps']['colormap']}
-            colorramps = {props.mapLayers[props.activeSettingsLayer]['rasterProps']['colorramps']}
-            handleLayerSettingsUpdate={props.handleLayerSettingsUpdate}
-          />
+          {props.mapLayers[props.activeSettingsLayer]['settingsTools'].indexOf('opacity') > -1 &&
+            <React.Fragment>
+              <Typography variant="body1">Opacity</Typography>
+              <OpacitySlider 
+                layerID={props.activeSettingsLayer}
+                opacity={props.mapLayers[props.activeSettingsLayer]['rasterProps']['opacity']}
+                handleLayerSettingsUpdate={props.handleLayerSettingsUpdate}
+              />
+            </React.Fragment>
+          }
+          {props.mapLayers[props.activeSettingsLayer]['settingsTools'].indexOf('datarange') > -1 &&
+            <React.Fragment>
+              <Typography variant="body1">Data Range</Typography>
+              <DataRangeSlider 
+                layerID={props.activeSettingsLayer}
+                absoluteMin={props.mapLayers[props.activeSettingsLayer]['rasterProps']['absoluteMin']}
+                absoluteMax={props.mapLayers[props.activeSettingsLayer]['rasterProps']['absoluteMax']}
+                currentMin={props.mapLayers[props.activeSettingsLayer]['rasterProps']['currentMin']}
+                currentMax={props.mapLayers[props.activeSettingsLayer]['rasterProps']['currentMax']}
+                interval={props.mapLayers[props.activeSettingsLayer]['rasterProps']['interval']}
+                handleLayerSettingsUpdate={props.handleLayerSettingsUpdate}
+              />
+            </React.Fragment>
+          }
+          {props.mapLayers[props.activeSettingsLayer]['settingsTools'].indexOf('interval') > -1 &&
+            <React.Fragment>
+              <Typography variant="body1">Data Interval</Typography>
+              <IntervalDropdown 
+                layerID={props.activeSettingsLayer}
+                interval={props.mapLayers[props.activeSettingsLayer]['rasterProps']['interval']}
+                intervalArr={props.mapLayers[props.activeSettingsLayer]['rasterProps']['dataRangeIntervals']}
+                handleLayerSettingsUpdate={props.handleLayerSettingsUpdate}
+              />
+            </React.Fragment>
+          }
+          {props.mapLayers[props.activeSettingsLayer]['settingsTools'].indexOf('colormap') > -1 &&
+            <React.Fragment>
+              <Typography variant="body1">Colormap</Typography>
+              <ColorMapDropdown
+                layerID={props.activeSettingsLayer}
+                colormap={props.mapLayers[props.activeSettingsLayer]['rasterProps']['colormap']}
+                colorramps = {props.mapLayers[props.activeSettingsLayer]['rasterProps']['colorramps']}
+                handleLayerSettingsUpdate={props.handleLayerSettingsUpdate}
+              />
+            </React.Fragment>
+          }
         </Paper>
       </Draggable>
     )

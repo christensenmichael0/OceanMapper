@@ -1,5 +1,5 @@
 // Left Drawer
-exports.drawerZIndex = 999;
+exports.drawerZIndex = 1201;
 exports.drawerWidth = 365;
 exports.drawerWidthNarrow = 280; // for small viewports (< 600px)
 

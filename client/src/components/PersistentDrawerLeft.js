@@ -64,6 +64,7 @@ const styles = theme => ({
     flexShrink: 0,
   },
   drawerPaper: {
+    zIndex: drawerZIndex,
     width: drawerWidth, 
     [`${theme.breakpoints.down('sm')}`]: { 
       width: drawerWidthNarrow, 
@@ -149,11 +150,6 @@ class PersistentDrawerLeft extends React.Component {
     );
   }
 }
-
-
-// classes={{ root: open ?  `${classes.test} ${classes.sliderRootShrink}` : `${classes.test} ${classes.sliderRoot}`, 
-// className={classes.sliderRoot}
-// root: open ?  classes.sliderRootShrink : classes.sliderRoot
 
 PersistentDrawerLeft.propTypes = {
   classes: PropTypes.object.isRequired,

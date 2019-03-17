@@ -1,5 +1,4 @@
 import React from 'react';
-import classNames from 'classnames';
 import { withStyles } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
 import TOCExpansionPanel from './TOCExpansionPanel';
@@ -23,13 +22,11 @@ library.add(faExclamationTriangle);
 const styles = theme => ({
   img: {
     width: '100%',
-  },
+  }
 });
 
-// TODO add some logic for error loading a layer.. i.e. probably don't show legend or date valid
-
 function TableOfContents(props) {
-  const {toc, classes } = props;
+  const {toc } = props;
 
   const constructLabel = (labelText, layerID, includeSettings) => (
     <React.Fragment>
@@ -81,7 +78,6 @@ function TableOfContents(props) {
                        <Typography variant="overline" gutterBottom>
                         Date Valid: {props['mapLayers'][subresource['id']]['validTime']}
                       </Typography>
-                      {/*{subresource['legendUrl'] ? <img src={subresource['legendUrl']} alt='data-legend' className={classNames(classes.img)}/> : ''}*/}
                       {subresource['legendUrl'] && 
                         <DynamicLegend 
                           layer={props['mapLayers'][subresource['id']]}

@@ -18,7 +18,6 @@ import { buildDynamicPopupContent } from './scripts/buildDynamicPopupContent';
 import { parseData } from './scripts/parseData';
 import priorityMap from './scripts/layerPriority';
 import { mapConfig } from './scripts/mapConfig';
-import { formatDateTime } from './scripts/formatDateTime';
 import _ from 'lodash';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -275,7 +274,8 @@ class App extends Component {
             streamFlowColorScale: layerObj['streamFlowColorScale'],
             streamFlowLayer: layerObj['streamFlowLayer'],
             overlayPriority: layerObj['overlayPriority'],
-            rasterProps: {...layerObj['rasterProps']}
+            rasterProps: {...layerObj['rasterProps']},
+            settingsTools: layerObj['settingsTools']
           };
 
           // add layer id to metOceanLayers list (this list maintains the order the layers are in)
@@ -907,8 +907,20 @@ class App extends Component {
       this.setState({mapLayers},() => {
         this.leafletLayerGroup.getLayer(id).setOpacity(decimalOpacity);
       });  
+    } else if (settingType === 'colormap') {
+       mapLayers[layerID]['rasterProps']['colormap'] = value;
+      this.setState({mapLayers},() => {
+        let tileLayerEndpoint = buildTileFetchEndpoint(this.state.mapTime, this.state.mapLayers[layerID]);
+        leafletLayer.setUrl(tileLayerEndpoint);
+      });  
+    } else if (settingType === 'interval') {
+      mapLayers[layerID]['rasterProps']['interval'] = value;
+      this.setState({mapLayers},() => {
+        let tileLayerEndpoint = buildTileFetchEndpoint(this.state.mapTime, this.state.mapLayers[layerID]);
+        leafletLayer.setUrl(tileLayerEndpoint);
+      });
     } else {
-      debugger
+      // TODO: for restoring defaults
     }
   }
 
