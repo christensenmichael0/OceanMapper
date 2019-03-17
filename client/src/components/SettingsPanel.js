@@ -57,14 +57,12 @@ const styles = theme => ({
   }
 });
 
-// TODO: build the contents dynamically based on a settings tools array in the layers
-
 /** Component used to display layer settings */
 const SettingsPanel = (props) => {
 
-  const { classes, settingsPanelOpen } = props;
+  const { classes, activeSettingsLayer } = props;
 
-  if (settingsPanelOpen) {
+  if (activeSettingsLayer) {
     return (
       <Draggable>
         <Paper className={classes.root} elevation={2}>
@@ -78,51 +76,51 @@ const SettingsPanel = (props) => {
             align={'center'} 
             gutterBottom={true}
           >
-            {props.mapLayers[props.activeSettingsLayer]['niceName']}
+            {activeSettingsLayer['niceName']}
           </Typography>
           <Divider style={{ margin: 5 }}/>
-          {props.mapLayers[props.activeSettingsLayer]['settingsTools'].indexOf('opacity') > -1 &&
+          {activeSettingsLayer['settingsTools'].indexOf('opacity') > -1 &&
             <React.Fragment>
               <Typography variant="body1">Opacity</Typography>
               <OpacitySlider 
-                layerID={props.activeSettingsLayer}
-                opacity={props.mapLayers[props.activeSettingsLayer]['rasterProps']['opacity']}
+                layerID={activeSettingsLayer['id']}
+                opacity={activeSettingsLayer['rasterProps']['opacity']}
                 handleLayerSettingsUpdate={props.handleLayerSettingsUpdate}
               />
             </React.Fragment>
           }
-          {props.mapLayers[props.activeSettingsLayer]['settingsTools'].indexOf('datarange') > -1 &&
+          {activeSettingsLayer['settingsTools'].indexOf('datarange') > -1 &&
             <React.Fragment>
               <Typography variant="body1">Data Range</Typography>
               <DataRangeSlider 
-                layerID={props.activeSettingsLayer}
-                absoluteMin={props.mapLayers[props.activeSettingsLayer]['rasterProps']['absoluteMin']}
-                absoluteMax={props.mapLayers[props.activeSettingsLayer]['rasterProps']['absoluteMax']}
-                currentMin={props.mapLayers[props.activeSettingsLayer]['rasterProps']['currentMin']}
-                currentMax={props.mapLayers[props.activeSettingsLayer]['rasterProps']['currentMax']}
-                interval={props.mapLayers[props.activeSettingsLayer]['rasterProps']['interval']}
+                layerID={activeSettingsLayer['id']}
+                absoluteMin={activeSettingsLayer['rasterProps']['absoluteMin']}
+                absoluteMax={activeSettingsLayer['rasterProps']['absoluteMax']}
+                currentMin={activeSettingsLayer['rasterProps']['currentMin']}
+                currentMax={activeSettingsLayer['rasterProps']['currentMax']}
+                interval={activeSettingsLayer['rasterProps']['interval']}
                 handleLayerSettingsUpdate={props.handleLayerSettingsUpdate}
               />
             </React.Fragment>
           }
-          {props.mapLayers[props.activeSettingsLayer]['settingsTools'].indexOf('interval') > -1 &&
+          {activeSettingsLayer['settingsTools'].indexOf('interval') > -1 &&
             <React.Fragment>
               <Typography variant="body1">Data Interval</Typography>
               <IntervalDropdown 
-                layerID={props.activeSettingsLayer}
-                interval={props.mapLayers[props.activeSettingsLayer]['rasterProps']['interval']}
-                intervalArr={props.mapLayers[props.activeSettingsLayer]['rasterProps']['dataRangeIntervals']}
+                layerID={activeSettingsLayer['id']}
+                interval={activeSettingsLayer['rasterProps']['interval']}
+                intervalArr={activeSettingsLayer['rasterProps']['dataRangeIntervals']}
                 handleLayerSettingsUpdate={props.handleLayerSettingsUpdate}
               />
             </React.Fragment>
           }
-          {props.mapLayers[props.activeSettingsLayer]['settingsTools'].indexOf('colormap') > -1 &&
+          {activeSettingsLayer['settingsTools'].indexOf('colormap') > -1 &&
             <React.Fragment>
               <Typography variant="body1">Colormap</Typography>
               <ColorMapDropdown
-                layerID={props.activeSettingsLayer}
-                colormap={props.mapLayers[props.activeSettingsLayer]['rasterProps']['colormap']}
-                colorramps = {props.mapLayers[props.activeSettingsLayer]['rasterProps']['colorramps']}
+                layerID={activeSettingsLayer['id']}
+                colormap={activeSettingsLayer['rasterProps']['colormap']}
+                colorramps = {activeSettingsLayer['rasterProps']['colorramps']}
                 handleLayerSettingsUpdate={props.handleLayerSettingsUpdate}
               />
             </React.Fragment>

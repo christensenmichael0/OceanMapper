@@ -15,8 +15,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
 library.add(faExclamationTriangle);
 
-// label={<LoadingSpinner />subresource['niceName']}
-
 // https://stackoverflow.com/questions/35905988/react-js-how-to-append-a-component-on-click
 
 const styles = theme => ({

@@ -880,8 +880,9 @@ class App extends Component {
   }
 
   handleSettingsPanelVisibility(layerID) {
-    this.setState({activeSettingsLayer: layerID}, () => {
-      this.setState({settingsPanelOpen: true})
+    this.setState({
+      activeSettingsLayer: layerID, 
+      settingsPanelOpen: true
     })
   }
 
@@ -908,13 +909,13 @@ class App extends Component {
         this.leafletLayerGroup.getLayer(id).setOpacity(decimalOpacity);
       });  
     } else if (settingType === 'colormap') {
-       mapLayers[layerID]['rasterProps']['colormap'] = value;
+      mapLayers[layerID]['rasterProps']['colormap'] = value;
       this.setState({mapLayers},() => {
         let tileLayerEndpoint = buildTileFetchEndpoint(this.state.mapTime, this.state.mapLayers[layerID]);
         leafletLayer.setUrl(tileLayerEndpoint);
       });  
     } else if (settingType === 'interval') {
-      mapLayers[layerID]['rasterProps']['interval'] = value;
+      mapLayers[layerID]['rasterProps']['interval'] = Number(value);
       this.setState({mapLayers},() => {
         let tileLayerEndpoint = buildTileFetchEndpoint(this.state.mapTime, this.state.mapLayers[layerID]);
         leafletLayer.setUrl(tileLayerEndpoint);
@@ -1026,12 +1027,14 @@ class App extends Component {
         />
         <div ref={this._mapNode} id="map" className={classNames(classes.map)} />
         <CoordinateDisplay lat={this.state.cursorLat} lng={this.state.cursorLng} />
-        <SettingsPanel 
-          {...this.state}
-          handleSettingsPanelHide = {this.handleSettingsPanelHide}
-          handleLayerOpacityUpdate = {this.handleLayerOpacityUpdate}
-          handleLayerSettingsUpdate = {this.handleLayerSettingsUpdate}
+        {this.state.settingsPanelOpen && 
+          <SettingsPanel
+            activeSettingsLayer = {this.state.mapLayers[this.state.activeSettingsLayer]}
+            handleSettingsPanelHide = {this.handleSettingsPanelHide}
+            handleLayerOpacityUpdate = {this.handleLayerOpacityUpdate}
+            handleLayerSettingsUpdate = {this.handleLayerSettingsUpdate}
         />
+      }
       </div>
     );
   }

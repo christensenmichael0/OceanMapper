@@ -25,7 +25,6 @@ const styles = theme => ({
 
 /** Component used to build settings panel datarange slider */
 const DataRangeSlider = (props) => {
-
   return (
     <Slider
       className={props.classes.sliderStyle}
