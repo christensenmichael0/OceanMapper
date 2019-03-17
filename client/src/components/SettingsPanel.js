@@ -10,6 +10,8 @@ import CancelIcon from '@material-ui/icons/Cancel';
 import Divider from '@material-ui/core/Divider';
 import { withStyles } from '@material-ui/core/styles';
 import OpacitySlider from './OpacitySlider';
+import DataRangeSlider from './DataRangeSlider';
+import ColorMapDropdown from './ColorMapDropdown';
 import externalStyles from '../scripts/styleVariables';
 
 const drawerZIndex = externalStyles.drawerZIndex;
@@ -44,8 +46,15 @@ const styles = theme => ({
     position: 'absolute',
     top: 1,
     right: 1,
+  },
+  settingTitle: {
+    fontFamily: 'Roboto, arial',
+    fontSize: '1em',
+    'margin': 0
   }
 });
+
+// TODO: build the contents dynamically based on a settings tools array in the layers
 
 /** Component used to display layer settings */
 const SettingsPanel = (props) => {
@@ -68,11 +77,28 @@ const SettingsPanel = (props) => {
           >
             {props.mapLayers[props.activeSettingsLayer]['niceName']}
           </Typography>
-          <Divider />
+          <Divider style={{ margin: 5 }}/>
+          <p className={props.classes.settingTitle}>Opacity</p>
           <OpacitySlider 
             layerID={props.activeSettingsLayer}
             opacity={props.mapLayers[props.activeSettingsLayer]['rasterProps']['opacity']}
-            handleLayerOpacityUpdate={props.handleLayerOpacityUpdate}
+            handleLayerSettingsUpdate={props.handleLayerSettingsUpdate}
+          />
+          <p className={props.classes.settingTitle}>Data Range</p>
+          <DataRangeSlider 
+            layerID={props.activeSettingsLayer}
+            absoluteMin={props.mapLayers[props.activeSettingsLayer]['rasterProps']['absoluteMin']}
+            absoluteMax={props.mapLayers[props.activeSettingsLayer]['rasterProps']['absoluteMax']}
+            currentMin={props.mapLayers[props.activeSettingsLayer]['rasterProps']['currentMin']}
+            currentMax={props.mapLayers[props.activeSettingsLayer]['rasterProps']['currentMax']}
+            interval={props.mapLayers[props.activeSettingsLayer]['rasterProps']['interval']}
+            handleLayerSettingsUpdate={props.handleLayerSettingsUpdate}
+          />
+          <p className={props.classes.settingTitle}>Colormap</p>
+          <ColorMapDropdown 
+            colormap={props.mapLayers[props.activeSettingsLayer]['rasterProps']['colormap']}
+            colorramps = {props.mapLayers[props.activeSettingsLayer]['rasterProps']['colorramps']}
+            handleLayerSettingsUpdate={props.handleLayerSettingsUpdate}
           />
         </Paper>
       </Draggable>

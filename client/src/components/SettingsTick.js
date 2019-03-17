@@ -6,7 +6,7 @@ function SettingsTick({ tick, count }) {  // your own tick component
       <div
         style={{
           position: 'absolute',
-          marginTop: 52,
+          marginTop: 32,
           marginLeft: -0.5,
           width: 1,
           height: 8,
@@ -17,7 +17,7 @@ function SettingsTick({ tick, count }) {  // your own tick component
       <div
         style={{
           position: 'absolute',
-          marginTop: 60,
+          marginTop: 40,
           fontSize: 10,
           textAlign: 'center',
           marginLeft: `${-(100 / count) / 2}%`,

@@ -17,27 +17,27 @@ const styles = theme => ({
   railStyle: { 
     position: 'absolute',
     width: '100%',
-    height: 2, // 5
-    marginTop: 25, // 35
+    height: 2,
+    marginTop: 25,
     borderRadius: 5,
     backgroundColor: 'lightgray'
   }
 });
 
-/** Component used to build settings panel opacity slider */
-const OpacitySlider = (props) => {
+/** Component used to build a dynamic legend */
+const DataRangeSlider = (props) => {
 
   return (
     <Slider
       className={props.classes.sliderStyle}
-      domain={[0, 100]}
-      step={1}
+      domain={[props.absoluteMin, props.absoluteMax]}
+      step={props.interval}
       mode={2}
-      values={[props.opacity*100]}
-      onChange={(val) => props.handleLayerSettingsUpdate(props.layerID, 'opacity', val)}
+      values={[props.currentMin, props.currentMax]}
+      onChange={(vals) => props.handleLayerSettingsUpdate(props.layerID, 'data-range', vals)}
     >
     <Rail>
-      {({ getRailProps }) => (  // adding the rail props sets up events on the rail
+      {({ getRailProps }) => (
         <div className={props.classes.railStyle} {...getRailProps()} /> 
       )}
     </Rail>
@@ -54,7 +54,7 @@ const OpacitySlider = (props) => {
         </div>
       )}
     </Handles>
-    <Tracks right={false}>
+    <Tracks left={false} right={false}>
       {({ tracks, getTrackProps }) => (
         <div className="slider-tracks">
           {tracks.map(({ id, source, target }) => (
@@ -68,7 +68,7 @@ const OpacitySlider = (props) => {
         </div>
       )}
     </Tracks>
-    <Ticks values={[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]}>
+    <Ticks count={15}> 
       {({ ticks }) => (
         <div className="slider-ticks">
           {ticks.map(tick => (
@@ -81,4 +81,4 @@ const OpacitySlider = (props) => {
   );
 }
 
-export default withStyles(styles, { withTheme: true })(OpacitySlider);
+export default withStyles(styles, { withTheme: true })(DataRangeSlider);

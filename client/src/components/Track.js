@@ -1,14 +1,15 @@
 import React from "react";
+import { withTheme } from '@material-ui/core/styles';
 
-export const Track = ({ source, target, getTrackProps }) => { // your own track component
+const Track = ({ source, target, getTrackProps, theme }) => { // your own track component
   return (
     <div
       style={{
         position: 'absolute',
-        height: 6, // 10,
+        height: 2,
         zIndex: 1,
-        marginTop: 35,
-        backgroundColor: 'purple', // '#546C91',
+        marginTop: 25, // 35,
+        backgroundColor: theme.palette.secondary.main,
         borderRadius: 5,
         cursor: 'pointer',
         left: `${source.percent}%`,
@@ -18,3 +19,5 @@ export const Track = ({ source, target, getTrackProps }) => { // your own track 
     />
   )
 }
+
+export default withTheme()(Track);

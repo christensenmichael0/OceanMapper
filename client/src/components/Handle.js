@@ -1,28 +1,40 @@
 import React from "react";
+import { withStyles } from '@material-ui/core/styles';
 
-export const Handle = ({ handle: { id, value, percent }, getHandleProps}) => {
+const styles = theme => ({
+  handleDiv: {
+    position: 'absolute',
+    marginLeft: -6, // -10,
+    marginTop: 20, // 30 
+    zIndex: 2,
+    width: 12, // 20
+    height: 12, // 20
+    border: 0,
+    textAlign: 'center',
+    cursor: 'pointer',
+    borderRadius: '50%',
+    backgroundColor: theme.palette.secondary.main,
+    color: '#333',
+  },
+  handleLabel: {
+    fontFamily: 'Roboto', 
+    fontSize: 11, 
+    marginTop: -15
+  }
+})
+
+const Handle = ({ handle: { id, value, percent }, getHandleProps, classes}) => {
   return (
     <div
-      style={{
-        left: `${percent}%`,
-        position: 'absolute',
-        marginLeft: -10, // -15,
-        marginTop: 28,
-        zIndex: 2,
-        width: 20, // 30,
-        height: 20, // 30,
-        border: 0,
-        textAlign: 'center',
-        cursor: 'pointer',
-        borderRadius: '50%',
-        backgroundColor: 'purple', // '#2C4870',
-        color: '#333',
-      }}
+      className={classes.handleDiv}
+      style={{ left: `${percent}%` }}
       {...getHandleProps(id)}
     >
-      <div style={{ fontFamily: 'Roboto', fontSize: 11, marginTop: -15 }}>
+      <div className={classes.handleLabel}>
         {value}
       </div>
     </div>
   )
 }
+
+export default withStyles(styles, { withTheme: true })(Handle);

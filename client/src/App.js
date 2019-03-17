@@ -10,7 +10,7 @@ import CoordinateDisplay from './components/CoordinateDisplay';
 import { layers, dataLayers } from './scripts/layers';
 import moment from 'moment';
 import { getData, getModelField, abortLayerRequest } from './scripts/dataFetchingUtils';
-import { populateImageUrlEndpoint } from './scripts/formattingUtils';
+import { populateImageUrlEndpoint, buildTileFetchEndpoint } from './scripts/formattingUtils';
 import { addCustomLeafletHandlers } from './scripts/addCustomLeafletHandlers';
 import { activeDrillingPopupStaticContent ,
          customLocationPopupStaticContent } from './scripts/buildStaticPopupContent';
@@ -96,7 +96,7 @@ class App extends Component {
     this.handleCloseChartModal = this.handleCloseChartModal.bind(this);
     this.handleSettingsPanelVisibility = this.handleSettingsPanelVisibility.bind(this);
     this.handleSettingsPanelHide = this.handleSettingsPanelHide.bind(this);
-    this.handleLayerOpacityUpdate = this.handleLayerOpacityUpdate.bind(this);
+    this.handleLayerSettingsUpdate = this.handleLayerSettingsUpdate.bind(this);
     this.updateValidTime = this.updateValidTime.bind(this);
     this.handlePopupChartClick = this.handlePopupChartClick.bind(this);
     this.layerLoadError = this.layerLoadError.bind(this);
@@ -652,44 +652,17 @@ class App extends Component {
    */
   async buildMetocTileLayer(layerObj,res) {
     let mapLayers = Object.assign({}, this.state.mapLayers);
-    let dataRangeDefined = layerObj['rasterProps']['currentMin'] ? true : false;
-    
-    // build query paramater object and then prune those keys which have no value
-    let queryParams = {
-      time: `${formatDateTime(this.state.mapTime, 'YYYY-MM-DDTHH:mm', '')}Z`,
-      dataset: layerObj['dataset'],
-      sub_resource: layerObj['subResource'],
-      level: !isNaN(layerObj['level']) ? layerObj['level'].toString() : 'blank',
-      color_map: layerObj['rasterProps']['colormap'],
-      data_range: dataRangeDefined ? 
-        `${layerObj['rasterProps']['currentMin']},${layerObj['rasterProps']['currentMax']}` : undefined,
-      interval: layerObj['rasterProps']['interval']
-    }
-
-    let param, paramArr = [];
-    for (param in queryParams) {
-      if (!queryParams[param]) {
-        delete queryParams[param]; 
-      } else {
-        queryParams[param] === 'blank' ? paramArr.push(`${param}=`) :
-          paramArr.push(`${param}=${queryParams[param]}`)
-      }
-    }
-    let queryStr = paramArr.join('&');
     
     // add tile imagery data
     let tileOptions = {
       opacity: layerObj['rasterProps']['opacity'],
-      // maxNativeZoom: layerObj['maxNativeZoom'],
-      // minNativeZoom: layerObj['minNativeZoom']
     }
 
     // add pane as an option is the layer contains overlayPriority key
     tileOptions = layerObj['overlayPriority'] ? {...tileOptions, pane: layerObj['overlayPriority']} : tileOptions;
     
-    // TODO: move this to a more easily editable location
-    let apiGatewayEndpoint = 'https://a7vap1k0cl.execute-api.us-east-2.amazonaws.com';
-    let tileLayer = await L.tileLayer(`${apiGatewayEndpoint}/staging/dynamic-tile/{z}/{x}/{y}?${queryStr}`, tileOptions);
+    let tileLayerEndpoint = buildTileFetchEndpoint(this.state.mapTime, layerObj)
+    let tileLayer = await L.tileLayer(tileLayerEndpoint, tileOptions);
 
     // set tile layer events
     tileLayer.on('loading', (function() {
@@ -916,17 +889,27 @@ class App extends Component {
     this.setState({settingsPanelOpen: false})
   }
 
-  handleLayerOpacityUpdate(layerID, opacityValue) {
-    // TODO update the opacity of the layer in state and then update layer
-    // TODO if default isnt set then need to set it
-    let decimalOpacity = opacityValue/100;
-    let mapLayers = Object.assign({},this.state.mapLayers)
-    mapLayers[layerID]['rasterProps']['opacity'] = decimalOpacity
-
+  handleLayerSettingsUpdate(layerID, settingType, value) {
+    let mapLayers = Object.assign({},this.state.mapLayers);
     let id = this.layerBindings[layerID];
-    this.setState({mapLayers},() => {
-      this.leafletLayerGroup.getLayer(id).setOpacity(decimalOpacity);
-    });    
+    let leafletLayer = this.leafletLayerGroup.getLayer(id);
+    
+    if (settingType === 'data-range') {
+      mapLayers[layerID]['rasterProps']['currentMin'] = value[0];
+      mapLayers[layerID]['rasterProps']['currentMax'] = value[1];
+      this.setState({mapLayers}, () => {
+        let tileLayerEndpoint = buildTileFetchEndpoint(this.state.mapTime, this.state.mapLayers[layerID]);
+        leafletLayer.setUrl(tileLayerEndpoint);
+      })
+    } else if (settingType === 'opacity') {
+      let decimalOpacity = value[0]/100;
+      mapLayers[layerID]['rasterProps']['opacity'] = decimalOpacity;
+      this.setState({mapLayers},() => {
+        this.leafletLayerGroup.getLayer(id).setOpacity(decimalOpacity);
+      });  
+    } else {
+      debugger
+    }
   }
 
   componentWillMount() {
@@ -1035,6 +1018,7 @@ class App extends Component {
           {...this.state}
           handleSettingsPanelHide = {this.handleSettingsPanelHide}
           handleLayerOpacityUpdate = {this.handleLayerOpacityUpdate}
+          handleLayerSettingsUpdate = {this.handleLayerSettingsUpdate}
         />
       </div>
     );
