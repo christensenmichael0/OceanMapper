@@ -53,6 +53,7 @@ def build_tile_image(incoming_tile, data_key, data_type, additional_params={}):
         body_string = pickle_data['Body'].read()
         data = pickle.loads(body_string)
     except Exception as e:
+        print('failed on pickle load')
         return
 
     # process the data in preparation for tiling
@@ -93,6 +94,11 @@ def build_tile_image(incoming_tile, data_key, data_type, additional_params={}):
     
     cmin, cmax = tile_settings['data_range']
 
+    # set the contour levels
+    if not tile_settings['interval'] is None:
+        interval = float(tile_settings['interval'])
+        lvls = np.arange(cmin, cmax + interval, interval)
+
     # plot entire image on 256 by 256 image then crop to tile extents
     fig, ax = make_tile_figure()
     if data_type == 'wind_speed' or data_type == 'ocean_current_speed':
@@ -102,30 +108,18 @@ def build_tile_image(incoming_tile, data_key, data_type, additional_params={}):
 
         data_array = np.sqrt((u_vel**2) + (v_vel**2))
 
-        n_lvls = tile_settings['n_levels']
-        lvls = np.linspace(cmin, cmax, n_lvls)
-
         ## filled contour (use SORTED indexes for the EPSG3857 drawing surface)
         contourf = ax.contourf(proj_lon_array, proj_lat_array, data_array[sa,:][:,so], 
             levels=lvls, cmap=data_cmap, extend='both')
 
     elif data_type == 'sig_wave_height':
-
         height_raw = data['sig_wave_height'][keep_lat_indx,:]
-        
-        palette = copy.copy(data_cmap)
-        palette.set_bad(alpha = 0.0)
+
         # ax.pcolormesh(proj_lon_array, proj_lat_array, height_raw, shading='flat', cmap=palette,
         # norm=colors.BoundaryNorm([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15],ncolors=palette.N))
+        ax.contourf(proj_lon_array, proj_lat_array, height_raw[sa,:][:,so], cmap=data_cmap,
+            levels=lvls, extend='both')
 
-        if 'n_levels' in tile_settings:
-            n_lvls = tile_settings['n_levels']
-            lvls = np.linspace(cmin, cmax, n_lvls)
-        else:
-            lvls = range(cmin, cmax)
-        
-        ax.contourf(proj_lon_array, proj_lat_array, height_raw[sa,:][:,so], cmap=palette,
-        levels=lvls, extend='both')
 
     elif data_type == 'primary_wave_dir':
         
@@ -160,17 +154,8 @@ def build_tile_image(incoming_tile, data_key, data_type, additional_params={}):
     elif data_type == 'primary_wave_period':
 
         period_raw = data['primary_wave_period'][keep_lat_indx,:]
-        
-        palette = copy.copy(data_cmap)
-        palette.set_bad(alpha = 0.0)
-        
-        if 'n_levels' in tile_settings:
-            n_lvls = tile_settings['n_levels']
-            lvls = np.linspace(cmin, cmax, n_lvls)
-        else:
-            lvls = range(cmin, cmax)
 
-        ax.contourf(proj_lon_array, proj_lat_array, period_raw[sa,:][:,so], cmap=palette,
+        ax.contourf(proj_lon_array, proj_lat_array, period_raw[sa,:][:,so], cmap=data_cmap,
         levels=lvls, extend='both')
 
     else:
@@ -186,7 +171,7 @@ def build_tile_image(incoming_tile, data_key, data_type, additional_params={}):
 
     _epsg_x_min, _epsg_y_min = EPSG3857(*ll[:2])
     _epsg_x_max, _epsg_y_max = EPSG3857(*ll[2:])
-        
+    
     # set x/y limits to match available tile extents
     ax.set_xlim(_epsg_x_min,_epsg_x_max)
     ax.set_ylim(_epsg_y_min, _epsg_y_max)

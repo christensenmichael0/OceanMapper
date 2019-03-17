@@ -13,6 +13,7 @@ import TableOfContents from './TableOfContents';
 import TimeSlider from './TimeSlider';
 import externalStyles from '../scripts/styleVariables';
 
+const drawerZIndex = externalStyles.drawerZIndex;
 const drawerWidth = externalStyles.drawerWidth;
 const drawerWidthNarrow = externalStyles.drawerWidthNarrow; // for small viewports (< 600px)
 
@@ -25,7 +26,7 @@ const styles = theme => ({
       easing: theme.transitions.easing.sharp,
       duration: theme.transitions.duration.leavingScreen,
     }),
-    'zIndex': 999,
+    'zIndex': drawerZIndex,
     'background': 'transparent',
     'boxShadow': 'none',
     'display': 'none'
@@ -45,7 +46,7 @@ const styles = theme => ({
   menuButton: {
     left: 20,
     top: 20,
-    zIndex: 1000,
+    zIndex: drawerZIndex + 1,
     border: `2px solid ${theme.palette.secondary.main}`,
     backgroundColor: theme.palette.primary.main,
     '&:hover': {
@@ -63,6 +64,7 @@ const styles = theme => ({
     flexShrink: 0,
   },
   drawerPaper: {
+    zIndex: drawerZIndex,
     width: drawerWidth, 
     [`${theme.breakpoints.down('sm')}`]: { 
       width: drawerWidthNarrow, 
@@ -128,7 +130,7 @@ class PersistentDrawerLeft extends React.Component {
           <Divider />
           <TableOfContents {...other}/>
           <p style={{fontSize: '0.8em', padding: 10, color: '#595959', fontFamily: 'Roboto, arial'}}>
-            &copy; {(new Date).getFullYear()} Michael Christensen. All rights reserved.
+            &copy; {(new Date()).getFullYear()} Michael Christensen. All rights reserved.
           </p>
         </Drawer>
         <main className={classes.content}>
@@ -148,11 +150,6 @@ class PersistentDrawerLeft extends React.Component {
     );
   }
 }
-
-
-// classes={{ root: open ?  `${classes.test} ${classes.sliderRootShrink}` : `${classes.test} ${classes.sliderRoot}`, 
-// className={classes.sliderRoot}
-// root: open ?  classes.sliderRootShrink : classes.sliderRoot
 
 PersistentDrawerLeft.propTypes = {
   classes: PropTypes.object.isRequired,

@@ -9,7 +9,6 @@ from multiprocessing import Process, Pipe
 
 from utils.s3_filepath_utils import build_tiledata_path
 from utils.datasets import datasets
-# from utils.point_locator import in_ocean
 from api_utils.response_constructor import generate_response
 from api_utils.check_query_params import check_query_params, filter_failed_params
 from api_utils.fetch_data_availability import grab_data_availability
@@ -91,7 +90,7 @@ def lambda_handler(event, context):
     coords = [float(coord) for coord in event['queryStringParameters']['coordinates'].split(',')]
     overlay_type = datasets[dataset]['sub_resource'][sub_resource]['overlay_type']
 
-    # check_ocean = os.getenv('check_ocean', False) # environment variable (easy adjument in lambda env)
+    check_ocean = os.getenv('check_ocean', False) # environment variable (easy adjument in lambda env)
     coord_in_ocean = False # default is not in ocean
     if overlay_type == 'ocean' and check_ocean:
         payload = {'lat': coords[1], 'lon': coords[0]}

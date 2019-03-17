@@ -31,7 +31,8 @@ def lambda_handler(event, context):
     This parameter is of the LambdaContext type.
     -----------------------------------------------------------------------
     Notes:
-    https://aws.amazon.com/blogs/compute/parallel-processing-in-python-with-aws-lambda/
+    
+    https://stackoverflow.com/questions/35804042/aws-api-gateway-and-lambda-to-return-image
     -----------------------------------------------------------------------
     Output: response object
     -----------------------------------------------------------------------
@@ -50,6 +51,7 @@ def lambda_handler(event, context):
     availability_struct = grab_data_availability()
     if not availability_struct:
         # build a blank image and inject data into response
+        print('data availability file not available')
         response_obj['body'] = blank_tile()
         return response_obj
         
@@ -100,9 +102,11 @@ def lambda_handler(event, context):
             response_obj['body'] = build_tile_image(incoming_tile, data_key, sub_resource, 
                 event['queryStringParameters'])
         except:
+            print('failed on tile image build')
             response_obj['body'] = blank_tile()      
         
     else:
+        print('no available time')
         response_obj['body'] = blank_tile()
 
     return response_obj
@@ -112,14 +116,15 @@ if __name__ == '__main__':
 
     event = {
         "queryStringParameters": {
-            "level": "",
             "dataset": "WW3_DATA",
             "sub_resource": "primary_wave_dir",
-            "time": "2019-03-03T23:00Z",
-
+            "time": "2019-03-18T23:00Z",
+            "level": "",
+            "interval": "1",
+            "data_range": "0,10"
         },
         "pathParameters": {
-            "proxy": "6/19/23"# "6/16/27"
+            "proxy": "4/4/6"# "6/16/27"
         }
     }
 
@@ -127,13 +132,3 @@ if __name__ == '__main__':
 
 # https://a7vap1k0cl.execute-api.us-east-2.amazonaws.com/staging/dynamic-tile/5/8/13?dataset=RTOFS_DATA&sub_resource=ocean_current_speed&level=0&time=2019-02-21T23:00Z
 # https://a7vap1k0cl.execute-api.us-east-2.amazonaws.com/staging/dynamic-tile/2/1/2?dataset=GFS_DATA&sub_resource=wind_speed&level=10&time=2019-02-26T23:00Z&n_levels=100&color_map=magma&data_range=0,100
-
-
-
-
-
-
-
-
-    
-    

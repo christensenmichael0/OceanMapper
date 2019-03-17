@@ -5,11 +5,12 @@ import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import PersistentDrawerLeft from './components/PersistentDrawerLeft';
 import ChartModal from './components/ChartModal';
+import SettingsPanel from './components/SettingsPanel';
 import CoordinateDisplay from './components/CoordinateDisplay';
 import { layers, dataLayers } from './scripts/layers';
 import moment from 'moment';
 import { getData, getModelField, abortLayerRequest } from './scripts/dataFetchingUtils';
-import { populateImageUrlEndpoint } from './scripts/formattingUtils';
+import { populateImageUrlEndpoint, buildTileFetchEndpoint } from './scripts/formattingUtils';
 import { addCustomLeafletHandlers } from './scripts/addCustomLeafletHandlers';
 import { activeDrillingPopupStaticContent ,
          customLocationPopupStaticContent } from './scripts/buildStaticPopupContent';
@@ -17,7 +18,6 @@ import { buildDynamicPopupContent } from './scripts/buildDynamicPopupContent';
 import { parseData } from './scripts/parseData';
 import priorityMap from './scripts/layerPriority';
 import { mapConfig } from './scripts/mapConfig';
-import { formatDateTime } from './scripts/formatDateTime';
 import _ from 'lodash';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -27,8 +27,6 @@ import 'leaflet-velocity/dist/leaflet-velocity';
 import 'leaflet-velocity/dist/leaflet-velocity.css';
 import '@ansur/leaflet-pulse-icon/dist/L.Icon.Pulse.js';
 import '@ansur/leaflet-pulse-icon/dist/L.Icon.Pulse.css';
-// import { parseTimeseriesData } from './scripts/parseTimeseriesData';
-// import { parseProfileData } from './scripts/parseProfileData';
 
 delete L.Icon.Default.prototype._getIconUrl;
 
@@ -68,7 +66,8 @@ class App extends Component {
       deepwater_activity: null,
       chartModalOpen: false,
       chartLoading: false,
-      chartData: null
+      chartData: null,
+      settingsPanelOpen: false
     };
 
     this._mapNode = React.createRef();
@@ -94,6 +93,9 @@ class App extends Component {
     this.handleLevelChange = this.handleLevelChange.bind(this);
     this.handleTimeChange = this.handleTimeChange.bind(this);
     this.handleCloseChartModal = this.handleCloseChartModal.bind(this);
+    this.handleSettingsPanelVisibility = this.handleSettingsPanelVisibility.bind(this);
+    this.handleSettingsPanelHide = this.handleSettingsPanelHide.bind(this);
+    this.handleLayerSettingsUpdate = this.handleLayerSettingsUpdate.bind(this);
     this.updateValidTime = this.updateValidTime.bind(this);
     this.handlePopupChartClick = this.handlePopupChartClick.bind(this);
     this.layerLoadError = this.layerLoadError.bind(this);
@@ -272,7 +274,8 @@ class App extends Component {
             streamFlowColorScale: layerObj['streamFlowColorScale'],
             streamFlowLayer: layerObj['streamFlowLayer'],
             overlayPriority: layerObj['overlayPriority'],
-            opacity: layerObj['defaultOpacity']
+            rasterProps: {...layerObj['rasterProps']},
+            settingsTools: layerObj['settingsTools']
           };
 
           // add layer id to metOceanLayers list (this list maintains the order the layers are in)
@@ -650,41 +653,16 @@ class App extends Component {
   async buildMetocTileLayer(layerObj,res) {
     let mapLayers = Object.assign({}, this.state.mapLayers);
     
-    // build query paramater object and then prune those keys which have no value
-    let queryParams = {
-      time: `${formatDateTime(this.state.mapTime, 'YYYY-MM-DDTHH:mm', '')}Z`,
-      dataset: layerObj['dataset'],
-      sub_resource: layerObj['subResource'],
-      level: !isNaN(layerObj['level']) ? layerObj['level'].toString() : 'blank',
-      color_map: layerObj['colorMap'],
-      data_range: layerObj['dataRange'],
-      n_levels: layerObj['numLevels']
-    }
-
-    let param, paramArr = [];
-    for (param in queryParams) {
-      if (!queryParams[param]) {
-        delete queryParams[param]; 
-      } else {
-        queryParams[param] === 'blank' ? paramArr.push(`${param}=`) :
-          paramArr.push(`${param}=${queryParams[param]}`)
-      }
-    }
-    let queryStr = paramArr.join('&');
-    
     // add tile imagery data
     let tileOptions = {
-      opacity: layerObj['opacity'],
-      // maxNativeZoom: layerObj['maxNativeZoom'],
-      // minNativeZoom: layerObj['minNativeZoom']
+      opacity: layerObj['rasterProps']['opacity'],
     }
 
     // add pane as an option is the layer contains overlayPriority key
     tileOptions = layerObj['overlayPriority'] ? {...tileOptions, pane: layerObj['overlayPriority']} : tileOptions;
     
-    let apiGatewayEndpoint = 'https://a7vap1k0cl.execute-api.us-east-2.amazonaws.com';
-    
-    let tileLayer = await L.tileLayer(`${apiGatewayEndpoint}/staging/dynamic-tile/{z}/{x}/{y}?${queryStr}`, tileOptions);
+    let tileLayerEndpoint = buildTileFetchEndpoint(this.state.mapTime, layerObj)
+    let tileLayer = await L.tileLayer(tileLayerEndpoint, tileOptions);
 
     // set tile layer events
     tileLayer.on('loading', (function() {
@@ -731,7 +709,7 @@ class App extends Component {
     let mapLayers = Object.assign({}, this.state.mapLayers);
 
     // add tile imagery data
-    let tileOptions = {opacity: layerObj['opacity'], ...extraOptions};
+    let tileOptions = {opacity: layerObj['rasterProps']['opacity'], ...extraOptions};
 
     // add pane as an option if the layer contains overlayPriority key
     tileOptions = layerObj['overlayPriority'] ? {...tileOptions, pane: layerObj['overlayPriority']} : tileOptions;
@@ -770,7 +748,7 @@ class App extends Component {
     let mapLayers = Object.assign({}, this.state.mapLayers);
 
     let imageOptions = {
-      opacity: layerObj['opacity']
+      opacity: layerObj['rasterProps']['opacity']
     }
 
     // add pane as an option if the layer contains overlayPriority key
@@ -901,6 +879,51 @@ class App extends Component {
     this.setState({chartModalOpen: false});
   }
 
+  handleSettingsPanelVisibility(layerID) {
+    this.setState({activeSettingsLayer: layerID}, () => {
+      this.setState({settingsPanelOpen: true})
+    })
+  }
+
+  handleSettingsPanelHide() {
+    this.setState({settingsPanelOpen: false})
+  }
+
+  handleLayerSettingsUpdate(layerID, settingType, value) {
+    let mapLayers = Object.assign({},this.state.mapLayers);
+    let id = this.layerBindings[layerID];
+    let leafletLayer = this.leafletLayerGroup.getLayer(id);
+    
+    if (settingType === 'data-range') {
+      mapLayers[layerID]['rasterProps']['currentMin'] = value[0];
+      mapLayers[layerID]['rasterProps']['currentMax'] = value[1];
+      this.setState({mapLayers}, () => {
+        let tileLayerEndpoint = buildTileFetchEndpoint(this.state.mapTime, this.state.mapLayers[layerID]);
+        leafletLayer.setUrl(tileLayerEndpoint);
+      })
+    } else if (settingType === 'opacity') {
+      let decimalOpacity = value[0]/100;
+      mapLayers[layerID]['rasterProps']['opacity'] = decimalOpacity;
+      this.setState({mapLayers},() => {
+        this.leafletLayerGroup.getLayer(id).setOpacity(decimalOpacity);
+      });  
+    } else if (settingType === 'colormap') {
+       mapLayers[layerID]['rasterProps']['colormap'] = value;
+      this.setState({mapLayers},() => {
+        let tileLayerEndpoint = buildTileFetchEndpoint(this.state.mapTime, this.state.mapLayers[layerID]);
+        leafletLayer.setUrl(tileLayerEndpoint);
+      });  
+    } else if (settingType === 'interval') {
+      mapLayers[layerID]['rasterProps']['interval'] = value;
+      this.setState({mapLayers},() => {
+        let tileLayerEndpoint = buildTileFetchEndpoint(this.state.mapTime, this.state.mapLayers[layerID]);
+        leafletLayer.setUrl(tileLayerEndpoint);
+      });
+    } else {
+      // TODO: for restoring defaults
+    }
+  }
+
   componentWillMount() {
     let categories = [...this.state.toc], mapLayers = Object.assign({},this.state.mapLayers), 
       orderedMapLayers = [...this.state.orderedMapLayers];
@@ -918,11 +941,11 @@ class App extends Component {
             minNativeZoom: layerObj['minNativeZoom'],
             maxNativeZoom: layerObj['maxNativeZoom'],
             addDataFunc: layerObj['addDataFunc'],
-            opacity: layerObj['defaultOpacity'] || 1,
             overlayPriority: layerObj['overlayPriority'],
             endPoint: layerObj['endPoint'],
             endPointInfo: layerObj['endPointInfo'],
-            legendUrl: layerObj['legendUrl']
+            legendUrl: layerObj['legendUrl'],
+            rasterProps: layerObj['rasterProps'] ? {...layerObj['rasterProps']} : null
           };
           orderedMapLayers.push(id);  
         })
@@ -998,10 +1021,17 @@ class App extends Component {
           handleLayerToggle = {this.handleLayerToggle}
           handleLevelChange = {this.handleLevelChange}
           handleTimeChange = {this.handleTimeChange}
+          handleSettingsPanelVisibility = {this.handleSettingsPanelVisibility}
           {...this.state}
         />
         <div ref={this._mapNode} id="map" className={classNames(classes.map)} />
         <CoordinateDisplay lat={this.state.cursorLat} lng={this.state.cursorLng} />
+        <SettingsPanel 
+          {...this.state}
+          handleSettingsPanelHide = {this.handleSettingsPanelHide}
+          handleLayerOpacityUpdate = {this.handleLayerOpacityUpdate}
+          handleLayerSettingsUpdate = {this.handleLayerSettingsUpdate}
+        />
       </div>
     );
   }
