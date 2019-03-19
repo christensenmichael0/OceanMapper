@@ -15,6 +15,12 @@ const styles = theme => ({
     borderRadius: '50%',
     backgroundColor: theme.palette.secondary.main,
     color: '#333',
+    [`${theme.breakpoints.down('xs')}`]: { 
+      marginTop: 14,
+      marginLeft: -12,
+      width: 24,
+      height: 24,
+    }, 
   },
   handleLabel: {
     fontFamily: 'Roboto', 

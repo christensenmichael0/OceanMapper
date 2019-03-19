@@ -8,7 +8,7 @@ const Track = ({ source, target, getTrackProps, theme }) => { // your own track 
         position: 'absolute',
         height: 2,
         zIndex: 1,
-        marginTop: 25, // 35,
+        marginTop: 25,
         backgroundColor: theme.palette.secondary.main,
         borderRadius: 5,
         cursor: 'pointer',
