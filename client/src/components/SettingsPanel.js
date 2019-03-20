@@ -12,6 +12,7 @@ import DataRangeSlider from './DataRangeSlider';
 import ColorMapDropdown from './ColorMapDropdown';
 import IntervalDropdown from './IntervalDropdown';
 import externalStyles from '../scripts/styleVariables';
+import { isMobile } from 'react-device-detect';
 
 const drawerZIndex = externalStyles.drawerZIndex;
 const drawerWidth = externalStyles.drawerWidth;
@@ -41,10 +42,9 @@ const styles = theme => ({
       width: settingsPanelWidth,
       marginLeft: drawerWidthNarrow  + 5, 
     },
-    [`${theme.breakpoints.down('xs')}`]: {
+    [`${theme.breakpoints.down('sm')}`]: {
       position: 'absolute',
-      margin: 'auto',
-      left: 0,
+      right: 0,
       top: 0,
       maxWidth: '95vw',
       maxHeight: '95vh'
@@ -64,7 +64,7 @@ const SettingsPanel = (props) => {
 
   if (activeSettingsLayer) {
     return (
-      <Draggable>
+      <Draggable disabled={isMobile ? true : false}>
         <Paper className={classes.root} elevation={2}>
           <IconButton className={classes.closeButton} aria-label="Close" color="primary">
             <CancelIcon onClick={props.handleSettingsPanelHide}/>
