@@ -11,6 +11,11 @@ https://www.bsee.gov/sites/bsee.gov/files/weeklyreport/current_deepwater_activit
 
 https://nowcoast.noaa.gov/help/#!section=layerinfo
 
+# NEED A BUILDPACK FOR HEROKU!!
+
+// add the latest nodejs build pack to our project
+heroku buildpacks:set https://github.com/heroku/heroku-buildpack-nodejs#yarn
+
 
 # fig, axes = plt.subplots()
 # axes.imshow(data['u_vel'], origin='lower')
