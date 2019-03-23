@@ -40,7 +40,7 @@ const DynamicLegend = (props) => {
         src={buildStaticLegendUrl()} 
         alt='data-legend' 
         className={classNames(props.classes.img)}
-        onError={buildDynamicLegendUrl.bind(this)}
+        onError={buildDynamicLegendUrl}
       />
     </div>
   );

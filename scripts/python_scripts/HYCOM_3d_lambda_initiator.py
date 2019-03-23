@@ -35,10 +35,10 @@ def lambda_handler(event, context):
     Notes: Check here for hycom version updates: http://tds.hycom.org/thredds/catalog/datasets/catalog.html
     -----------------------------------------------------------------------
     Author: Michael Christensen
-    Date Modified: 11/26/2018
+    Date Modified: 3/22/2019
     """
 
-    hycom_url = 'https://tds.hycom.org/thredds/catalog/datasets/GLBy0.08/expt_93.0/data/forecasts/catalog.html'
+    hycom_url = 'http://tds.hycom.org/thredds/catalog/datasets/GLBv0.08/expt_93.0/data/forecasts/catalog.html'
     forecast_info = get_hycom_forecast_info(hycom_url)
     
     zipped_time_and_indx = np.array(tuple(zip(forecast_info['forecast']['field_datetimes'], 
@@ -47,26 +47,28 @@ def lambda_handler(event, context):
     for forecast_time, data_url in zipped_time_and_indx:
         # only utilize 1 forecast/day (00:00 UTC) for cost savings 
         if forecast_time.hour % 6 == 0:
-            # only grab the upper 10m
+            # only grab the upper 100m
             levels = forecast_info['levels']
-            stop_depth_indx = levels.index(10) + 1
+            stop_depth_indx = levels.index(100) # use a depth of 100 as the stop indx
             for level_indx, level_depth in enumerate(levels[:stop_depth_indx]):
-                # build payload for initiation of lambda function
-                payload = {}
-                payload['url'] = data_url
-                payload['forecast_time'] = datetime.datetime.strftime(forecast_time,'%Y%m%dT%H:%M')
-                payload['level'] = {'level_depth': level_depth, 'level_indx': level_indx}
+                # only utilize depths at intervals of 10
+                if level_indx % 10 == 0:
+                    # build payload for initiation of lambda function
+                    payload = {}
+                    payload['url'] = data_url
+                    payload['forecast_time'] = datetime.datetime.strftime(forecast_time,'%Y%m%dT%H:%M')
+                    payload['level'] = {'level_depth': level_depth, 'level_indx': level_indx}
 
-                # InvocationType = RequestResponse # this is used for synchronous lambda calls
-                try:
-                    response = lam.invoke(FunctionName='grab_hycom_3d', 
-                        InvocationType='Event', Payload=json.dumps(payload))
-                except Exception as e:
-                    print(e)
-                    raise e
+                    # InvocationType = RequestResponse # this is used for synchronous lambda calls
+                    try:
+                        response = lam.invoke(FunctionName='grab_hycom_3d', 
+                            InvocationType='Event', Payload=json.dumps(payload))
+                    except Exception as e:
+                        print(e)
+                        raise e
 
-                print(response)
-                time.sleep(0.1)
+                    print(response)
+                    time.sleep(0.1)
 	           
 
 if __name__ == "__main__":

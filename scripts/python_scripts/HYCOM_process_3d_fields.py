@@ -40,7 +40,7 @@ def lambda_handler(event, context):
     Output: A .json file and a .pickle file are save to S3
     -----------------------------------------------------------------------
     Author: Michael Christensen
-    Date Modified: 08/26/2018
+    Date Modified: 03/22/2019
     """
 
     AWS_BUCKET_NAME = 'oceanmapper-data-storage'
@@ -73,7 +73,7 @@ def lambda_handler(event, context):
     time_origin = datetime.datetime.strptime(file.variables['tau'].time_origin,'%Y-%m-%d %H:%M:%S')
 
     # resolution is scaled down since we are running into memory exceedence issues with lambda functions
-    skip = 2
+    skip = 1
 
     lat = file.variables['lat'][::skip] # [:]
     lon = file.variables['lon'][:]
