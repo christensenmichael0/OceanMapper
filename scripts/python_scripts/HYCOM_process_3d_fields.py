@@ -69,6 +69,8 @@ def lambda_handler(event, context):
     output_tile_data_path = (TOP_LEVEL_FOLDER + '/' + formatted_folder_date + '/' + SUB_RESOURCE + '/' +
         str(model_level_depth) + 'm/tiles/data/')
 
+    output_info_path = TOP_LEVEL_FOLDER + '/' + formatted_folder_date + '/info.json'
+
     # get model origin time
     time_origin = datetime.datetime.strptime(file.variables['tau'].time_origin,'%Y-%m-%d %H:%M:%S')
 
@@ -169,9 +171,9 @@ def lambda_handler(event, context):
     client.put_object(Body=json.dumps(output_data), Bucket=AWS_BUCKET_NAME, Key=output_json_path)
     client.put_object(Body=raw_data_pickle, Bucket=AWS_BUCKET_NAME, Key=output_pickle_path)
 
-    # call an intermediate function to distribute tiling workload
-    # tile_task_distributor(output_pickle_path, 'current_speed', AWS_BUCKET_NAME, 
-    #     output_tile_scalar_path, range(3,4))
+    # save an info file for enhanced performance (get_model_field_api.py)
+    client.put_object(Body=json.dumps({'time_origin': datetime.datetime.strftime(time_origin,'%Y-%m-%d %H:%M:%S')}), 
+        Bucket=AWS_BUCKET_NAME, Key=output_info_path)
 
     # call an intermediate function to distribute pickling workload (subsetting data by tile)
     data_zoom_level = datasets[TOP_LEVEL_FOLDER]['sub_resource'][SUB_RESOURCE]['data_tiles_zoom_level']

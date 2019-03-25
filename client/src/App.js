@@ -460,6 +460,8 @@ class App extends Component {
                 this.updateValidTime(layerObj['id'], 'n/a')
                 return
               } else {
+                // TODO: pass model init time to this func
+                // data[0]['header']['timeOrigin']
                 this.updateValidTime(layerObj['id'], res['valid_time'])
               }
 

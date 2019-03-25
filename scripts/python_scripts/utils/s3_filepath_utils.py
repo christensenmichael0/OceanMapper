@@ -103,3 +103,27 @@ def build_tiledata_path(model_top_level_folder, sub_resource, level, field_datet
             sub_resource + '/tiles/data/' + tile_folder_str + '.pickle')
 
     return output_filepath
+
+def build_date_path(info_filename, model_top_level_folder, field_datetime):
+    """
+    build_date_path(info_filename, model_top_level_folder, field_datetime)
+
+    This function builds a s3 filepath to the 'info.json' file 
+    -----------------------------------------------------------------------
+    Inputs:
+
+    info_filename (str) - the name of the info file (i.e. info.json)
+    model_top_level_folder (str) - the top level folder for a particular data source (i.e. GFS_WINDS)
+    field_datetime (datetime.datetime) - a datetime object for a particular model time
+    -----------------------------------------------------------------------
+    Output: (str) - the output s3 filepath 
+    -----------------------------------------------------------------------
+    Author: Michael Christensen
+    Date Modified: 03/24/2019
+    """
+    formatted_folder_date = datetime.datetime.strftime(field_datetime,'%Y%m%d_%H')
+
+    output_folderpath = (model_top_level_folder + '/' + formatted_folder_date + '/' +
+            info_filename)
+
+    return output_folderpath

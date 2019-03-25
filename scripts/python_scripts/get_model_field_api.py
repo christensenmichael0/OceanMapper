@@ -4,12 +4,13 @@ import numpy as np
 import json
 import re
 
-from utils.s3_filepath_utils import build_file_path
+from utils.s3_filepath_utils import build_file_path, build_date_path
 from utils.datasets import datasets
 from api_utils.response_constructor import generate_response
 from api_utils.check_query_params import check_query_params, filter_failed_params
 from api_utils.fetch_data_availability import grab_data_availability
 from api_utils.nearest_model_time import get_available_model_times
+from api_utils.get_model_init import get_model_init
 
 s3 = boto3.client('s3')
 bucket = 'oceanmapper-data-storage'
@@ -88,11 +89,18 @@ def lambda_handler(event, context):
         data_key, tile_keys = build_file_path(dataset, sub_resource, dataset_prefix, available_time, 
             dataset_type, scalar_tiles, vector_tiles, level_formatted)
 
+        # get model init time by looking at top level info.json file
+        info_file_path = build_date_path('info.json', dataset, available_time)
+        init_time = get_model_init(info_file_path, bucket)
+        init_time_str = datetime.datetime.strftime(init_time,'%Y-%m-%dT%H:%MZ')
+
         # get the file (if we arent dealing with waves)
         if not dataset == 'WW3_DATA':
             try:
                 raw_data = s3.get_object(Bucket=bucket, Key=data_key)
                 unpacked_data = raw_data.get('Body').read().decode('utf-8')
+                # extract model init time from here (not necessary.. doin this above)
+                # init_time = json.loads(unpacked_data)[0]['header']['timeOrigin']
             except Exception as e:
                 response_body = {
                     'status': 'data not available',
@@ -105,6 +113,7 @@ def lambda_handler(event, context):
         response_body = {
             'model': dataset,
             'valid_time': available_time_str,
+            'init_time': init_time_str,
             'data': unpacked_data,
             'tile_paths': tile_keys
         }
@@ -113,6 +122,7 @@ def lambda_handler(event, context):
         response_body = {
             'model': dataset,
             'valid_time': None,
+            'init_time': None,
             'data': None,
             'tile_paths': None,
         }
@@ -126,7 +136,7 @@ if __name__ == '__main__':
             "level": "0",
             "dataset": "HYCOM_DATA",
             "sub_resource": "ocean_current_speed",
-            "time": "2018-12-20T08:00Z"
+            "time": "2019-03-26T08:00Z"
         }
     }
     lambda_handler(event,'')

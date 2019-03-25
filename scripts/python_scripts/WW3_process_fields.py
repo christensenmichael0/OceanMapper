@@ -84,6 +84,8 @@ def lambda_handler(event, context):
     output_tile_data_path_perpwsfc = (TOP_LEVEL_FOLDER + '/' + formatted_folder_date +
         '/' + SUB_RESOURCE_PERPWSFC + '/tiles/data/')
 
+    output_info_path = TOP_LEVEL_FOLDER + '/' + formatted_folder_date + '/info.json'
+
     # get model origin time
     init_time = file.variables['time'][0]
     basetime_int = int(init_time)
@@ -141,15 +143,9 @@ def lambda_handler(event, context):
     client.put_object(Body=raw_data_pickle_dirpwsfc, Bucket=AWS_BUCKET_NAME, Key=output_pickle_path_dirpwsfc)
     client.put_object(Body=raw_data_pickle_perpwsfc, Bucket=AWS_BUCKET_NAME, Key=output_pickle_path_perpwsfc)
 
-    # call an intermediate function to distribute tiling workload
-    # tile_task_distributor(output_pickle_path_htsgwsfc, 'wave_amp', AWS_BUCKET_NAME,
-    #     output_tile_scalar_path_htsgwsfc, range(3,4))
-    
-    # tile_task_distributor(output_pickle_path_dirpwsfc, 'wave_dir', AWS_BUCKET_NAME,
-    #     output_tile_vector_path_dirpwsfc, range(3,5))
-
-    # tile_task_distributor(output_pickle_path_perpwsfc, 'wave_period', AWS_BUCKET_NAME,
-    #     output_tile_scalar_path_perpwsfc, range(3,4))
+    # save an info file for enhanced performance (get_model_field_api.py)
+    client.put_object(Body=json.dumps({'time_origin': datetime.datetime.strftime(time_origin,'%Y-%m-%d %H:%M:%S')}), 
+        Bucket=AWS_BUCKET_NAME, Key=output_info_path)
 
     # call an intermediate function to distribute pickling workload (subsetting data by tile)
     data_zoom_level_htsgwsfc = datasets[TOP_LEVEL_FOLDER]['sub_resource'][SUB_RESOURCE_HTSGWSFC]['data_tiles_zoom_level']

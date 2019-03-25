@@ -52,7 +52,7 @@ def lambda_handler(event, context):
             stop_depth_indx = levels.index(100) # use a depth of 100 as the stop indx
             for level_indx, level_depth in enumerate(levels[:stop_depth_indx]):
                 # only utilize depths at intervals of 10
-                if level_indx % 10 == 0:
+                if level_depth % 10 == 0:
                     # build payload for initiation of lambda function
                     payload = {}
                     payload['url'] = data_url
