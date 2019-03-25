@@ -92,15 +92,13 @@ def lambda_handler(event, context):
         # get model init time by looking at top level info.json file
         info_file_path = build_date_path('info.json', dataset, available_time)
         init_time = get_model_init(info_file_path, bucket)
-        init_time_str = datetime.datetime.strftime(init_time,'%Y-%m-%dT%H:%MZ')
+        init_time_str = datetime.datetime.strftime(init_time,'%Y-%m-%dT%H:%MZ') if init_time else None
 
         # get the file (if we arent dealing with waves)
         if not dataset == 'WW3_DATA':
             try:
                 raw_data = s3.get_object(Bucket=bucket, Key=data_key)
                 unpacked_data = raw_data.get('Body').read().decode('utf-8')
-                # extract model init time from here (not necessary.. doin this above)
-                # init_time = json.loads(unpacked_data)[0]['header']['timeOrigin']
             except Exception as e:
                 response_body = {
                     'status': 'data not available',
@@ -109,7 +107,7 @@ def lambda_handler(event, context):
         else:
             unpacked_data = None
         
-        # contruct the response body 
+        # construct the response body 
         response_body = {
             'model': dataset,
             'valid_time': available_time_str,

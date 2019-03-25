@@ -96,7 +96,7 @@ class App extends Component {
     this.handleSettingsPanelVisibility = this.handleSettingsPanelVisibility.bind(this);
     this.handleSettingsPanelHide = this.handleSettingsPanelHide.bind(this);
     this.handleLayerSettingsUpdate = this.handleLayerSettingsUpdate.bind(this);
-    this.updateValidTime = this.updateValidTime.bind(this);
+    this.updateLayerTimeInfo = this.updateLayerTimeInfo.bind(this);
     this.handlePopupChartClick = this.handlePopupChartClick.bind(this);
     this.layerLoadError = this.layerLoadError.bind(this);
   }
@@ -381,9 +381,10 @@ class App extends Component {
    * @param {str} layerID
    * @param {int} validTime JS time in ms
    */
-  updateValidTime(layerID,validTime) {
+  updateLayerTimeInfo(layerID,validTime,initTime) {
     let mapLayers = Object.assign({},this.state.mapLayers);
     mapLayers[layerID]['validTime'] = validTime;
+    mapLayers[layerID]['initTime'] = initTime;
     mapLayers[layerID]['isLoading'] = false;
     this.setState({mapLayers});
   }
@@ -457,12 +458,10 @@ class App extends Component {
               let data = JSON.parse(res['data']);
               // update valid time here.. check if requested date is outside of data range
               if (!res['tile_paths']) {
-                this.updateValidTime(layerObj['id'], 'n/a')
+                this.updateLayerTimeInfo(layerObj['id'], 'n/a', 'n/a')
                 return
               } else {
-                // TODO: pass model init time to this func
-                // data[0]['header']['timeOrigin']
-                this.updateValidTime(layerObj['id'], res['valid_time'])
+                this.updateLayerTimeInfo(layerObj['id'], res['valid_time'],res['init_time'])
               }
 
               // add tile and streamflow data

@@ -20,6 +20,10 @@ library.add(faExclamationTriangle);
 const styles = theme => ({
   img: {
     width: '100%',
+  },
+  timeInfo: {
+    lineHeight: '1.6',
+    fontSize: '.65rem'
   }
 });
 
@@ -73,8 +77,11 @@ function TableOfContents(props) {
                     {(props['mapLayers'][subresource['id']]['isOn'] && !props['mapLayers'][subresource['id']]['isLoading'] &&
                      !props['mapLayers'][subresource['id']]['loadError']) && 
                     <React.Fragment>
-                       <Typography variant="overline" gutterBottom>
+                       <Typography variant="overline" classes={{overline: props.classes['timeInfo']}}>
                         Date Valid: {props['mapLayers'][subresource['id']]['validTime']}
+                      </Typography>
+                      <Typography variant="overline" classes={{overline: props.classes['timeInfo']}} gutterBottom>
+                        Model Initialized: {props['mapLayers'][subresource['id']]['initTime']}
                       </Typography>
                       {subresource['legendUrl'] && 
                         <DynamicLegend 
