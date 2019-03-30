@@ -1,0 +1,46 @@
+# DOCKER #
+
+# build the image
+docker build -t data-collection-cron .
+
+# run the docker image and remove when it exits.. need to add an automatic restart
+docker run -e AWS_ACCESS_KEY_ID=XXX -e AWS_SECRET_ACCESS_KEY=XXX -d --rm data-collection-cron
+
+# enter the container (with id e544...)
+docker exec -it e544 /bin/sh
+
+# delete all stopped containers
+docker rm $(docker ps -a -q)
+
+# delete untagged images
+docker rmi $(docker images -q --filter "dangling=true")
+
+# push docker image to dockerhub
+docker login
+docker build --no-cache -t christensenmichael0/flow_mapper_data_harvest:latest .
+docker push christensenmichael0/flow_mapper_data_harvest:latest
+
+or 
+
+docker tag data-collection-cron:latest christensenmichael0/flow_mapper_data_harvest:latest
+docker push christensenmichael0/flow_mapper_data_harvest:latest
+
+
+# EC2 #
+
+sudo yum update -y
+sudo yum install docker -y
+sudo service docker start
+sudo usermod -a -G docker ec2-user
+
+# change permissions if necessary..
+sudo chmod 666 /var/run/docker.sock
+
+# login before pulling image
+docker login
+
+ssh -i ~/.aws/ec2-creds.pem ec2-user@xxx.us-east-2.compute.amazonaws.com
+
+# pull docker image from dockerhub
+
+docker run -e AWS_ACCESS_KEY_ID=XXX -e AWS_SECRET_ACCESS_KEY=XXX -d --rm christensenmichael0/flow_mapper_data_harvest:latest
