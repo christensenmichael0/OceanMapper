@@ -224,14 +224,15 @@ class App extends Component {
 
     for (let indx=0; indx<orderedMetOceanLayers.length; indx++) {
       dataset = orderedMetOceanLayers[indx]['model'];
-      // check that dataset exists within available datasets returned from s3
-      if (!Object.keys(data).includes(dataset)) {
+      // if the dataset doesnt exist within available datasets returned from s3 or if its empty continue
+      if (!Object.keys(data).includes(dataset) || !Object.keys(data[dataset]).length) {
+        // TODO: remove empty dataset from categories -- should clean up categories
         continue
       }
-
+      
       let orderedSubresouces = categories[metocDatasetMappingIndx]['Layers'][indx]['subResources'].map(
         ((subresource, innerIndx) => ({subresource: subresource['s3Name'], index: innerIndx})));
-      
+
       for (let innerIndx=0; innerIndx<orderedSubresouces.length; innerIndx++) {
         subResource = orderedSubresouces[innerIndx]['subresource'];
         // check that subresource exists within available data returned from s3

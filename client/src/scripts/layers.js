@@ -21,7 +21,7 @@ export const layers = [
     Layers: [{
       s3Name: 'HYCOM_DATA',
       niceName: 'HYCOM',
-      visibleTOC: true,
+      visibleTOC: false,
       subResources: [
         {
           id: 'hycom_currents',
@@ -54,7 +54,7 @@ export const layers = [
             colorramps: ['viridis', 'magma', 'jet', 'rainbow', 'cool']
           },
           settingsTools: ['opacity', 'datarange', 'interval', 'colormap'],
-          visibleTOC: true,
+          visibleTOC: false,
           defaultOn: false
         }
       ]
