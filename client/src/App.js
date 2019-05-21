@@ -471,60 +471,30 @@ class App extends Component {
               let streamFlowColorScale = layerObj['streamFlowColorScale'];
               this.buildMetocTileLayer(layerObj,res).then(tileLayer => {
 
-                // new
-                tileLayer.on('load',()=> {
-                  console.log('now im done!!')
-                })
-                // end new
+                // this line tricks the event loop
+                tileLayer.on('load',()=> {});
 
-                if (this.layerBindings.hasOwnProperty(layerObj['id'])) {
-                  this.removeLeafletLayer(layerObj['id']).then(() => {
-
-                    // add tile layer
-                    this.addToLeafletLayerGroup(tileLayer, layerObj, false)
-
-                    // TODO: this logic is repeated below in else block
-                    // add transparent basemap
-                    if (layerObj['overlayType'] === 'all') {
-                      let transparentBasemap = mapLayers['transparent_basemap'];
-                      this.buildGeneralTileLayer(transparentBasemap,transparentBasemap['endPoint']).then(tileMapLayer => {
-                        this.addLayer(transparentBasemap,tileMapLayer);
-                      });
-                    }
-
-                    // add stream layer
-                    if (layerObj['streamFlowLayer']) {
-                      this.buildStreamlineLayer(data, maxVelocity, velocityScale, streamFlowColorScale).then(streamLayer => {
-                        this.addToLeafletLayerGroup(streamLayer, layerObj, true)
-                      })
-                    }
-                  })
-                } else {
                   // add tile layer
-                  this.addToLeafletLayerGroup(tileLayer, layerObj, false)
+                this.addToLeafletLayerGroup(tileLayer, layerObj, false)
 
-                  // new (TODO: repeated logic.. wrap this logic in a function)
-                  // add transparent basemap
-                  if (layerObj['overlayType'] === 'all') {
-                    let transparentBasemap = mapLayers['transparent_basemap'];
-                    
-                    let extraOptions = {
-                      minNativeZoom: transparentBasemap['minNativeZoom'], 
-                      maxNativeZoom: transparentBasemap['maxNativeZoom']
-                    };
+                // add transparent basemap
+                if (layerObj['overlayType'] === 'all') {
+                  let transparentBasemap = mapLayers['transparent_basemap'];
+                  
+                  let extraOptions = {
+                    minNativeZoom: transparentBasemap['minNativeZoom'], 
+                    maxNativeZoom: transparentBasemap['maxNativeZoom']
+                  };
 
-                    this.buildGeneralTileLayer(transparentBasemap,transparentBasemap['endPoint'],extraOptions).then(
-                      tileMapLayer => {
-                      this.addLayer(transparentBasemap,tileMapLayer);
-                    });
-                  }
-                  // end new
+                  this.buildGeneralTileLayer(transparentBasemap,transparentBasemap['endPoint'],extraOptions).then(tileMapLayer => {
+                    this.addLayer(transparentBasemap,tileMapLayer);
+                  });
+                }
 
-                  if (layerObj['streamFlowLayer']) {
-                    this.buildStreamlineLayer(data, maxVelocity, velocityScale, streamFlowColorScale).then(streamLayer => {
-                      this.addToLeafletLayerGroup(streamLayer, layerObj, true)
-                    })
-                  }
+                if (layerObj['streamFlowLayer']) {
+                  this.buildStreamlineLayer(data, maxVelocity, velocityScale, streamFlowColorScale).then(streamLayer => {
+                    this.addToLeafletLayerGroup(streamLayer, layerObj, true)
+                  })
                 }
               })
             }
