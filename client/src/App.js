@@ -472,30 +472,32 @@ class App extends Component {
               this.buildMetocTileLayer(layerObj,res).then(tileLayer => {
 
                 // this line tricks the event loop
-                tileLayer.on('load',()=> {});
+                tileLayer.on('load',()=> {console.log('layer just loaded!!')});
 
+                this.removeLeafletLayer(layerObj['id']).then(() => {
                   // add tile layer
-                this.addToLeafletLayerGroup(tileLayer, layerObj, false)
+                  this.addToLeafletLayerGroup(tileLayer, layerObj, false)
 
-                // add transparent basemap
-                if (layerObj['overlayType'] === 'all') {
-                  let transparentBasemap = mapLayers['transparent_basemap'];
-                  
-                  let extraOptions = {
-                    minNativeZoom: transparentBasemap['minNativeZoom'], 
-                    maxNativeZoom: transparentBasemap['maxNativeZoom']
-                  };
+                  // add transparent basemap
+                  if (layerObj['overlayType'] === 'all') {
+                    let transparentBasemap = mapLayers['transparent_basemap'];
+                    
+                    let extraOptions = {
+                      minNativeZoom: transparentBasemap['minNativeZoom'], 
+                      maxNativeZoom: transparentBasemap['maxNativeZoom']
+                    };
 
-                  this.buildGeneralTileLayer(transparentBasemap,transparentBasemap['endPoint'],extraOptions).then(tileMapLayer => {
-                    this.addLayer(transparentBasemap,tileMapLayer);
-                  });
-                }
+                    this.buildGeneralTileLayer(transparentBasemap,transparentBasemap['endPoint'],extraOptions).then(tileMapLayer => {
+                      this.addLayer(transparentBasemap,tileMapLayer);
+                    });
+                  }
 
-                if (layerObj['streamFlowLayer']) {
-                  this.buildStreamlineLayer(data, maxVelocity, velocityScale, streamFlowColorScale).then(streamLayer => {
-                    this.addToLeafletLayerGroup(streamLayer, layerObj, true)
-                  })
-                }
+                  if (layerObj['streamFlowLayer']) {
+                    this.buildStreamlineLayer(data, maxVelocity, velocityScale, streamFlowColorScale).then(streamLayer => {
+                      this.addToLeafletLayerGroup(streamLayer, layerObj, true)
+                    })
+                  }
+                })
               })
             }
           ).catch(alert) // TODO: make a formal modal out of this
