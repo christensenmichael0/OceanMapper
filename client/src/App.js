@@ -469,7 +469,14 @@ class App extends Component {
               let maxVelocity = layerObj['maxVelocity'];
               let velocityScale = layerObj['velocityScale'];
               let streamFlowColorScale = layerObj['streamFlowColorScale'];
-              this.buildMetocTileLayer(layerObj,res).then(tileLayer => { 
+              this.buildMetocTileLayer(layerObj,res).then(tileLayer => {
+
+                // new
+                tileLayer.on('load',()=> {
+                  console.log('now im done!!')
+                })
+                // end new
+
                 if (this.layerBindings.hasOwnProperty(layerObj['id'])) {
                   this.removeLeafletLayer(layerObj['id']).then(() => {
 
