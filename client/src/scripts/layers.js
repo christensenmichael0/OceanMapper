@@ -262,6 +262,7 @@ export const layers = [
         endPointInfo: 'https://nowcoast.noaa.gov/layerinfo?request=prodtime&service=wwa_meteocean_tropicalcyclones_trackintensityfcsts_time&format=json',
         legendUrl: 'https://nowcoast.noaa.gov/layerinfo?request=legend&format=html&service=wwa_meteocean_tropicalcyclones_trackintensityfcsts_time&layers=3,4,5,6,2,8,9',
         nowCoastDataset: true,
+        movementSensitive: true,
         timeSensitive: false,
         rasterProps: {
           opacity: 1.0

@@ -472,7 +472,10 @@ class App extends Component {
               this.buildMetocTileLayer(layerObj,res).then(tileLayer => {
 
                 // this line tricks the event loop
-                tileLayer.on('load',()=> {console.log('layer just loaded!!')});
+                // TODO: remove this
+                tileLayer.on('load',()=> {
+                  // console.log('layer just loaded!!')
+                });
 
                 this.removeLeafletLayer(layerObj['id']).then(() => {
                   // add tile layer
