@@ -35,9 +35,11 @@ def build_legend_image(params):
     nlvls = range_val/interval
     levelsArr = np.arange(np.min(data_range), np.max(data_range) + interval, interval)
 
+    formatted_label = params['label'].replace(' ','_')
+
     # create a filename 
-    legend_filename = 'dynamic_legend_cache/{}_{:{prec}}_{:{prec}}_{:{prec}}_legend.png'.format(
-        color_map, data_range[0], data_range[1], interval, prec='.3f')
+    legend_filename = 'dynamic_legend_cache/{}_{:{prec}}_{:{prec}}_{:{prec}}_{}_legend.png'.format(
+        color_map, data_range[0], data_range[1], interval, formatted_label, prec='.3f')
 
     # create some fake data
     extraExtension = range_val/20.0
