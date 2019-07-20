@@ -26,7 +26,8 @@ const DynamicLegend = (props) => {
       ${Number(props['layer']['rasterProps']['currentMax']).toFixed(3)}`.replace(/\s/g, "");
 
     let intervalLongFormat = Number(interval).toFixed(3);
-    return `${staticLegendEndpoint}${colorMap}_${dataRangeLongFormat}_${intervalLongFormat}_legend.png`;
+    let labelWithUnits = label.replace(/ /g,'_').replace('/','_');
+    return `${staticLegendEndpoint}${colorMap}_${dataRangeLongFormat}_${intervalLongFormat}_${labelWithUnits}_legend.png`;
   }
 
   const buildDynamicLegendUrl = (e) => {
