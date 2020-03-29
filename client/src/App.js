@@ -505,6 +505,7 @@ class App extends Component {
             }
           ).catch(alert) // TODO: make a formal modal out of this
           break;
+        case 'boemWindLease':
         case 'getGebcoBathy':
           this.buildGeneralTileLayer(layerObj,layerObj['endPoint']).then(tileLayer => { 
             this.addLayer(layerObj,tileLayer);

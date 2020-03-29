@@ -278,6 +278,19 @@ export const layers = [
     expanded: false,
     Layers: [
       {
+        id: 'boem_wind_leases',
+        niceName: 'BOEM Renewable Energy Lease Areas',
+        overlayPriority: 'high',
+        endPoint: 'https://df3aeoynrb.execute-api.us-east-2.amazonaws.com/staging/shape2tile/{z}/{x}/{y}?shapefile_path=https://www.boem.gov/BOEM-Renewable-Energy-Shapefiles.zip&edgecolor=red&linewidth=0.2',
+        addDataFunc: 'boemWindLease',
+        timeSensitive: false,
+        rasterProps: {
+          opacity: 1.0
+        },
+        visibleTOC: true,
+        defaultOn: false
+      },
+      {
         id: 'ocs_leasing_extents',
         niceName: 'BOEM OCS Protraction Diagrams & Leasing Maps',
         overlayPriority: 'high',
