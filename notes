@@ -68,6 +68,15 @@ docker cp 62f0320eafbc:/lambda_package_api/lambda_package_dynamic_tiles.zip ~
 cd ~/OceanMapper/scripts/python_scripts
 zip -ur ~/lambda_package_dynamic_tiles.zip utils api_utils process_tiles.py dynamic_tile_creator.py build_tile_image.py dynamic_legend_creator.py build_legend_image.py
 
+mkdir lambda_package_shape2tiles
+cd lambda_package_shape2tiles
+pip3 install matplotlib mercantile pyproj geopandas -t ./
+zip -r lambda_package_shape2tiles.zip *
+docker cp 62f0320eafbc:/lambda_package_shape2tiles/lambda_package_shape2tiles.zip ~
+cd ~/OceanMapper/scripts/python_scripts
+zip -ur ~/lambda_package_shape2tiles.zip utils/tile_utils.py dynamic_shape2tile_creator.py build_tile_from_shape.py 
+
+
 
 mkdir lambda_package
 cd lambda_package
