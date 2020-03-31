@@ -281,7 +281,7 @@ export const layers = [
         id: 'boem_wind_leases',
         niceName: 'BOEM Renewable Energy Lease Areas',
         overlayPriority: 'high',
-        endPoint: 'https://df3aeoynrb.execute-api.us-east-2.amazonaws.com/staging/shape2tile/{z}/{x}/{y}?shapefile_path=https://www.boem.gov/BOEM-Renewable-Energy-Shapefiles.zip&edgecolor=red&linewidth=0.2',
+        endPoint: 'https://df3aeoynrb.execute-api.us-east-2.amazonaws.com/staging/shape2tile/{z}/{x}/{y}?shapefile_path=https://oceanmapper-data-storage.s3.us-east-2.amazonaws.com/SHAPEFILES/BOEM_Renewable_Energy_Areas_Shapefiles_2_13_2019/BOEM_Renewable_Energy_Areas_Shapefiles_2_13_2019.zip&edgecolor=red&linewidth=0.2',
         addDataFunc: 'boemWindLease',
         timeSensitive: false,
         rasterProps: {
