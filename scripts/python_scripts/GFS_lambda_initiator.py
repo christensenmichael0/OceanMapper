@@ -36,7 +36,7 @@ def lambda_handler(event, context):
     Date Modified: 02/06/2019
     """
 
-    gfs_url = 'https://nomads.ncep.noaa.gov:9090/dods/gfs_0p25'
+    gfs_url = 'https://nomads.ncep.noaa.gov/dods/gfs_0p25'
     forecast_info = get_gfs_forecast_info(gfs_url)
         
     for forecast_indx, forecast_time in forecast_info['data']:

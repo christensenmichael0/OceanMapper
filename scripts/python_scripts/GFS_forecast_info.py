@@ -29,7 +29,6 @@ def get_gfs_forecast_info(gfs_url):
     forecast_info = [(forecast_indx, forecast_field_datetime), ...]
 
     """
-    
     page = urllib.urlopen(gfs_url).read()
     soup = BeautifulSoup(page,'html.parser')
     soup.prettify()

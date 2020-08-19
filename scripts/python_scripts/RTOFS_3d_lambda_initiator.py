@@ -37,7 +37,7 @@ def lambda_handler(event, context):
     Date Modified: 02/06/2019
     """
 
-    rtofs_url = 'https://nomads.ncep.noaa.gov:9090/dods/rtofs'
+    rtofs_url = 'https://nomads.ncep.noaa.gov/dods/rtofs'
     available_data = get_latest_RTOFS_forecast_time(rtofs_url, '3d')
     output_info = assemble_model_timesteps(available_data,'daily')
     
