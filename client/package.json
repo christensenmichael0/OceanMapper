@@ -12,7 +12,7 @@
     "@material-ui/icons": "^3.0.1",
     "@material-ui/lab": "^3.0.0-alpha.23",
     "esri-leaflet": "^2.2.3",
-    "highcharts": "^7.0.1",
+    "highcharts": "^9.0.0",
     "highcharts-export-csv": "^1.4.8",
     "highcharts-exporting": "^0.1.7",
     "jquery": "^3.3.1",
