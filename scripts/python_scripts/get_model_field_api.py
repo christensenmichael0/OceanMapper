@@ -33,10 +33,13 @@ def lambda_handler(event, context):
     Output: response object
     -----------------------------------------------------------------------
     Author: Michael Christensen
-    Date Modified: 09/20/2018
+    Date Modified: 10/21/2022
     """
 
     required_query_params = ['time','dataset','sub_resource','level']
+
+    # default headers for request
+    headers = {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'}
 
     # load data availability file from s3
     availability_struct = grab_data_availability()
@@ -56,9 +59,6 @@ def lambda_handler(event, context):
             'status': failed_query_param_obj,
         }
         return generate_response(404, headers, response_body)
-
-    # default headers for request
-    headers = {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'}
 
     # model time
     model_time = event['queryStringParameters']['time']
@@ -81,7 +81,7 @@ def lambda_handler(event, context):
     vector_tiles = sub_resource_folder['vector_tiles']
 
     available_time = get_available_model_times(dataset,sub_resource, model_time_datetime,
-        level_formatted,dataset_type,availability_struct)
+        level_formatted, dataset_type,availability_struct)
     
     if available_time:
         available_time_str = datetime.datetime.strftime(available_time,'%Y-%m-%dT%H:%MZ')
@@ -134,7 +134,7 @@ if __name__ == '__main__':
             "level": "0",
             "dataset": "HYCOM_DATA",
             "sub_resource": "ocean_current_speed",
-            "time": "2019-03-26T08:00Z"
+            "time": "2022-10-21T19:00Z"
         }
     }
     lambda_handler(event,'')

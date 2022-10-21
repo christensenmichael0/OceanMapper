@@ -13,38 +13,6 @@ config.params = {
   zoomControl: false,
   attributionControl: false
 };
-// config.tileLayer = {
-//   uri: 'http://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
-//   params: {
-//     minZoom: 11,
-//     attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="http://cartodb.com/attributions">CartoDB</a>',
-//     id: '',
-//     accessToken: ''
-//   }
-// };
-
-// array to store unique names of Brooklyn subway lines,
-// this eventually gets passed down to the Filter component
-// let subwayLineNames = [];
-
-// https://gis.stackexchange.com/questions/183720/does-leaflet-support-user-defined-layer-identifiers
-
-// var layer = L.tileLayer('foo');
-// var group = L.layerGroup([layer]);
-// var id = group.getLayerId(layer);
-// ...
-// group.getLayer(id);
-
-
-// L.LayerGroup.include({
-//     customGetLayer: function (id) {
-//         for (var i in this._layers) {
-//             if (this._layers[i].id == id) {
-//                 return this._layers[i];
-//             }
-//         }
-//     }
-// });
 
 class Map extends Component {
   constructor(props) {
@@ -125,39 +93,6 @@ class Map extends Component {
     }
   }
 
-  // componentWillReceiveProps(nextProps) {
-  //   console.log('rec props')
-  //   // debugger
-  // }
-
-  // componentDidUpdate(prevProps, prevState) {
-  //   let layerUpdates;
-  //   // debugger
-  //   if (prevProps.initializedLayers) {
-  //     // debugger
-  //     layerUpdates = this.determineLayerDiff(prevProps);
-  //     // take care not to go into infinite loop... only call setState if there are updates to be made
-  //     // trigger functions for objects in layerDif['updatedMapLayers']
-  //     //debugger
-  //     if (layerUpdates.length) {
-  //       // debugger
-  //       // trigger layer updates... loop through and call the layers respective update function
-  //       layerUpdates.forEach((layerObj) => {
-  //         this.addTestLayer(layerObj);
-  //       });
-
-  //       // this.setState({mapTime: prevProps['mapTime'], mapLayers: prevProps['mapLayers']})
-  //       //debugger
-  //       console.log('got past state change');
-  //       // set properties instead of setting state
-  //       // this.mapTime = prevProps['mapTime'];
-  //       // this.mapLayers = prevProps['mapLayers'];
-  //     }
-  //   }
-  //   //debugger
-  //   console.log('hi');
-  // }
-
   addTestLayer(layerObj) {
     // marker2=L.marker([0,10],{pane: 'test'})
     console.log('layer being added');
@@ -169,22 +104,6 @@ class Map extends Component {
     marker.addTo(this.map);
     this.layerGroup.addLayer(marker)
   }
-
-    
-
-    // code to run when the component receives new props or state
-    // check to see if geojson is stored, map is created, and geojson overlay needs to be added
-    // if (this.state.geojson && this.state.map && !this.state.geojsonLayer) {
-    //   // add the geojson overlay
-    //   this.addGeoJSONLayer(this.state.geojson);
-    // }
-
-    // // check to see if the subway lines filter has changed
-    // if (this.state.subwayLinesFilter !== prevState.subwayLinesFilter) {
-    //   // filter / re-render the geojson overlay
-    //   this.filterGeoJSONLayer();
-    // }
-  //}
 
   componentWillMount() {
     // code to run just before rendering the component

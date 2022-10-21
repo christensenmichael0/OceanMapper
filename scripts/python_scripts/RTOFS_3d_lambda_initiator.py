@@ -5,16 +5,18 @@ Created on Mon Apr  2 17:20:30 2018
 @author: Michael Christensen
 """
 
-
-import json
-import boto3
-import numpy as np
-from RTOFS_forecast_info import get_latest_RTOFS_forecast_time
-from build_model_times import assemble_model_timesteps
 import datetime
+import json
 import time
 
+import boto3
+import numpy as np
+
+from RTOFS_forecast_info import get_latest_RTOFS_forecast_time
+from build_model_times import assemble_model_timesteps
+
 lam = boto3.client('lambda')
+
 
 def lambda_handler(event, context):
     """
@@ -34,43 +36,45 @@ def lambda_handler(event, context):
     Output: No output
     -----------------------------------------------------------------------
     Author: Michael Christensen
-    Date Modified: 02/06/2019
+    Date Modified: 10/21/2022
     """
 
     rtofs_url = 'https://nomads.ncep.noaa.gov/dods/rtofs'
     available_data = get_latest_RTOFS_forecast_time(rtofs_url, '3d')
-    output_info = assemble_model_timesteps(available_data,'daily')
-    
-    for product_type in output_info['products'].keys():
+    output_info = assemble_model_timesteps(available_data, 'daily')
 
-        zipped_time_and_indx = np.array(tuple(zip(output_info['products'][product_type]['field_datetimes'], 
-            output_info['products'][product_type]['forecast_indx'])))
-        
-        for model_field in zipped_time_and_indx:
-            model_field_indx = model_field[1]
+    # use only the forecast data to simplify things
+    product_type = 'forecast'
 
-            # only grab the upper 10m
-            levels = output_info['general']['levels']
-            stop_depth_indx = levels.index(100) + 1
-            for level_indx, level_depth in enumerate(levels[:stop_depth_indx]):
-                # build payload for initiation of lambda function
-                payload = {}
-                payload['url'] = output_info['products'][product_type]['url']
-                payload['forecast_time'] = datetime.datetime.strftime(model_field[0],'%Y%m%dT%H:%M')
-                payload['forecast_indx'] = model_field_indx
-                payload['level'] = {'level_depth': level_depth, 'level_indx': level_indx}
+    zipped_time_and_indx = np.array(tuple(zip(output_info['products'][product_type]['field_datetimes'],
+                                              output_info['products'][product_type]['forecast_indx'])))
 
-                # InvocationType = RequestResponse # this is used for synchronous lambda calls
-                try:
-                    response = lam.invoke(FunctionName='grab_rtofs_3d', 
-                        InvocationType='Event', Payload=json.dumps(payload))
-                except Exception as e:
-                    print(e)
-                    raise e
+    for model_field in zipped_time_and_indx:
+        model_field_indx = model_field[1]
 
-                print(response)
-                time.sleep(0.1)
-	           
+        # only grab the upper 10m
+        levels = output_info['general']['levels']
+        stop_depth_indx = levels.index(100) + 1
+        for level_indx, level_depth in enumerate(levels[:stop_depth_indx]):
+            # build payload for initiation of lambda function
+            payload = {
+                'url': output_info['products'][product_type]['url'],
+                'forecast_time': datetime.datetime.strftime(model_field[0], '%Y%m%dT%H:%M'),
+                'forecast_indx': model_field_indx,
+                'level': {'level_depth': level_depth, 'level_indx': level_indx}
+            }
+
+            # InvocationType = RequestResponse # this is used for synchronous lambda calls
+            try:
+                response = lam.invoke(FunctionName='grab_rtofs_3d',
+                                      InvocationType='Event', Payload=json.dumps(payload))
+            except Exception as e:
+                print(e)
+                raise e
+
+            print(response)
+            time.sleep(0.1)
+
 
 if __name__ == "__main__":
-	lambda_handler('','')
+    lambda_handler('', '')

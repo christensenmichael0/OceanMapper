@@ -5,7 +5,7 @@
   "repository": "https://github.com/christensenmichael0/OceanMapper.git",
   "license": "MIT",
   "engines": {
-    "node": "8.10.0"
+    "node": "14.15.3"
   },
   "dependencies": {
     "concurrently": "^4.0.1",

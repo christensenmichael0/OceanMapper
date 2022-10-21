@@ -1,5 +1,4 @@
 import express from 'express';
-import aws from 'aws-sdk';
 import request from 'request';
 
 const apiGatewayRouter = express.Router();

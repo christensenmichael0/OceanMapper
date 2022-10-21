@@ -21,7 +21,7 @@ export const layers = [
     Layers: [{
       s3Name: 'HYCOM_DATA',
       niceName: 'HYCOM',
-      visibleTOC: false,
+      visibleTOC: true,
       subResources: [
         {
           id: 'hycom_currents',
@@ -54,7 +54,7 @@ export const layers = [
             colorramps: ['viridis', 'magma', 'jet', 'rainbow', 'cool']
           },
           settingsTools: ['opacity', 'datarange', 'interval', 'colormap'],
-          visibleTOC: false,
+          visibleTOC: true,
           defaultOn: false
         }
       ]
@@ -62,7 +62,7 @@ export const layers = [
     {
       s3Name: 'RTOFS_DATA',
       niceName: 'RTOFS',
-      visibleTOC: true,
+      visibleTOC: false,
       subResources: [
         {
           id: 'rtofs_currents',
@@ -96,7 +96,7 @@ export const layers = [
             colorramps: ['viridis', 'magma', 'jet', 'rainbow', 'cool']
           },
           settingsTools: ['opacity', 'datarange', 'interval', 'colormap'],
-          visibleTOC: true,
+          visibleTOC: false,
           defaultOn: false
         }
       ]

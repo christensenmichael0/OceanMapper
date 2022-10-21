@@ -5,13 +5,11 @@ Created on Mon Apr  2 17:20:30 2018
 @author: Michael Christensen
 """
 
-
-import json
-import boto3
-import numpy as np
-from HYCOM_forecast_info import get_hycom_forecast_info
 import datetime
+import json
 import time
+import boto3
+from HYCOM_forecast_info import get_hycom_forecast_info
 
 lam = boto3.client('lambda')
 
@@ -35,41 +33,43 @@ def lambda_handler(event, context):
     Notes: Check here for hycom version updates: http://tds.hycom.org/thredds/catalog/datasets/catalog.html
     -----------------------------------------------------------------------
     Author: Michael Christensen
-    Date Modified: 3/22/2019
+    Date Modified: 10/17/2022
     """
 
-    hycom_url = 'http://tds.hycom.org/thredds/catalog/datasets/GLBv0.08/expt_93.0/data/forecasts/catalog.html'
+    hycom_url = 'https://tds.hycom.org/thredds/catalog/GLBy0.08/expt_93.0/FMRC/runs/catalog.html'
     forecast_info = get_hycom_forecast_info(hycom_url)
-    
-    zipped_time_and_indx = np.array(tuple(zip(forecast_info['forecast']['field_datetimes'], 
-            forecast_info['forecast']['data_urls'])))
 
-    for forecast_time, data_url in zipped_time_and_indx:
-        # only utilize 1 forecast/day (00:00 UTC) for cost savings 
+    field_datetimes = forecast_info['forecast']['field_datetimes']
+    data_url = forecast_info['forecast']['data_url']
+    levels = forecast_info['forecast']['levels']
+
+    for forecast_time_indx, forecast_time in enumerate(field_datetimes):
+        # only use a subset of the available forecast fields for cost savings
         if forecast_time.hour % 6 == 0:
             # only grab the upper 100m
-            levels = forecast_info['levels']
-            stop_depth_indx = levels.index(100) # use a depth of 100 as the stop indx
+            stop_depth_indx = levels.index(100)  # use a depth of 100 as the stop indx
             for level_indx, level_depth in enumerate(levels[:stop_depth_indx]):
                 # only utilize depths at intervals of 10
                 if level_depth % 10 == 0:
                     # build payload for initiation of lambda function
-                    payload = {}
-                    payload['url'] = data_url
-                    payload['forecast_time'] = datetime.datetime.strftime(forecast_time,'%Y%m%dT%H:%M')
-                    payload['level'] = {'level_depth': level_depth, 'level_indx': level_indx}
+                    payload = {
+                        'url': data_url,
+                        'forecast_time': datetime.datetime.strftime(forecast_time, '%Y%m%dT%H:%M'),
+                        'forecast_time_indx': forecast_time_indx,
+                        'level': {'level_depth': level_depth, 'level_indx': level_indx}
+                    }
 
                     # InvocationType = RequestResponse # this is used for synchronous lambda calls
                     try:
-                        response = lam.invoke(FunctionName='grab_hycom_3d', 
-                            InvocationType='Event', Payload=json.dumps(payload))
+                        response = lam.invoke(FunctionName='grab_hycom_3d',
+                                              InvocationType='Event', Payload=json.dumps(payload))
                     except Exception as e:
                         print(e)
                         raise e
 
                     print(response)
                     time.sleep(0.1)
-	           
+
 
 if __name__ == "__main__":
-	lambda_handler('','')
+    lambda_handler('', '')

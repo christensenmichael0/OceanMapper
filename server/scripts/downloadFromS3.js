@@ -1,5 +1,4 @@
 import express from 'express';
-import aws from 'aws-sdk';
 import s3Obj from './awsS3Obj';
 
 const downloadFromS3Router = express.Router();

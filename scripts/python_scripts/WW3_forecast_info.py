@@ -5,12 +5,13 @@ Created on Mon Apr 09 19:12:40 2018
 @author: Michael
 """
 
-import urllib.request as urllib
-from bs4 import BeautifulSoup
-import netCDF4
 import datetime
-import numpy as np
 import re
+import urllib.request as urllib
+
+import numpy as np
+from bs4 import BeautifulSoup
+
 from utils.fetch_utils import get_opendapp_netcdf
 
 
@@ -50,22 +51,18 @@ def get_ww3_forecast_info(ww3_url):
     formatted_latest_date = datetime.datetime.strftime(max_forecast_run_date, '%Y%m%d')
 
     # find the latest run using bs4
-    forecast_run_url = ww3_url +'/nww3' + formatted_latest_date
+    forecast_run_url = ww3_url + "/" + formatted_latest_date
     page = urllib.urlopen(forecast_run_url).read()
     soup = BeautifulSoup(page,'html.parser')
     soup.prettify()
 
-    forecast_run_array = {}
     for model_run in soup.findAll('b'):
-        match = re.search(r'nww3\d{8}_(\d{2})z', model_run.string)
-    
+        match = re.search(r'gfswave.global.0p25_(\d{2})z', model_run.string)
+
         if match:
             run_name = match.group(0)
-            forecast_run_hour = match.group(1)
-            forecast_run_array.setdefault(int(forecast_run_hour), run_name)
 
     # build forecast field datetime/indx array
-    max_run = max(forecast_run_array.keys())
     opendapp_url = forecast_run_url + '/' + run_name
     file = get_opendapp_netcdf(opendapp_url)
     product_times = file.variables['time'][:]

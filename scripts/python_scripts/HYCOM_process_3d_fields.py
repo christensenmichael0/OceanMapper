@@ -4,22 +4,17 @@ Created on Mon Apr  2 17:20:30 2018
 
 @author: Michael Christensen
 """
-
-
-import json
 import datetime
+import json
 import pickle
-import time
 
 import boto3
 import numpy as np
 from scipy import interpolate
-import netCDF4
 
-from utils.fetch_utils import get_opendapp_netcdf
-from utils.tile_task_distributor import tile_task_distributor
-from utils.pickle_task_distributor import pickle_task_distributor
 from utils.datasets import datasets
+from utils.fetch_utils import get_opendapp_netcdf
+from utils.pickle_task_distributor import pickle_task_distributor
 
 
 def lambda_handler(event, context):
@@ -27,7 +22,7 @@ def lambda_handler(event, context):
     lambda_handler(event, context):
 
     This function reads, parses, and saves a .json and .pickle file from 
-    a netCDF file from a provided opendapp url (contained within the event paramater object).
+    a netCDF file from a provided opendapp url (contained within the event parameter object).
     -----------------------------------------------------------------------
     Inputs:
 
@@ -40,7 +35,7 @@ def lambda_handler(event, context):
     Output: A .json file and a .pickle file are save to S3
     -----------------------------------------------------------------------
     Author: Michael Christensen
-    Date Modified: 03/22/2019
+    Date Modified: 10/21/2022
     """
 
     AWS_BUCKET_NAME = 'oceanmapper-data-storage'
@@ -51,6 +46,7 @@ def lambda_handler(event, context):
     # unpack event data
     url = event['url']
     model_field_time = datetime.datetime.strptime(event['forecast_time'],'%Y%m%dT%H:%M')
+    model_field_time_indx = event["forecast_time_indx"]
     model_level_depth = event['level']['level_depth']
     model_level_indx = event['level']['level_indx']
 
@@ -62,9 +58,6 @@ def lambda_handler(event, context):
 
     output_pickle_path = (TOP_LEVEL_FOLDER + '/' + formatted_folder_date + '/' + SUB_RESOURCE + '/' +
         str(model_level_depth) + 'm/pickle/' + DATA_PREFIX + '_' + formatted_folder_date + '.pickle')
-
-    output_tile_scalar_path = (TOP_LEVEL_FOLDER + '/' + formatted_folder_date + '/' + SUB_RESOURCE + '/' +
-        str(model_level_depth) + 'm/tiles/scalar/')
 
     output_tile_data_path = (TOP_LEVEL_FOLDER + '/' + formatted_folder_date + '/' + SUB_RESOURCE + '/' +
         str(model_level_depth) + 'm/tiles/data/')
@@ -81,11 +74,12 @@ def lambda_handler(event, context):
     lon = file.variables['lon'][:]
 
     # transform masked values to 0
-    u_data_raw = file.variables['water_u'][0,model_level_indx,::skip,:] #[time,level,lat,lon] -- only 1 time for HYCOM
-    v_data_raw = file.variables['water_v'][0,model_level_indx,::skip,:]
-	
-    u_data_mask_applied = np.where(~u_data_raw.mask, u_data_raw, 0)
-    v_data_mask_applied = np.where(~v_data_raw.mask, v_data_raw, 0)
+    u_data_raw = file.variables['water_u'][model_field_time_indx,model_level_indx,::skip,:] #[time,level,lat,lon]
+    v_data_raw = file.variables['water_v'][model_field_time_indx,model_level_indx,::skip,:]
+
+    # convert masked values (nans) to 0
+    u_data_mask_applied = np.where(~np.isnan(u_data_raw), u_data_raw, 0)
+    v_data_mask_applied = np.where(~np.isnan(v_data_raw), v_data_raw, 0)
 
     # ordered lat array
     lat_sort_indices = np.argsort(lat)
@@ -119,7 +113,7 @@ def lambda_handler(event, context):
 
     u_data_interp = u_interp_func(output_lon_array, output_lat_array)
     v_data_interp = v_interp_func(output_lon_array, output_lat_array)
-	
+
     minLat = np.min(output_lat_array)
     maxLat = np.max(output_lat_array)
     minLon = np.min(output_lon_array)
@@ -129,42 +123,42 @@ def lambda_handler(event, context):
     dy = np.diff(output_lat_array)[0]
     
     output_data = [
-    		{'header': {
-    			'parameterUnit': "m.s-1",
-    			'parameterNumber': 2,
-    			'dx': dx,
-    			'dy': dy,
-    			'parameterNumberName': "Eastward current",
-    			'la1': maxLat,
-    			'la2': minLat,
-    			'parameterCategory': 2,
-    			'lo1': minLon,
-    			'lo2': maxLon,
-    			'nx': len(output_lon_array),
-    			'ny': len(output_lat_array),
-    			'refTime': datetime.datetime.strftime(model_field_time,'%Y-%m-%d %H:%M:%S'),
+            {'header': {
+                'parameterUnit': "m.s-1",
+                'parameterNumber': 2,
+                'dx': dx,
+                'dy': dy,
+                'parameterNumberName': "Eastward current",
+                'la1': maxLat,
+                'la2': minLat,
+                'parameterCategory': 2,
+                'lo1': minLon,
+                'lo2': maxLon,
+                'nx': len(output_lon_array),
+                'ny': len(output_lat_array),
+                'refTime': datetime.datetime.strftime(model_field_time,'%Y-%m-%d %H:%M:%S'),
                 'timeOrigin': datetime.datetime.strftime(time_origin,'%Y-%m-%d %H:%M:%S'),
-    			},
-    			'data': [float('{:.3f}'.format(el)) if np.abs(el) > 0.0001 else 0 for el in u_data_interp[::-1].flatten().tolist()]
-    		},
-    		{'header': {
-    			'parameterUnit': "m.s-1",
-    			'parameterNumber': 3,
-    			'dx': dx,
-    			'dy': dy,
-    			'parameterNumberName': "Northward current",
-    			'la1': maxLat,
-    			'la2': minLat,
-    			'parameterCategory': 2,
-    			'lo1': minLon,
-    			'lo2': maxLon,
-    			'nx': len(output_lon_array),
-    			'ny': len(output_lat_array),
-    			'refTime': datetime.datetime.strftime(model_field_time,'%Y-%m-%d %H:%M:%S'),
+                },
+                'data': [float('{:.3f}'.format(el)) if np.abs(el) > 0.0001 else 0 for el in u_data_interp[::-1].flatten().tolist()]
+            },
+            {'header': {
+                'parameterUnit': "m.s-1",
+                'parameterNumber': 3,
+                'dx': dx,
+                'dy': dy,
+                'parameterNumberName': "Northward current",
+                'la1': maxLat,
+                'la2': minLat,
+                'parameterCategory': 2,
+                'lo1': minLon,
+                'lo2': maxLon,
+                'nx': len(output_lon_array),
+                'ny': len(output_lat_array),
+                'refTime': datetime.datetime.strftime(model_field_time,'%Y-%m-%d %H:%M:%S'),
                 'timeOrigin': datetime.datetime.strftime(time_origin,'%Y-%m-%d %H:%M:%S'),
-    			},
-    			'data': [float('{:.3f}'.format(el)) if np.abs(el) > 0.0001 else 0 for el in v_data_interp[::-1].flatten().tolist()]
-    		},
+                },
+                'data': [float('{:.3f}'.format(el)) if np.abs(el) > 0.0001 else 0 for el in v_data_interp[::-1].flatten().tolist()]
+            },
       ]
 
     client = boto3.client('s3')
@@ -182,4 +176,10 @@ def lambda_handler(event, context):
     file.close()
 
 if __name__ == "__main__":
-	lambda_handler('','')
+    # event = {
+    #     'url': 'https://tds.hycom.org/thredds/dodsC/GLBy0.08/expt_93.0/FMRC/runs/GLBy0.08_930_FMRC_RUN_2022-10-20T12:00:00Z',
+    #     'forecast_time': '20221020T12:00',
+    #     'forecast_time_indx': 0,
+    #     'level': {'level_depth': 0, 'level_indx': 0}
+    # }
+    lambda_handler('', '')

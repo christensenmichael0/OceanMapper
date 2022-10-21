@@ -1,8 +1,8 @@
-import boto3
+import io
 import json
 import re
-import io
 
+import boto3
 import geopandas
 import requests
 from PyPDF2 import PdfFileReader
@@ -19,7 +19,7 @@ def text_extractor(fileObj):
     Inputs:
     fileObj: file object
     """
-    pdf = PdfFileReader(fileObj)
+    pdf = PdfFileReader(fileObj) # Note: must use v1.26.0
     combined_text = ''
     for page_indx in range(pdf.getNumPages()):
         page = pdf.getPage(page_indx)

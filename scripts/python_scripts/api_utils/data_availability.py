@@ -1,7 +1,7 @@
-import boto3
-import datetime
 import json
 import re
+
+import boto3
 
 s3 = boto3.resource('s3')
 AWS_BUCKET_NAME = 'oceanmapper-data-storage'

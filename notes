@@ -1,5 +1,32 @@
+# ADD AWS DIRECTORY INFO (~/.aws)
+
+# CONTAINERIZE LAMBDA W/GENERAL IMAGE -- OVERRIDE CMD IN LAMBDA FUNC
+https://docs.aws.amazon.com/lambda/latest/dg/python-image.html
+https://docs.aws.amazon.com/lambda/latest/dg/images-create.html#images-create-from-base
+https://earthly.dev/blog/aws-lambda-docker/
+
+aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 967950673736.dkr.ecr.us-east-2.amazonaws.com
+docker build -t data-fetch:latest -f lambdas/data-fetch.Dockerfile.python3.8 .
+docker tag data-fetch:latest 967950673736.dkr.ecr.us-east-2.amazonaws.com/data-fetch:latest
+docker push 967950673736.dkr.ecr.us-east-2.amazonaws.com/data-fetch:latest
+
+docker run -p 9000:8080 gfs_data_fetch:latest
+curl -XPOST "http://localhost:9000/2015-03-31/functions/function/invocations" -d '{}'
+
+LAMBDAS CALLED BY API GATEWAY
+timeseries_data_api
+profile_data_api
+point_data_api
+get_model_field
+TODO: add info on roles
+
+# VIRTUAL ENV (ON OLD DELL)
 python3 -m venv ~/env/oceanmapper
 source ~/env/oceanmapper/bin/activate
+
+# CREATE VIRTUAL ENV (ON MAC)
+python3.8 -m venv venv
+source ./venv/bin/activate
 
 # FRONT END (CRAE)
 https://originmaster.com/running-create-react-app-and-express-crae-on-heroku-c39a39fe7851
@@ -10,6 +37,7 @@ http://blog.davidelner.com/create-map-with-tilemill-and-leaflet/
 https://www.bsee.gov/sites/bsee.gov/files/weeklyreport/current_deepwater_activity_12-18-18.pdf
 
 https://nowcoast.noaa.gov/help/#!section=layerinfo
+https://www.maptiler.com/google-maps-coordinates-tile-bounds-projection/#3/18.82/49.67
 
 # NEED A BUILDPACK FOR HEROKU!!
 

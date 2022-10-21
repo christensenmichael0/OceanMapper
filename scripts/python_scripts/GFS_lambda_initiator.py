@@ -6,12 +6,13 @@ Created on Mon Apr  2 17:20:30 2018
 """
 
 
-import json
-import boto3
-import numpy as np
-from GFS_forecast_info import get_gfs_forecast_info
 import datetime
+import json
 import time
+
+import boto3
+
+from GFS_forecast_info import get_gfs_forecast_info
 
 lam = boto3.client('lambda')
 

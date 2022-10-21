@@ -5,12 +5,14 @@ Created on Mon Apr 09 19:12:40 2018
 @author: Michael
 """
 
-import urllib.request as urllib
-from bs4 import BeautifulSoup
-import datetime
-import numpy as np
 import collections
+import datetime
 import re
+import urllib.request as urllib
+
+import numpy as np
+from bs4 import BeautifulSoup
+
 
 def get_latest_RTOFS_forecast_time(rtofs_url, grid_dim='2d'):
     """
@@ -24,7 +26,7 @@ def get_latest_RTOFS_forecast_time(rtofs_url, grid_dim='2d'):
     {string} grid_dim - the RTOFS grid dimension '2d' or '3d' (i.e. the 2d surface data or 3d full water column data)
 
 
-    ex: 'https://nomads.ncep.noaa.gov:9090/dods/rtofs/rtofs_global20180516/rtofs_glo_2ds_nowcast_daily_prog'
+    ex: 'https://nomads.ncep.noaa.gov/dods/rtofs/rtofs_global20180516/rtofs_glo_2ds_nowcast_daily_prog'
     -----------------------------------------------------------------------
     Output: object with this structure:
 
@@ -32,7 +34,7 @@ def get_latest_RTOFS_forecast_time(rtofs_url, grid_dim='2d'):
         'forecast': {'forecast': {'latest_date': 'yyyymmdd', 'url': xxx}}
     -----------------------------------------------------------------------
     Author: Michael Christensen
-    Date Modified: 06/06/2018
+    Date Modified: 10/21/2022
     """
     
     page = urllib.urlopen(rtofs_url).read()
@@ -81,5 +83,5 @@ def get_latest_RTOFS_forecast_time(rtofs_url, grid_dim='2d'):
     return forecast_info
 
 if __name__ == "__main__":
-    rtofs_url = 'https://nomads.ncep.noaa.gov:9090/dods/rtofs'
+    rtofs_url = 'https://nomads.ncep.noaa.gov/dods/rtofs'
     get_latest_RTOFS_forecast_time(rtofs_url)

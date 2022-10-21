@@ -5,22 +5,16 @@ Created on Mon Apr  2 17:20:30 2018
 @author: Michael Christensen
 """
 
-
-import json
 import datetime
+import json
 import pickle
-import time
 
 import boto3
 import numpy as np
-from scipy import interpolate
-import netCDF4
 
-from utils.fetch_utils import get_opendapp_netcdf
-from utils.tile_task_distributor import tile_task_distributor
-from utils.pickle_task_distributor import pickle_task_distributor
 from utils.datasets import datasets
-
+from utils.fetch_utils import get_opendapp_netcdf
+from utils.pickle_task_distributor import pickle_task_distributor
 
 def lambda_handler(event, context):
     """
@@ -40,7 +34,7 @@ def lambda_handler(event, context):
     Output: A .pickle file are save to S3
     -----------------------------------------------------------------------
     Author: Michael Christensen
-    Date Modified: 10/08/2018
+    Date Modified: 10/20/2022
     """
 
     AWS_BUCKET_NAME = 'oceanmapper-data-storage'
@@ -60,26 +54,17 @@ def lambda_handler(event, context):
     output_pickle_path_htsgwsfc = (TOP_LEVEL_FOLDER + '/' + formatted_folder_date + 
         '/' + SUB_RESOURCE_HTSGWSFC + '/pickle/' +'ww3_htsgwsfc_' + formatted_folder_date + '.pickle')
 
-    output_tile_scalar_path_htsgwsfc = (TOP_LEVEL_FOLDER + '/' + formatted_folder_date + 
-        '/' + SUB_RESOURCE_HTSGWSFC + '/tiles/scalar/')
-
     output_tile_data_path_htsgwsfc = (TOP_LEVEL_FOLDER + '/' + formatted_folder_date +
         '/' + SUB_RESOURCE_HTSGWSFC + '/tiles/data/')
 
     output_pickle_path_dirpwsfc = (TOP_LEVEL_FOLDER + '/' + formatted_folder_date + 
         '/' + SUB_RESOURCE_DIRPWSFC + '/pickle/' +'ww3_dirpwsfc_' + formatted_folder_date + '.pickle')
 
-    output_tile_vector_path_dirpwsfc = (TOP_LEVEL_FOLDER + '/' + formatted_folder_date + 
-        '/' + SUB_RESOURCE_DIRPWSFC + '/tiles/vector/')
-
     output_tile_data_path_dirpwsfc = (TOP_LEVEL_FOLDER + '/' + formatted_folder_date +
         '/' + SUB_RESOURCE_DIRPWSFC + '/tiles/data/')
 
     output_pickle_path_perpwsfc = (TOP_LEVEL_FOLDER + '/' + formatted_folder_date + 
         '/' + SUB_RESOURCE_PERPWSFC + '/pickle/' +'ww3_perpwsfc_' + formatted_folder_date + '.pickle')
-
-    output_tile_scalar_path_perpwsfc = (TOP_LEVEL_FOLDER + '/' + formatted_folder_date + 
-        '/' + SUB_RESOURCE_PERPWSFC + '/tiles/scalar/')
 
     output_tile_data_path_perpwsfc = (TOP_LEVEL_FOLDER + '/' + formatted_folder_date +
         '/' + SUB_RESOURCE_PERPWSFC + '/tiles/data/')
@@ -163,4 +148,5 @@ def lambda_handler(event, context):
     file.close()
 
 if __name__ == "__main__":
-	lambda_handler('','')
+    # event = {'url': 'https://nomads.ncep.noaa.gov/dods/wave/gfswave/20221020/gfswave.global.0p25_12z', 'forecast_time': '20221020T12:00', 'forecast_indx': 0};
+    lambda_handler('','')
