@@ -143,6 +143,9 @@ class App extends Component {
          position:'topright'
       }).addTo(map);
     }
+
+    // assign window variable
+    window.mymap = this.map;
     
     // add click event listener
     map.on('click', this.onMapClick);
@@ -151,7 +154,9 @@ class App extends Component {
     map.on('moveend', this.onMapBoundsChange); // moveend, zoomend
 
     // add click event listener to map (fired when clicking on specific popup element) 
-    map.on('timeseriesClick', () => {this.handlePopupChartClick('timeseries')});
+    map.on('timeseriesClick', () => {
+      this.handlePopupChartClick('timeseries')
+    });
 
     // add click event listener to map (ired when clicking on specific popup element) 
     map.on('profileClick', () => {this.handlePopupChartClick('profile')});
@@ -774,8 +779,6 @@ class App extends Component {
       try {
         drillingMarker = L.marker(drillSite['coordinates'].reverse(), 
           {...drillSite, popupStationContent});
-        
-        window.mymap = this.map;
         drillingMarker.bindPopup(`${popupStationContent}`);
         activeDrillingLayer.addLayer(drillingMarker);
 
