@@ -170,16 +170,15 @@ def lambda_handler(event, context):
 
 
 if __name__ == '__main__':
+#     event = {
+#         "queryStringParameters": {
+#             "level": "0",
+#             "dataset": "RTOFS_DATA",
+#             "sub_resource": "ocean_current_speed",
+#             "start_time": "2019-02-28T01:00Z",
+#             "end_time": "2019-03-03T19:00Z",
+#             "coordinates": "-81.58,23.88"
+#         }
+#     }
 
-    event = {
-        "queryStringParameters": {
-            "level": "0",
-            "dataset": "RTOFS_DATA",
-            "sub_resource": "ocean_current_speed",
-            "start_time": "2019-02-28T01:00Z",
-            "end_time": "2019-03-03T19:00Z",
-            "coordinates": "-81.58,23.88"
-        }
-    }
-
-    lambda_handler(event,'')
+    lambda_handler('','')

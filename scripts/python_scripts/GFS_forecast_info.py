@@ -22,7 +22,7 @@ def get_gfs_forecast_info(gfs_url):
     -----------------------------------------------------------------------
     Input: {string} gfs_url - displays available GFS forecast model runs 
 
-    i.e. http://nomads.ncep.noaa.gov:9090/dods/gfs_0p25
+    i.e. http://nomads.ncep.noaa.gov/dods/gfs_0p25
     -----------------------------------------------------------------------
     Output: array of tuples with this structure:
 

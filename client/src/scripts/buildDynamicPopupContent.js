@@ -1,5 +1,5 @@
-import { buildActiveDrillingPopupButtons } from './buildStaticPopupContent';
-import { getPointData } from './dataFetchingUtils';
+import {buildActiveDrillingPopupButtons} from './buildStaticPopupContent';
+import {getPointData} from './dataFetchingUtils';
 
 export const buildDynamicPopupContent = (getAppState, markerContext) => {
   let mapLayers = getAppState()['mapLayers'];
@@ -7,7 +7,7 @@ export const buildDynamicPopupContent = (getAppState, markerContext) => {
 
   let activeLayers = [];
   orderedMapLayers.forEach(layer => {
-    if (mapLayers[layer]['dataset'] && mapLayers[layer]['isOn']) activeLayers.push(mapLayers[layer]);
+    if (mapLayers[layer] && mapLayers[layer]['dataset'] && mapLayers[layer]['isOn']) activeLayers.push(mapLayers[layer]);
   })
 
   let origPopupContent = markerContext.popup._source.options.popupStationContent || 

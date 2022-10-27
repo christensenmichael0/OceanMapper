@@ -128,14 +128,13 @@ def lambda_handler(event, context):
 
     
 if __name__ == '__main__':
-    
-    event = {
-        "queryStringParameters": {
-            "level": "0",
-            "dataset": "HYCOM_DATA",
-            "sub_resource": "ocean_current_speed",
-            "time": "2022-10-21T19:00Z"
-        }
-    }
-    lambda_handler(event,'')
+#     event = {
+#         "queryStringParameters": {
+#             "level": "0",
+#             "dataset": "HYCOM_DATA",
+#             "sub_resource": "ocean_current_speed",
+#             "time": "2022-10-21T19:00Z"
+#         }
+#     }
+    lambda_handler('','')
     

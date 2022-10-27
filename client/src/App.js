@@ -1,5 +1,5 @@
-import React, { Component } from 'react';
-import { withStyles } from '@material-ui/core/styles';
+import React, {Component} from 'react';
+import {withStyles} from '@material-ui/core/styles';
 import './App.css';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
@@ -7,17 +7,16 @@ import PersistentDrawerLeft from './components/PersistentDrawerLeft';
 import ChartModal from './components/ChartModal';
 import SettingsPanel from './components/SettingsPanel';
 import CoordinateDisplay from './components/CoordinateDisplay';
-import { layers, dataLayers } from './scripts/layers';
+import {dataLayers, layers} from './scripts/layers';
 import moment from 'moment';
-import { getData, getModelField, abortLayerRequest } from './scripts/dataFetchingUtils';
-import { populateImageUrlEndpoint, buildTileFetchEndpoint } from './scripts/formattingUtils';
-import { addCustomLeafletHandlers } from './scripts/addCustomLeafletHandlers';
-import { activeDrillingPopupStaticContent ,
-         customLocationPopupStaticContent } from './scripts/buildStaticPopupContent';
-import { buildDynamicPopupContent } from './scripts/buildDynamicPopupContent';
-import { parseData } from './scripts/parseData';
+import {abortLayerRequest, getData, getModelField} from './scripts/dataFetchingUtils';
+import {buildTileFetchEndpoint, populateImageUrlEndpoint} from './scripts/formattingUtils';
+import {addCustomLeafletHandlers} from './scripts/addCustomLeafletHandlers';
+import {activeDrillingPopupStaticContent, customLocationPopupStaticContent} from './scripts/buildStaticPopupContent';
+import {buildDynamicPopupContent} from './scripts/buildDynamicPopupContent';
+import {parseData} from './scripts/parseData';
 import priorityMap from './scripts/layerPriority';
-import { mapConfig } from './scripts/mapConfig';
+import {mapConfig} from './scripts/mapConfig';
 import _ from 'lodash';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -839,9 +838,9 @@ class App extends Component {
     // loop through orderlayers and update necessary layers depending on timeSensitive param 
     orderedMapLayers.forEach((layer)=> {
       let layerObj = mapLayers[layer];
-      if (layerObj['movementSensitive'] && layerObj['isOn']) {
+      if (layerObj && layerObj['isOn'] && layerObj['movementSensitive']) {
         this.removeLeafletLayer(layerObj['id']).then(()=>{this.addLeafletLayer(layerObj)});
-      };
+      }
     });
   }
 

@@ -64,7 +64,7 @@ def get_model_value(coords, data_key, sub_resource, dataset_vars, conn=None):
     Output: 
     -----------------------------------------------------------------------
     Author: Michael Christensen
-    Date Modified: 02/09/2019
+    Date Modified: 10/23/2022
 
     """
 
@@ -91,7 +91,7 @@ def get_model_value(coords, data_key, sub_resource, dataset_vars, conn=None):
             # transform masked values to 0
             data_raw = data[var].data
             data_mask = data[var].mask
-            data_mask_applied = np.where(~data_mask, data_raw, 0)       
+            data_mask_applied = np.where(~np.isnan(data_raw), data_raw, 0)
             
             interp_func = interpolate.interp2d(lon, lat, data_mask_applied, kind='cubic')
             interp_vals.append(interp_func(coords[0], coords[1])[0])

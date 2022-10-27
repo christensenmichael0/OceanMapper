@@ -1,7 +1,3 @@
-/*
- * Import required packages.
- * Packages should be installed with "npm install".
- */
 import cluster from 'cluster';
 import os from 'os';
 import bodyParser from 'body-parser';
@@ -23,12 +19,6 @@ if (cluster.isMaster) {
   for (var i = 0; i < cpuCount; i += 1) {
     cluster.fork();
   }
-
-  // cluster.on('listening', (worker, address) => {
-  //   console.log(
-  //     `A worker is now connected to ${address.address}:${address.port}`);
-  // });
-
   // restart an exited worker
   cluster.on('exit', (worker, code, signal) => {
     console.log('worker %d died (%s). restarting...',
@@ -67,11 +57,6 @@ if (cluster.isMaster) {
 
   // error handler here: (prior middleware should pass next(errorObj))
   app.use(errorHandler());
-
-  // 404 on failed get (doesnt exist)
-  // 400 dont do something for some reason
-  // 204 sucessful delete
-  // 200 sucessful get
 
   app.use('/*', staticFiles)
 

@@ -1,5 +1,4 @@
-import moment from 'moment';
-import { getProfileData } from './dataFetchingUtils';
+import {getProfileData} from './dataFetchingUtils';
 
 
 export const parseProfileData = (app, abortSignal) => {
@@ -8,7 +7,7 @@ export const parseProfileData = (app, abortSignal) => {
   activeLayers = [], arrowLen = 150;
 
   orderedMapLayers.forEach(layer => {
-    if (mapLayers[layer]['dataset'] && mapLayers[layer]['isOn']) activeLayers.push(mapLayers[layer]);
+    if (mapLayers[layer] && mapLayers[layer]['isOn'] && mapLayers[layer]['dataset']) activeLayers.push(mapLayers[layer]);
   })
 
   // stop execution if no active layers

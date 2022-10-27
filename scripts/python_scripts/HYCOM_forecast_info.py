@@ -24,7 +24,7 @@ def get_hycom_forecast_info(hycom_url):
     -----------------------------------------------------------------------
     Input: {string} hycom_url - the HYCOM forecast data catalog url
 
-    i.e. http://tds.hycom.org/thredds/catalog/datasets/GLBv0.08/expt_93.0/data/forecasts/catalog.html
+    i.e. https://tds.hycom.org/thredds/catalog/GLBy0.08/expt_93.0/FMRC/runs/catalog.html
     -----------------------------------------------------------------------
     Output: object with this structure:
 

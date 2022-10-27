@@ -55,7 +55,7 @@ export const layers = [
           },
           settingsTools: ['opacity', 'datarange', 'interval', 'colormap'],
           visibleTOC: true,
-          defaultOn: false
+          defaultOn: true
         }
       ]
     },
@@ -234,7 +234,7 @@ export const layers = [
   {
     Category: 'Oil & Gas',
     visibleTOC: true,
-    expanded: true,
+    expanded: false,
     Layers: [
       {
         id: 'active_drilling',
@@ -244,7 +244,7 @@ export const layers = [
         endPoint: '/download/current_deepwater_activity.json',
         timeSensitive: false,
         visibleTOC: true,
-        defaultOn: true
+        defaultOn: false
       }
     ]
   },
@@ -302,7 +302,7 @@ export const layers = [
           opacity: 1.0
         },
         visibleTOC: true,
-        defaultOn: true
+        defaultOn: false
       },
       {
         id: 'ocs_lease_blocks',
@@ -322,7 +322,7 @@ export const layers = [
         id: 'gebco_bathy',
         niceName: 'GEBCO Bathmetry',
         overlayPriority: 'medium',
-        endPoint: 'https://gis.ngdc.noaa.gov/arcgis/rest/services/web_mercator/gebco_2014_contours/MapServer/tile/{z}/{y}/{x}',
+        endPoint: 'https://tiles.arcgis.com/tiles/C8EMgrsFcRFL6LrL/arcgis/rest/services/GEBCO_contours/MapServer/tile/{z}/{y}/{x}',
         addDataFunc: 'getGebcoBathy',
         timeSensitive: false,
         rasterProps: {

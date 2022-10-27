@@ -1,6 +1,34 @@
-# ADD AWS DIRECTORY INFO (~/.aws)
 
-# CONTAINERIZE LAMBDA W/GENERAL IMAGE -- OVERRIDE CMD IN LAMBDA FUNC
+----------------------------------------------------------------------------------------------------------------------
+************************************************ MISCELLANEOUS ******************************************************
+
+# When running python scripts locally which interact with AWS resources make sure to add/update file located here:
+
+~/.aws
+   -- config
+   -- credentials
+
+-- config file contents --
+[default]
+region = us-east-2
+
+-- credentials file contents --
+[default]
+aws_access_key_id=XXXX
+aws_secret_access_key=XXXX
+
+# creating a virtualenv (on personal Dell laptop)
+python3 -m venv ~/env/oceanmapper
+source ~/env/oceanmapper/bin/activate
+
+# creating a virtualenv (on mac)
+python3.8 -m venv venv
+source ./venv/bin/activate
+
+----------------------------------------------------------------------------------------------------------------------
+************************************************ AWS LAMBDA ******************************************************
+
+# Containerize lambda func w/general image and then override the CMD in the lambda func (via aws portal)
 https://docs.aws.amazon.com/lambda/latest/dg/python-image.html
 https://docs.aws.amazon.com/lambda/latest/dg/images-create.html#images-create-from-base
 https://earthly.dev/blog/aws-lambda-docker/
@@ -10,39 +38,57 @@ docker build -t data-fetch:latest -f lambdas/data-fetch.Dockerfile.python3.8 .
 docker tag data-fetch:latest 967950673736.dkr.ecr.us-east-2.amazonaws.com/data-fetch:latest
 docker push 967950673736.dkr.ecr.us-east-2.amazonaws.com/data-fetch:latest
 
+# To run a lambda function locally -- need to export AWS variables (terminal)
 docker run -p 9000:8080 gfs_data_fetch:latest
 curl -XPOST "http://localhost:9000/2015-03-31/functions/function/invocations" -d '{}'
 
 LAMBDAS CALLED BY API GATEWAY
-timeseries_data_api
-profile_data_api
-point_data_api
-get_model_field
-TODO: add info on roles
+timeseries_data_api (updated)
+profile_data_api (updated)
+point_data_api (updated)
+get_model_field (updated)
 
-# VIRTUAL ENV (ON OLD DELL)
-python3 -m venv ~/env/oceanmapper
-source ~/env/oceanmapper/bin/activate
+----------------------------------------------------------------------------------------------------------------------
+************************************************ HEROKU ******************************************************
 
-# CREATE VIRTUAL ENV (ON MAC)
-python3.8 -m venv venv
-source ./venv/bin/activate
+# loggin in to heroku
+heroku login -i
+Registered Authorizations token for pw can be found here: https://dashboard.heroku.com/account/applications (Authorization: heroku_auth)
 
-# FRONT END (CRAE)
+# pushing code to heroku
+git push heroku master
+
+# upgrading heroku stack
+https://devcenter.heroku.com/articles/upgrading-to-the-latest-stack
+
+# set buildpacks if necessary (first time)
+heroku buildpacks:set https://github.com/heroku/heroku-buildpack-nodejs#latest -a my-app
+
+# heroku command cheatsheat
+https://devhints.io/heroku
+
+----------------------------------------------------------------------------------------------------------------------
+************************************************ FRONT END  ******************************************************
+
+# CRAE (create react app with express)
 https://originmaster.com/running-create-react-app-and-express-crae-on-heroku-c39a39fe7851
 https://github.com/Johnnycon/crae-env
 
+# creating basemap tiles
 http://blog.davidelner.com/create-map-with-tilemill-and-leaflet/
 
+# current deepwater activity
 https://www.bsee.gov/sites/bsee.gov/files/weeklyreport/current_deepwater_activity_12-18-18.pdf
 
+# nowcast map (tropical storms)
 https://nowcoast.noaa.gov/help/#!section=layerinfo
+
+# map tiles reference
 https://www.maptiler.com/google-maps-coordinates-tile-bounds-projection/#3/18.82/49.67
 
-# NEED A BUILDPACK FOR HEROKU!!
-
-// add the latest nodejs build pack to our project
-heroku buildpacks:set https://github.com/heroku/heroku-buildpack-nodejs#yarn
+# bathymetry (use to determine endpoint for bathy tiles)
+https://www.arcgis.com/apps/mapviewer/index.html?layers=5f98dbc4708e4a7e99c0a7fe043d70a1
+----------------------------------------------------------------------------------------------------------------------
 
 
 # fig, axes = plt.subplots()
