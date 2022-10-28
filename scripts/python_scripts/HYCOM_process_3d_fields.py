@@ -176,10 +176,10 @@ def lambda_handler(event, context):
     file.close()
 
 if __name__ == "__main__":
-    # event = {
-    #     'url': 'https://tds.hycom.org/thredds/dodsC/GLBy0.08/expt_93.0/FMRC/runs/GLBy0.08_930_FMRC_RUN_2022-10-20T12:00:00Z',
-    #     'forecast_time': '20221020T12:00',
-    #     'forecast_time_indx': 0,
-    #     'level': {'level_depth': 0, 'level_indx': 0}
-    # }
-    lambda_handler('', '')
+    event = {
+        'url': 'https://tds.hycom.org/thredds/dodsC/GLBy0.08/expt_93.0/FMRC/runs/GLBy0.08_930_FMRC_RUN_2022-10-26T12:00:00Z',
+        'forecast_time': '20221021T12:00',
+        'forecast_time_indx': 0,
+        'level': {'level_depth': 0, 'level_indx': 0}
+    }
+    lambda_handler(event, '')

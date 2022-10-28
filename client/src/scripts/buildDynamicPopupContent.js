@@ -38,7 +38,7 @@ export const buildDynamicPopupContent = (getAppState, markerContext) => {
 
         let niceName = activeLayers[indx]['niceName'];
         let value, direction, units, dataStr;
-        if (!resp['error']) {
+        if (!resp['error'] && resp.data) {
           value = resp['data']['val'].toFixed(2);
           direction = resp['data']['direction'] ? resp['data']['direction'].toFixed(1) : null;
           units = resp['units'];
@@ -48,6 +48,8 @@ export const buildDynamicPopupContent = (getAppState, markerContext) => {
           } else {
             dataStr = `<p class="popup-metoc-data">${niceName}: ${value} ${units}</p>`;
           }
+        } else if (!resp['data'] && resp['status'] === "point on land") {
+          dataStr = `<p class="popup-metoc-data">${niceName}: data unavailable</p>`;
         } else {
           dataStr = `<p class="popup-metoc-data">${niceName}: failed to load data!</p>`;
         }
@@ -58,6 +60,8 @@ export const buildDynamicPopupContent = (getAppState, markerContext) => {
       markerContext.popup.setContent(
         `${origPopupContent}${modelOutputContent}${buttonContent}`
       )
-    }) 
+    }).catch(error => {
+      console.log(error);
+    })
   }
 }

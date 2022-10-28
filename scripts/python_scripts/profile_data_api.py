@@ -14,6 +14,7 @@ from api_utils.check_query_params import check_query_params, filter_failed_param
 from api_utils.fetch_data_availability import grab_data_availability
 from api_utils.nearest_model_time import get_available_model_times
 from api_utils.get_model_value import get_model_value
+from point_locator import in_ocean
 
 s3 = boto3.client('s3')
 lam = boto3.client('lambda')
@@ -87,15 +88,12 @@ def lambda_handler(event, context):
     coords = [float(coord) for coord in event['queryStringParameters']['coordinates'].split(',')]
     overlay_type = datasets[dataset]['sub_resource'][sub_resource]['overlay_type']
 
-    check_ocean = os.getenv('check_ocean', False) # environment variable (easy adjument in lambda env)
     coord_in_ocean = False # default is not in ocean
-    if overlay_type == 'ocean' and check_ocean:
-        payload = {'lat': coords[1], 'lon': coords[0]}
-        coord_in_ocean = lam.invoke(FunctionName='in_ocean', 
-                InvocationType='RequestResponse', Payload=json.dumps(payload)) # this function is slow
+        if overlay_type == 'ocean':
+            coord_in_ocean = in_ocean(coords[0], coords[1])
     
     # if model is (ocean only) then check the coords to make sure they are in the ocean
-    if not coord_in_ocean and overlay_type == 'ocean' and check_ocean:
+    if not coord_in_ocean and overlay_type == 'ocean':
         response_body = {
             'data': None,
             'status': 'point on land',

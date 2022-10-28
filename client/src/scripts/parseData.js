@@ -53,7 +53,7 @@ export const parseData = (app, chartType, abortSignal) => {
     responses.forEach((resp,indx) => {
       // skip the following logic if there was an error (so we could end up with empty outputHighChartsArray)
       // can i build an error object? and display error in subtitle??
-      if (resp['error']) {
+      if (resp['error'] || !resp['data']) {
         chartLoadingErrors.push(activeLayers[indx]['niceName']);
         return;
       }

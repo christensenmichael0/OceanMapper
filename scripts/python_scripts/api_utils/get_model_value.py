@@ -90,9 +90,13 @@ def get_model_value(coords, data_key, sub_resource, dataset_vars, conn=None):
         if hasattr(data[var],'mask'):
             # transform masked values to 0
             data_raw = data[var].data
-            data_mask = data[var].mask
-            data_mask_applied = np.where(~np.isnan(data_raw), data_raw, 0)
-            
+            # determine whether or not to apply the mask. If the mask is uniform (i.e. every item is false (unmasked) then the mask isn't helpful)
+            all_masked = np.all(~data[var].mask)
+            if ~all_masked:
+                data_mask_applied = np.where(~data[var].mask, data_raw, 0)
+            else:
+                data_mask_applied = np.where(data_raw < data[var].fill_value, data_raw, 0)
+
             interp_func = interpolate.interp2d(lon, lat, data_mask_applied, kind='cubic')
             interp_vals.append(interp_func(coords[0], coords[1])[0])
 
@@ -126,14 +130,19 @@ def get_model_value(coords, data_key, sub_resource, dataset_vars, conn=None):
 
 if __name__ == '__main__':
     
-    # coords=[-81.7, 24.08]
+    # coords=[-68.9337, 41.7016]
     # dataset_vars = ['u_vel','v_vel']
     # sub_resource = 'ocean_current_speed'
-    # data_key='HYCOM_DATA/20181023_00/ocean_current_speed/0m/pickle/hycom_currents_20181023_00.pickle'
+    # data_key='HYCOM_DATA/20221101_18/ocean_current_speed/0m/pickle/hycom_currents_20221101_18.pickle'
 
-    coords=[-93.66943359375,23.644524198573688]
+    # coords=[-68.9337, 41.7016]
+    # dataset_vars = ['sig_wave_height']
+    # sub_resource = 'sig_wave_height'
+    # data_key='WW3_DATA/20221027_18/sig_wave_height/tiles/data/3/2/2.pickle'
+
+    coords = [-68.9337, 41.7016]
     dataset_vars = ['primary_wave_dir']
     sub_resource = 'primary_wave_dir'
-    data_key='WW3_DATA/20190209_00/primary_wave_dir/pickle/ww3_dirpwsfc_20190209_00.pickle'
-    
+    data_key = 'WW3_DATA/20221027_18/primary_wave_dir/tiles/data/3/2/2.pickle'
+
     get_model_value(coords, data_key, sub_resource, dataset_vars, conn='mock_con')
