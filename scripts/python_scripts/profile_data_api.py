@@ -1,20 +1,16 @@
-import boto3
 import datetime
-import numpy as np
-import json
-import re
-import os
-
 from multiprocessing import Process, Pipe
 
-from utils.s3_filepath_utils import build_tiledata_path
-from utils.datasets import datasets
-from api_utils.response_constructor import generate_response
+import boto3
+
 from api_utils.check_query_params import check_query_params, filter_failed_params
 from api_utils.fetch_data_availability import grab_data_availability
-from api_utils.nearest_model_time import get_available_model_times
 from api_utils.get_model_value import get_model_value
+from api_utils.nearest_model_time import get_available_model_times
+from api_utils.response_constructor import generate_response
 from point_locator import in_ocean
+from utils.datasets import datasets
+from utils.s3_filepath_utils import build_tiledata_path
 
 s3 = boto3.client('s3')
 lam = boto3.client('lambda')
@@ -41,7 +37,7 @@ def lambda_handler(event, context):
     Output: response object
     -----------------------------------------------------------------------
     Author: Michael Christensen
-    Date Modified: 02/17/2019
+    Date Modified: 10/31/2022
     """
     # default headers for request
     headers = {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'}
@@ -77,7 +73,6 @@ def lambda_handler(event, context):
     # sub resource
     sub_resource = event['queryStringParameters']['sub_resource']
     sub_resource_folder = datasets[dataset]['sub_resource'][sub_resource]
-    dataset_prefix = sub_resource_folder['data_prefix']
     dataset_units = sub_resource_folder['units']
 
     # get all available levels then select the first one for data availability
@@ -89,8 +84,8 @@ def lambda_handler(event, context):
     overlay_type = datasets[dataset]['sub_resource'][sub_resource]['overlay_type']
 
     coord_in_ocean = False # default is not in ocean
-        if overlay_type == 'ocean':
-            coord_in_ocean = in_ocean(coords[0], coords[1])
+    if overlay_type == 'ocean':
+        coord_in_ocean = in_ocean(coords[0], coords[1])
     
     # if model is (ocean only) then check the coords to make sure they are in the ocean
     if not coord_in_ocean and overlay_type == 'ocean':
@@ -119,7 +114,6 @@ def lambda_handler(event, context):
         for level_formatted in available_levels:
             # this is the subsetted .pickle data
             data_key = build_tiledata_path(dataset, sub_resource, level_formatted, available_time, coords)
-            data_value = get_model_value(coords, data_key, sub_resource, dataset_vars)
 
             # create a pipe for communication
             parent_conn, child_conn = Pipe()
@@ -167,14 +161,12 @@ def lambda_handler(event, context):
 
 
 if __name__ == '__main__':
-
-    event = {
-        "queryStringParameters": {
-            "dataset": "RTOFS_DATA",
-            "sub_resource": "ocean_current_speed",
-            "time": "2019-02-17T01:00Z",
-            "coordinates": "-75.19,37.57"
-        }
-    }
-
-    lambda_handler(event,'')
+    # event = {
+    #     "queryStringParameters": {
+    #         "dataset": "HYCOM_DATA",
+    #         "sub_resource": "ocean_current_speed",
+    #         "time": "2022-10-31T12:00Z",
+    #         "coordinates": "-75.19,37.57"
+    #     }
+    # }
+    lambda_handler('','')
