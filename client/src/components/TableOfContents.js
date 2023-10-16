@@ -32,20 +32,20 @@ function TableOfContents(props) {
 
   const constructLabel = (labelText, layerID, includeSettings) => (
     <React.Fragment>
-      {(props['mapLayers'][layerID] ? 
+      {(props['mapLayers'][layerID] ?
         props['mapLayers'][layerID]['isLoading'] : false) && <LoadingSpinner />}
       {labelText}
-      {(props['mapLayers'][layerID]['loadError'] && !props['mapLayers'][layerID]['isLoading'] && 
-        props['mapLayers'][layerID]['isOn']) && 
-        <FontAwesomeIcon 
-          icon="exclamation-triangle" 
-          title={'Failed to load layer!'} 
-          style={{color: 'red', marginLeft: 5, fontSize: '1.2em'}} 
+      {(props['mapLayers'][layerID]['loadError'] && !props['mapLayers'][layerID]['isLoading'] &&
+        props['mapLayers'][layerID]['isOn']) &&
+        <FontAwesomeIcon
+          icon="exclamation-triangle"
+          title={'Failed to load layer!'}
+          style={{color: 'red', marginLeft: 5, fontSize: '1.2em'}}
         />
       }
-      {(includeSettings && !props['mapLayers'][layerID]['isLoading'] &&  props['mapLayers'][layerID]['isOn']) && 
+      {(includeSettings && !props['mapLayers'][layerID]['isLoading'] &&  props['mapLayers'][layerID]['isOn']) &&
         <SettingsCog
-          layerID = {layerID} 
+          layerID = {layerID}
           handleSettingsPanelVisibility = {props.handleSettingsPanelVisibility}
         />
       }
@@ -58,7 +58,7 @@ function TableOfContents(props) {
         if ('subResources' in layer) {
           return (
             layer['subResources'].map((subresource, indx) => {
-              if (subresource['visibleTOC']) {
+              if (props['mapLayers'][subresource['id']] && subresource['visibleTOC']) {
                 return (
                   <React.Fragment key={indx}>
                     <FormGroup row={false}>
@@ -75,7 +75,7 @@ function TableOfContents(props) {
                       />
                     </FormGroup>
                     {(props['mapLayers'][subresource['id']]['isOn'] && !props['mapLayers'][subresource['id']]['isLoading'] &&
-                     !props['mapLayers'][subresource['id']]['loadError']) && 
+                     !props['mapLayers'][subresource['id']]['loadError']) &&
                     <React.Fragment>
                        <Typography variant="overline" classes={{overline: props.classes['timeInfo']}}>
                         Date Valid: {props['mapLayers'][subresource['id']]['validTime']}
@@ -83,13 +83,13 @@ function TableOfContents(props) {
                       <Typography variant="overline" classes={{overline: props.classes['timeInfo']}} gutterBottom>
                         Model Initialized: {props['mapLayers'][subresource['id']]['initTime']}
                       </Typography>
-                      {subresource['legendUrl'] && 
-                        <DynamicLegend 
+                      {subresource['legendUrl'] &&
+                        <DynamicLegend
                           layer={props['mapLayers'][subresource['id']]}
                           legendUrl={subresource['legendUrl']}
                       />}
-                      {!isNaN(props['mapLayers'][subresource['id']]['level']) && 
-                      <LevelSelector 
+                      {!isNaN(props['mapLayers'][subresource['id']]['level']) &&
+                      <LevelSelector
                         availableLevels={subresource['availableLevels']}
                         levelName={subresource['levelName']}
                         presentLevel={props['mapLayers'][subresource['id']]['level']}
@@ -123,10 +123,10 @@ function TableOfContents(props) {
                   />
                 </FormGroup>
                 {(props['mapLayers'][layer['id']]['isOn'] && props['mapLayers'][layer['id']]['nowCoastDataset']
-                  && !props['mapLayers'][layer['id']]['isLoading'] && !props['mapLayers'][layer['id']]['loadError']) && 
+                  && !props['mapLayers'][layer['id']]['isLoading'] && !props['mapLayers'][layer['id']]['loadError']) &&
                   <React.Fragment>
                     <Typography variant="overline" gutterBottom>
-                      {props['mapLayers'][layer['id']]['prodTime'] ? 
+                      {props['mapLayers'][layer['id']]['prodTime'] ?
                       `${props['mapLayers'][layer['id']]['prodTimeLabel']}: ${props['mapLayers'][layer['id']]['prodTime'] || ''}` : ''}
                     </Typography>
                     <LegendContainer>

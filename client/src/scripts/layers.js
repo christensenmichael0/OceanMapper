@@ -54,8 +54,8 @@ export const layers = [
             colorramps: ['viridis', 'magma', 'jet', 'rainbow', 'cool']
           },
           settingsTools: ['opacity', 'datarange', 'interval', 'colormap'],
-          visibleTOC: true,
-          defaultOn: true
+          visibleTOC: false,
+          defaultOn: false
         }
       ]
     },
@@ -268,7 +268,7 @@ export const layers = [
           opacity: 1.0
         },
         visibleTOC: true,
-        defaultOn: true
+        defaultOn: false
       }
     ]
   },

@@ -51,7 +51,7 @@ class App extends Component {
 
     let startTime = moment.utc().startOf('day').subtract(10, "days").valueOf();
     let endTime = moment.utc().startOf('day').add(8, "days").valueOf();
-    
+
     this.state = {
       startTime: startTime,
       endTime: endTime,
@@ -111,8 +111,8 @@ class App extends Component {
 
     this.setState({
       chartModalOpen: true,
-      chartType, 
-      chartLoading: true, 
+      chartType,
+      chartLoading: true,
       chartAbortController: abortController
     }, () => {
       // trigger fetch and parsing of data
@@ -146,19 +146,19 @@ class App extends Component {
 
     // assign window variable
     window.mymap = this.map;
-    
+
     // add click event listener
     map.on('click', this.onMapClick);
 
     // add move event listener (for lease blocks)
     map.on('moveend', this.onMapBoundsChange); // moveend, zoomend
 
-    // add click event listener to map (fired when clicking on specific popup element) 
+    // add click event listener to map (fired when clicking on specific popup element)
     map.on('timeseriesClick', () => {
       this.handlePopupChartClick('timeseries')
     });
 
-    // add click event listener to map (ired when clicking on specific popup element) 
+    // add click event listener to map (ired when clicking on specific popup element)
     map.on('profileClick', () => {this.handlePopupChartClick('profile')});
 
     // add a mousemove event listener to map to track lat/lng coordinates
@@ -180,7 +180,7 @@ class App extends Component {
   }
 
   /**
-   * Used to determine image bounds (i.e. lower left corner lon/lat and 
+   * Used to determine image bounds (i.e. lower left corner lon/lat and
    * upper right corner lon/lat). Also returned is the lower left corner
    * and upper right corner coordinates transformed into EPSG:3857. Map width
    * and height determined from the viewport is also returned.
@@ -194,7 +194,7 @@ class App extends Component {
     let neCorner = L.CRS.EPSG3857.project(L.latLng(max_lat, max_lon));
     let swCorner = L.CRS.EPSG3857.project(L.latLng(min_lat, min_lon));
     let imageBounds = [[min_lat,min_lon],[max_lat,max_lon]]
-        
+
     let width = this._mapNode.current.clientWidth;
     let height = this._mapNode.current.clientHeight;
 
@@ -218,10 +218,10 @@ class App extends Component {
   * @param {obj} data metocean data availability objected fetched from s3
   */
   populateAvailableLevels(data) {
-    let dataset, subResource, levels, levelUnit, categories = [...this.state.toc], 
-      metOceanLayers = [], mapLayers = Object.assign({},this.state.mapLayers), 
+    let dataset, subResource, levels, levelUnit, categories = [...this.state.toc],
+      metOceanLayers = [], mapLayers = Object.assign({},this.state.mapLayers),
       orderedMapLayers = [...this.state.orderedMapLayers];
-    
+
     let metocDatasetMappingIndx = this.findObjIndex(categories, 'Category', 'MetOcean');
     let orderedMetOceanLayers = categories[metocDatasetMappingIndx]['Layers'].map(
       (model, indx) => ({model: model['s3Name'], index: indx}));
@@ -233,7 +233,7 @@ class App extends Component {
         // TODO: remove empty dataset from categories -- should clean up categories
         continue
       }
-      
+
       let orderedSubresouces = categories[metocDatasetMappingIndx]['Layers'][indx]['subResources'].map(
         ((subresource, innerIndx) => ({subresource: subresource['s3Name'], index: innerIndx})));
 
@@ -250,11 +250,11 @@ class App extends Component {
 
         if (categoryVisible && layerObjVisible) {
           let id = layerObj['id'];
-          
+
           levels = Object.keys(data[dataset][subResource]['level']).map(level => parseInt(level)).sort(function(a, b){return a-b});
           levelUnit = Object.keys(data[dataset][subResource]['level'])[0].match(/[a-z]+/gi) ?
             Object.keys(data[dataset][subResource]['level'])[0].match(/[a-z]+/gi)[0] : '';
-          
+
           categories[metocDatasetMappingIndx]['Layers'][indx]['subResources'][innerIndx]['availableLevels'] = levels;
 
           mapLayers[id] = {
@@ -263,12 +263,12 @@ class App extends Component {
             subResource,
             niceName: layerObj['niceName'],
             shortName: layerObj['shortName'],
-            isOn: layerObj['defaultOn'], 
+            isOn: layerObj['defaultOn'],
             level: levels[0],
             levelUnit,
             validTime: '',
             overlayType: layerObj['overlayType'],
-            timeSensitive: layerObj['timeSensitive'], 
+            timeSensitive: layerObj['timeSensitive'],
             addDataFunc: layerObj['addDataFunc'],
             chartType: layerObj['chartType'],
             directionConvention: layerObj['directionConvention'],
@@ -296,10 +296,10 @@ class App extends Component {
     }
 
     this.setState({
-      toc: categories, 
-      isLoading: false, 
-      initializedLayers: true, 
-      mapLayers: mapLayers, 
+      toc: categories,
+      isLoading: false,
+      initializedLayers: true,
+      mapLayers: mapLayers,
       orderedMapLayers
     }, () => {
       this.state.orderedMapLayers.forEach(individualLayer => {
@@ -318,7 +318,7 @@ class App extends Component {
   handleLayerToggle(layerID, event) {
 
     // dont mutate state data
-    let layerIndx, mapLayers = Object.assign({}, this.state.mapLayers), 
+    let layerIndx, mapLayers = Object.assign({}, this.state.mapLayers),
       orderedMapLayers = [...this.state.orderedMapLayers], transparentBasemapID = 'transparent_basemap',
       transparentBasemapIndx;
 
@@ -329,7 +329,7 @@ class App extends Component {
     if (event.target.checked) {
       orderedMapLayers.splice(layerIndx,1);
       orderedMapLayers.push(layerID);
-      
+
       // need to update position of transparent basemap in certain cases
       if (mapLayers[layerID]['overlayType'] === 'all') {
         transparentBasemapIndx = orderedMapLayers.indexOf(transparentBasemapID);
@@ -342,7 +342,7 @@ class App extends Component {
       this.addLeafletLayer({...mapLayers[layerID], isOn: true});
     } else {
       mapLayers[layerID]['isLoading'] = false;
-      this.removeLeafletLayer(layerID); 
+      this.removeLeafletLayer(layerID);
     }
 
     // logic to update status of transparent basemap if necessary
@@ -375,14 +375,14 @@ class App extends Component {
    */
   handleTimeChange(timeValue) {
     this.setState({mapTime: timeValue},()=> {
-      this.debouncedUpdateLeafletLayer(); 
+      this.debouncedUpdateLeafletLayer();
     });
   }
 
   /**
    * Fired when the time is changed via the slider. This function updates
    * the date valid time of a particular layer
-   * 
+   *
    * @param {str} layerID
    * @param {int} validTime JS time in ms
    */
@@ -404,7 +404,7 @@ class App extends Component {
   debouncedUpdateLeafletLayer() {
     let mapLayers = Object.assign({},this.state.mapLayers), orderedMapLayers = [...this.state.orderedMapLayers];
 
-    // loop through orderlayers and update necessary layers depending on timeSensitive param 
+    // loop through orderlayers and update necessary layers depending on timeSensitive param
     orderedMapLayers.forEach((layer)=> {
       let layerObj = mapLayers[layer];
       if (layerObj['timeSensitive'] && layerObj['isOn']) {
@@ -414,11 +414,11 @@ class App extends Component {
   }
 
   /**
-   * Check the app state for layer status to keep map and app state in sync. This 
+   * Check the app state for layer status to keep map and app state in sync. This
    * is necessary if a user rapidly turns on/off a layer and app state diverges from map state.
    * Leaflet manipulates the DOM directly and React works by diffing virtual DOM and present DOM.
    * If the layer is not on (in state) but Leaflet just finished adding it to the map then we need
-   * to remove it. 
+   * to remove it.
    *
    * @param {str} layerID the layer id
    */
@@ -451,7 +451,7 @@ class App extends Component {
         case 'getModelField':
           // pass abort controller signal to getModelField
           abortSignal = this.state.mapLayers[layerObj['id']]['abortController']['signal'];
-          getModelField(layerObj['dataset'], layerObj['subResource'], layerObj['level'], 
+          getModelField(layerObj['dataset'], layerObj['subResource'], layerObj['level'],
             this.state.mapTime, abortSignal).then(
             res => {
               // error handling if response returns an error
@@ -488,9 +488,9 @@ class App extends Component {
                   // add transparent basemap
                   if (layerObj['overlayType'] === 'all') {
                     let transparentBasemap = mapLayers['transparent_basemap'];
-                    
+
                     let extraOptions = {
-                      minNativeZoom: transparentBasemap['minNativeZoom'], 
+                      minNativeZoom: transparentBasemap['minNativeZoom'],
                       maxNativeZoom: transparentBasemap['maxNativeZoom']
                     };
 
@@ -511,7 +511,7 @@ class App extends Component {
           break;
         case 'boemWindLease':
         case 'getGebcoBathy':
-          this.buildGeneralTileLayer(layerObj,layerObj['endPoint']).then(tileLayer => { 
+          this.buildGeneralTileLayer(layerObj,layerObj['endPoint']).then(tileLayer => {
             this.addLayer(layerObj,tileLayer);
           })
           break;
@@ -543,17 +543,17 @@ class App extends Component {
           mapProps = this.getMapDimensionInfo();
 
           layerEndpointUrl = populateImageUrlEndpoint(layerObj['endPoint'], mapProps);
-          this.buildImageLayer(layerObj,layerEndpointUrl,mapProps['imageBounds']).then(imageLayer => { 
+          this.buildImageLayer(layerObj,layerEndpointUrl,mapProps['imageBounds']).then(imageLayer => {
             // get legend here and the info.. wait for both requests to finish
             let endpointInfo = getData(layerObj['endPointInfo']);
             let legendContent = getData(layerObj['legendUrl'], 'text');
-            
+
             Promise.all([endpointInfo, legendContent]).then(resp => {
               if (resp[0]['error'] || resp[1]['error']) {
                 this.layerLoadError(layerObj);
                 return
               }
-              
+
               mapLayers[layerObj['id']]['prodTimeLabel'] = resp[0]['prodTimeLabel'];
               mapLayers[layerObj['id']]['prodTime'] = moment.utc(resp[0]['prodTime']).format('YYYY-MM-DDTHH:mm[Z]');
               mapLayers[layerObj['id']]['legendContent'] = resp[1];
@@ -569,10 +569,10 @@ class App extends Component {
   }
 
   /**
-   * Asynchronous function to remove a leaflet layer and update layerBindings object of the parent class. 
+   * Asynchronous function to remove a leaflet layer and update layerBindings object of the parent class.
    * A check is perfomed to see if streamlines exist for a particular layer and removes
    * that layer as well if it is found.
-   * 
+   *
    * @param {str} layerID the layer id (as stored in state)
    */
   async removeLeafletLayer(layerID) {
@@ -619,12 +619,12 @@ class App extends Component {
 
   /**
    * Add layer to map layer group that contains all pertinent TOC layers.
-   * The layer leaflet id is used to update layerBinding class object for 
+   * The layer leaflet id is used to update layerBinding class object for
    * future reference.
    *
    * @param {obj} layerHandle leaflet layer
    * @param {obj} layerObj layer object that provides layer specific information
-   * @param {bool} streamline 
+   * @param {bool} streamline
    */
   addToLeafletLayerGroup(layerHandle, layerObj, streamline=false) {
     this.leafletLayerGroup.addLayer(layerHandle);
@@ -641,7 +641,7 @@ class App extends Component {
    */
   async buildMetocTileLayer(layerObj,res) {
     let mapLayers = Object.assign({}, this.state.mapLayers);
-    
+
     // add tile imagery data
     let tileOptions = {
       opacity: layerObj['rasterProps']['opacity'],
@@ -649,7 +649,7 @@ class App extends Component {
 
     // add pane as an option is the layer contains overlayPriority key
     tileOptions = layerObj['overlayPriority'] ? {...tileOptions, pane: layerObj['overlayPriority']} : tileOptions;
-    
+
     let tileLayerEndpoint = buildTileFetchEndpoint(this.state.mapTime, layerObj)
     let tileLayer = await L.tileLayer(tileLayerEndpoint, tileOptions);
 
@@ -665,7 +665,7 @@ class App extends Component {
 
     tileLayer.on('load', (function() {
       mapLayers[layerObj['id']]['isLoading'] = false;
-      // check if the layer is still on when load is complete 
+      // check if the layer is still on when load is complete
       // (need to keep DOM and react state in sync)
       this.checkLayerStatus(layerObj['id']);
       this.setState({mapLayers});
@@ -689,7 +689,7 @@ class App extends Component {
       data: data,
       maxVelocity: maxVelocity, //20.0,
       velocityScale: scale, // 0.01 // arbitrary default 0.005
-      colorScale: ['#ffffff'] // ['#ffffff','#d9d9d9','#969696','#525252','#000000'] // use gray scale for all 
+      colorScale: ['#ffffff'] // ['#ffffff','#d9d9d9','#969696','#525252','#000000'] // use gray scale for all
     });
     return velocityLayer;
   }
@@ -746,7 +746,7 @@ class App extends Component {
 
     // set some image layer events
     imageLayer.on('add', (function() {
-      // setting isLoading to true might be redundant but leave it 
+      // setting isLoading to true might be redundant but leave it
       mapLayers[layerObj['id']]['isLoading'] = true;
       mapLayers[layerObj['id']]['loadError'] = false;
       this.setState({mapLayers});
@@ -768,7 +768,7 @@ class App extends Component {
 
   /**
    * Builds active drilling layer by creating a layer group and inserting a marker for each location
-   * 
+   *
    * @param {array} drilingArray list of active drilling sites stored in s3 bucket in a json file)
    */
   buildActiveDrillingLayer(drillingArray) {
@@ -777,7 +777,7 @@ class App extends Component {
     drillingArray.forEach(drillSite => {
       popupStationContent = activeDrillingPopupStaticContent(drillSite);
       try {
-        drillingMarker = L.marker(drillSite['coordinates'].reverse(), 
+        drillingMarker = L.marker(drillSite['coordinates'].reverse(),
           {...drillSite, popupStationContent});
         drillingMarker.bindPopup(`${popupStationContent}`);
         activeDrillingLayer.addLayer(drillingMarker);
@@ -800,7 +800,7 @@ class App extends Component {
   }
 
   /**
-   * Update layer loading and error status 
+   * Update layer loading and error status
    */
   layerLoadError(layerObj) {
     let mapLayers = Object.assign({}, this.state.mapLayers);
@@ -810,7 +810,7 @@ class App extends Component {
   }
 
   /**
-   * Generate a pulsing marker when a user clicks on the map. 
+   * Generate a pulsing marker when a user clicks on the map.
    */
   onMapClick(e) {
     // let initialPopupContent = `<h4>${e.latlng.toString()}</h4>`;
@@ -831,14 +831,14 @@ class App extends Component {
 
   /**
    * Fired when map bounds change. Active layers with a 'movementSensitive'
-   * attribute are refreshed. 
+   * attribute are refreshed.
    */
   onMapBoundsChange() {
     // TODO this basically repeats some logic i already have... see if we can move this logic into a func..
     // pass the prop I care about.. movementSensitive.. timeSensitive
     let mapLayers = Object.assign({},this.state.mapLayers), orderedMapLayers = [...this.state.orderedMapLayers];
-    
-    // loop through orderlayers and update necessary layers depending on timeSensitive param 
+
+    // loop through orderlayers and update necessary layers depending on timeSensitive param
     orderedMapLayers.forEach((layer)=> {
       let layerObj = mapLayers[layer];
       if (layerObj && layerObj['isOn'] && layerObj['movementSensitive']) {
@@ -849,7 +849,7 @@ class App extends Component {
 
   /**
    * Track the location of the cursor when hovering over the map
-   * 
+   *
    * @param {lat} the present latitude of the cursor
    * @param {lng} the present longitude of the cursor
    */
@@ -868,7 +868,7 @@ class App extends Component {
 
   handleSettingsPanelVisibility(layerID) {
     this.setState({
-      activeSettingsLayer: layerID, 
+      activeSettingsLayer: layerID,
       settingsPanelOpen: true
     })
   }
@@ -881,7 +881,7 @@ class App extends Component {
     let mapLayers = Object.assign({},this.state.mapLayers);
     let id = this.layerBindings[layerID];
     let leafletLayer = this.leafletLayerGroup.getLayer(id);
-    
+
     if (settingType === 'data-range') {
       mapLayers[layerID]['rasterProps']['currentMin'] = value[0];
       mapLayers[layerID]['rasterProps']['currentMax'] = value[1];
@@ -894,13 +894,13 @@ class App extends Component {
       mapLayers[layerID]['rasterProps']['opacity'] = decimalOpacity;
       this.setState({mapLayers},() => {
         this.leafletLayerGroup.getLayer(id).setOpacity(decimalOpacity);
-      });  
+      });
     } else if (settingType === 'colormap') {
       mapLayers[layerID]['rasterProps']['colormap'] = value;
       this.setState({mapLayers},() => {
         let tileLayerEndpoint = buildTileFetchEndpoint(this.state.mapTime, this.state.mapLayers[layerID]);
         leafletLayer.setUrl(tileLayerEndpoint);
-      });  
+      });
     } else if (settingType === 'interval') {
       mapLayers[layerID]['rasterProps']['interval'] = Number(value);
       this.setState({mapLayers},() => {
@@ -913,7 +913,7 @@ class App extends Component {
   }
 
   componentWillMount() {
-    let categories = [...this.state.toc], mapLayers = Object.assign({},this.state.mapLayers), 
+    let categories = [...this.state.toc], mapLayers = Object.assign({},this.state.mapLayers),
       orderedMapLayers = [...this.state.orderedMapLayers];
 
     categories.forEach((category, outerIndx) => {
@@ -935,7 +935,7 @@ class App extends Component {
             legendUrl: layerObj['legendUrl'],
             rasterProps: layerObj['rasterProps'] ? {...layerObj['rasterProps']} : null
           };
-          orderedMapLayers.push(id);  
+          orderedMapLayers.push(id);
         })
       } else {
         orderedMapLayers.push('MetOcean'); // this is a placeholder (injection point for active metocean layers)
@@ -943,7 +943,6 @@ class App extends Component {
     })
     this.setState({mapLayers, orderedMapLayers})
   }
-
 
   componentDidMount() {
     let categories = [...this.state.toc];
@@ -979,11 +978,11 @@ class App extends Component {
 
     } else {
       this.setState({
-        isLoadingMetoc: false, 
-        initializedLayers: true, 
+        isLoadingMetoc: false,
+        initializedLayers: true,
         metocLoadError: false
       }, () => {
-        // add non metoc layers to map 
+        // add non metoc layers to map
         this.state.orderedMapLayers.forEach(nonMetocLayer => {
             if (nonMetocLayer !== 'MetOcean') {
               if (this.state.mapLayers[nonMetocLayer]['isOn']) this.addLeafletLayer(this.state.mapLayers[nonMetocLayer])
@@ -999,13 +998,13 @@ class App extends Component {
 
     return (
       <div>
-        {this.state.chartModalOpen && 
+        {this.state.chartModalOpen &&
           <ChartModal
             {...this.state}
             closeChartModal={this.handleCloseChartModal}
           />
         }
-        <PersistentDrawerLeft 
+        <PersistentDrawerLeft
           handleLayerToggle = {this.handleLayerToggle}
           handleLevelChange = {this.handleLevelChange}
           handleTimeChange = {this.handleTimeChange}
@@ -1014,7 +1013,7 @@ class App extends Component {
         />
         <div ref={this._mapNode} id="map" className={classNames(classes.map)} />
         <CoordinateDisplay lat={this.state.cursorLat} lng={this.state.cursorLng} />
-        {this.state.settingsPanelOpen && 
+        {this.state.settingsPanelOpen &&
           <SettingsPanel
             activeSettingsLayer = {this.state.mapLayers[this.state.activeSettingsLayer]}
             handleSettingsPanelHide = {this.handleSettingsPanelHide}
