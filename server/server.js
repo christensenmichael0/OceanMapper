@@ -38,7 +38,7 @@ if (cluster.isMaster) {
 
   const S3_BUCKET = process.env.S3_BUCKET_NAME;
 
-  // logging middleware 
+  // logging middleware
   app.use(morgan('dev'));
 
   // add other routes below

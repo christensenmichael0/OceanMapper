@@ -1,0 +1,14 @@
+trigger: none
+pool:
+  vmImage: ubuntu-18.04
+name: "$(Date:yyyyMMdd)$(Rev:.r)"
+jobs:
+  - job: job_1
+    steps:
+      - task: Docker@2
+        inputs:
+          containerRegistry: 'flowmapper-service-connection'
+          repository: 'OceanMapper'
+          command: 'buildAndPush'
+          Dockerfile: '**/Dockerfile'
+          tags: '$(Build.BuildNumber)'
