@@ -27,6 +27,10 @@ FROM base as builder
 
 WORKDIR /usr/src/app
 
+COPY package*.json ./
+
+RUN echo $(npm install --unsafe-perm)
+
 RUN npm run build
 
 
