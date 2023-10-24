@@ -46,7 +46,7 @@ COPY --from=builder /usr/src/app/client/build ./client/build
 COPY --from=builder /usr/src/app/server ./server
 
 # Note: the script name is install so we must use npm run install (or else we end up in infinite loop)
-RUN echo $(npm run install-deps --unsafe-perm)
+# RUN echo $(npm run install-deps --unsafe-perm)
 
 EXPOSE 3001
 
