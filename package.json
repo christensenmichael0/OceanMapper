@@ -13,7 +13,7 @@
   },
   "scripts": {
     "build": "concurrently \"cd client && npm run build\" \"cd server && npm run build\"",
-    "install": "(cd client && npm i) && (cd server && npm i)",
+    "install-deps": "(cd client && npm i) && (cd server && npm i)",
     "heroku-postbuild": "yarn build",
     "start": "concurrently \"cd client && PORT=3000 yarn start\" \"cd server && PORT=3001 yarn start\"",
     "start:prod": "cd server && npm run start:prod"

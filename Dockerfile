@@ -3,11 +3,14 @@ FROM node:14.17.5 AS base
 
 WORKDIR /usr/src/app
 
+COPY . .
+
 COPY package*.json ./
 
-RUN npm install
+RUN echo $(npm install --unsafe-perm)
 
-COPY . .
+
+#COPY . .
 
 # -- NOT IMPLEMENTED -- #
 # for lint
@@ -35,11 +38,11 @@ WORKDIR /usr/src/app
 
 COPY package*.json ./
 
-RUN npm install --only=production
-
-# COPY --from=builder /usr/src/app/dist ./
 COPY --from=builder /usr/src/app/client/build ./client/build
 COPY --from=builder /usr/src/app/server ./server
+
+# Note: the script name is install so we must use npm run install (or else we end up in infinite loop)
+RUN echo $(npm run install-deps --unsafe-perm)
 
 EXPOSE 3001
 

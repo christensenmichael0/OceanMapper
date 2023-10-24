@@ -65,7 +65,7 @@ if (_cluster2.default.isMaster) {
 
   var S3_BUCKET = process.env.S3_BUCKET_NAME;
 
-  // logging middleware 
+  // logging middleware
   app.use((0, _morgan2.default)('dev'));
 
   // add other routes below

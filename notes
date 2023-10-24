@@ -1,3 +1,20 @@
+----------------------------------------------------------------------------------------------------------------------
+DOCKERIZING THE APP
+
+— BUILD, RUN, EXEC IMAGE locally —
+docker build --progress=plain --no-cache -t app:latest .
+docker run --env-file ./server/.env -p 3001:3001 app:latest
+docker exec -it {{image_name}} /bin/sh
+
+— MANUALLY PUSH TO AZURE ACR —
+az login --tenant 740f9867-e35e-4402-8e21-d5e9ce17f706
+az acr login --name flowmapper (need to be off of vpn)
+
+docker tag app:latest flowmapper.azurecr.io/flowmapper:latest
+docker push flowmapper.azurecr.io/flowmapper
+
+
+https://dolivasm.medium.com/deploy-a-docker-image-from-acr-to-azure-app-service-5b24ef68cafd
 
 ----------------------------------------------------------------------------------------------------------------------
 ************************************************ MISCELLANEOUS ******************************************************
@@ -93,12 +110,12 @@ https://www.arcgis.com/apps/mapviewer/index.html?layers=5f98dbc4708e4a7e99c0a7fe
 
 # fig, axes = plt.subplots()
 # axes.imshow(data['u_vel'], origin='lower')
-# or 
+# or
 # fig = plt.figure()
 # ax = fig.add_subplot(111)
 
 
-* when request tiles for a specific date we need to shoot off a request to see whats available... following this 
+* when request tiles for a specific date we need to shoot off a request to see whats available... following this
 we need to send off individual requests for the tiles
 
 --- (PACKAGING USING DOCKER)
@@ -148,7 +165,7 @@ pip3 install matplotlib mercantile pyproj geopandas -t ./
 zip -r lambda_package_shape2tiles.zip *
 docker cp 62f0320eafbc:/lambda_package_shape2tiles/lambda_package_shape2tiles.zip ~
 cd ~/OceanMapper/scripts/python_scripts
-zip -ur ~/lambda_package_shape2tiles.zip utils/tile_utils.py dynamic_shape2tile_creator.py build_tile_from_shape.py 
+zip -ur ~/lambda_package_shape2tiles.zip utils/tile_utils.py dynamic_shape2tile_creator.py build_tile_from_shape.py
 
 
 
@@ -249,7 +266,7 @@ payload['pickle_filepath'] = 'blah
 payload['data_type'] = 'wind_speed'
 payload['bucket_name'] = 'blah'
 payload['output_tilepath'] = 'blah'
-payload['xyz_info'] = {'start_indx': 1, 
+payload['xyz_info'] = {'start_indx': 1,
     'end_indx': 2}
 payload['zoom_array'] = list(range(4,7)
 
