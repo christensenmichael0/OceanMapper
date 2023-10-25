@@ -11,4 +11,6 @@ jobs:
           repository: 'flowmapper'
           command: 'buildAndPush'
           Dockerfile: '**/Dockerfile'
-          tags: '$(Build.BuildNumber)'
+          tags: |
+            latest
+            $(Build.BuildNumber)
