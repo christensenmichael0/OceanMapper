@@ -1,4 +1,9 @@
-trigger: none
+trigger:
+  branches:
+    include:
+      - '*'
+    exclude:
+      - release/releaseCandidate
 pool:
   vmImage: ubuntu-latest
 name: "$(Date:yyyyMMdd)$(Rev:.r)"
