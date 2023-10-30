@@ -46,6 +46,6 @@ COPY --from=builder /usr/src/app/server ./server
 
 RUN echo $(npm run install-deps --unsafe-perm --production-only)
 
-EXPOSE 3001
+EXPOSE 80
 
 ENTRYPOINT ["npm", "run", "start:prod"]

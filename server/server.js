@@ -60,7 +60,7 @@ if (cluster.isMaster) {
 
   app.use('/*', staticFiles)
 
-  app.set('port', (process.env.PORT || 3001))
+  app.set('port', (process.env.PORT || 80))
 
   app.listen(app.get('port'), () => {
     console.log(`Worker ${cluster.worker.id} listening on ${app.get('port')}`)

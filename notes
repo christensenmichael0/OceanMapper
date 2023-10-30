@@ -3,7 +3,7 @@ DOCKERIZING THE APP
 
 — BUILD, RUN, EXEC IMAGE locally —
 docker build --progress=plain --no-cache -t app:latest .
-docker run --env-file ./server/.env -p 3001:3001 app:latest
+docker run --env-file ./server/.env -p 3001:80 app:latest
 docker exec -it {{image_name}} /bin/sh
 
 — MANUALLY PUSH TO AZURE ACR —
